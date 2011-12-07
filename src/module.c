@@ -57,7 +57,7 @@ ganv_module_init(GanvModule* module)
 	module->widest_input      = 0.0;
 	module->widest_output     = 0.0;
 	module->show_port_labels  = FALSE;
-	module->must_resize       = FALSE;
+	module->must_resize       = TRUE;
 	module->port_size_changed = FALSE;
 }
 
@@ -548,6 +548,25 @@ ganv_module_class_init(GanvModuleClass* class)
 	node_class->move    = ganv_module_move;
 	node_class->move_to = ganv_module_move_to;
 	node_class->resize  = ganv_module_resize;
+}
+
+GanvModule*
+ganv_module_new(GanvCanvas* canvas,
+                const char* first_prop_name, ...)
+{
+	GanvModule* module = GANV_MODULE(
+		g_object_new(ganv_module_get_type(), NULL));
+
+	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(module);
+	va_list args;
+	va_start(args, first_prop_name);
+	gnome_canvas_item_construct(item,
+	                            gnome_canvas_root(GNOME_CANVAS(canvas)),
+	                            first_prop_name, args);
+	va_end(args);
+
+	ganv_canvas_add_node(canvas, GANV_NODE(module));
+	return module;
 }
 
 void

@@ -125,7 +125,7 @@ struct HeadTailOrder {
 struct GanvCanvasImpl {
 	GanvCanvasImpl(GanvCanvas* gobj)
 		: _gcanvas(gobj)
-		, _layout(Glib::wrap(GTK_LAYOUT(_gcanvas)))
+		, _layout(GTK_LAYOUT(_gcanvas))
 		, _connect_port(NULL)
 		, _last_selected_port(NULL)
 		, _base_rect(gnome_canvas_item_new(
@@ -231,8 +231,8 @@ struct GanvCanvasImpl {
 
 	void move_contents_to_internal(double x, double y, double min_x, double min_y);
 
-	GanvCanvas*  _gcanvas;
-	Gtk::Layout* _layout;
+	GanvCanvas* _gcanvas;
+	GtkLayout*  _layout;
 
 	Items         _items;       ///< Items on this canvas
 	Edges         _edges;       ///< Edges ordered (src, dst)
@@ -310,7 +310,7 @@ GanvCanvasImpl::selection_move_finished()
 {
 	FOREACH_ITEM(_selected_items, i) {
 		std::cerr << "FIXME: selection move finished" << std::endl;
-		Glib::wrap(*i)->signal_moved.emit();
+		//Glib::wrap(*i)->signal_moved.emit();
 	}
 }
 
@@ -398,8 +398,7 @@ GanvCanvasImpl::select_item(GanvNode* m)
 
 	// Select any connections to or from this node
 	if (GANV_IS_MODULE(m)) {
-		Ganv::Module* module = Glib::wrap(GANV_MODULE(m));
-		module->for_each_port(select_edges, this);
+		ganv_module_for_each_port(GANV_MODULE(m), select_edges, this);
 	} else {
 		for_each_edge_on(m, ganv_edge_select);
 	}
@@ -425,8 +424,7 @@ GanvCanvasImpl::unselect_item(GanvNode* m)
 {
 	// Unselect any connections to or from this node
 	if (GANV_IS_MODULE(m)) {
-		Ganv::Module* module = Glib::wrap(GANV_MODULE(m));
-		module->for_each_port(unselect_edges, this);
+		ganv_module_for_each_port(GANV_MODULE(m), unselect_edges, this);
 	} else {
 		for_each_edge_on(m, ganv_edge_unselect);
 	}
@@ -1707,7 +1705,7 @@ Canvas::root()
 Gtk::Layout&
 Canvas::widget()
 {
-	return *impl()->_layout;
+	return *Glib::wrap(impl()->_layout);
 }
 
 void

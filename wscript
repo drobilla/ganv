@@ -26,6 +26,8 @@ def options(opt):
     opt.load('compiler_c')
     opt.load('compiler_cxx')
     autowaf.set_options(opt)
+    opt.add_option('--test', action='store_true', default=False, dest='build_tests',
+                   help="Build unit tests")
     opt.add_option('--no-graphviz', action='store_true', default=False,
                    dest='no_graphviz',
                    help='Do not compile with graphviz support')
@@ -42,7 +44,10 @@ def configure(conf):
     autowaf.display_header('Ganv Configuration')
 
     conf.env.append_unique('CFLAGS', '-std=c99')
+    conf.env['BUILD_TESTS'] = Options.options.build_tests
 
+    autowaf.check_pkg(conf, 'gtk+-2.0', uselib_store='GTK',
+                      atleast_version='2.0.0', mandatory=True)
     autowaf.check_pkg(conf, 'gtkmm-2.4', uselib_store='GTKMM',
                       atleast_version='2.10.0', mandatory=True)
     autowaf.check_pkg(conf, 'libgnomecanvas-2.0', uselib_store='GNOMECANVAS',
@@ -66,6 +71,7 @@ def configure(conf):
     autowaf.display_msg(conf, "Auto-arrange", conf.is_defined('HAVE_AGRAPH'))
     autowaf.display_msg(conf, "Native language support", conf.is_defined('ENABLE_NLS'))
     autowaf.display_msg(conf, "GObject introspection", conf.is_defined('HAVE_GIR'))
+    autowaf.display_msg(conf, "Unit tests", str(conf.env['BUILD_TESTS']))
     print('')
 
 ganv_source = [
@@ -101,13 +107,33 @@ def build(bld):
     obj.vnum            = GANV_LIB_VERSION
     obj.install_path    = '${LIBDIR}'
 
-    # Benchmark program
+    # Benchmark program (C++)
     obj = bld(features     = 'cxx cxxprogram',
               source       = 'src/ganv_bench.cpp',
               includes     = ['.', './src'],
               use          = 'libganv',
               use_lib      = 'GTKMM',
               target       = 'src/ganv_bench')
+
+    if bld.env['BUILD_TESTS']:
+        # Static library for test program
+        obj = bld(features     = 'c cstlib',
+                  source       = ganv_source,
+                  includes     = ['.', './src'],
+                  name         = 'libganv_profiled',
+                  target       = 'ganv_profiled',
+                  uselib       = 'GTKMM GNOMECANVAS AGRAPH',
+                  install_path = '',
+                  cflags       = [ '-fprofile-arcs', '-ftest-coverage' ])
+
+        # Test program (C)
+        obj = bld(features     = 'c cprogram',
+                  source       = 'src/ganv_test.c',
+                  includes     = ['.', './src'],
+                  use          = 'libganv_profiled',
+                  lib          = ['gcov'],
+                  use_lib      = 'GTK',
+                  target       = 'src/ganv_test')
 
     # Documentation
     autowaf.build_dox(bld, 'GANV', GANV_VERSION, top, out)
@@ -142,6 +168,11 @@ def build(bld):
             rule         = 'g-ir-compiler ${SRC} -o ${TGT}')
 
     bld.add_post_fun(autowaf.run_ldconfig)
+
+def test(ctx):
+    autowaf.pre_test(ctx, APPNAME)
+    autowaf.run_tests(ctx, APPNAME, ['src/ganv_test'], dirs=['./src'])
+    autowaf.post_test(ctx, APPNAME)
 
 def i18n(bld):
     autowaf.build_i18n(bld, '..', 'ganv', APPNAME, ganv_source,

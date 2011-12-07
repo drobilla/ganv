@@ -43,7 +43,7 @@ struct _GanvPort
 {
 	GanvBox          box;
 	GanvPortControl* control;
-	gboolean               is_input;
+	gboolean         is_input;
 };
 
 struct _GanvPortClass {
@@ -54,8 +54,8 @@ GType ganv_port_get_type(void);
 
 GanvPort*
 ganv_port_new(GanvModule* module,
-                     gboolean          is_input,
-                     const char*       first_prop_name, ...);
+              gboolean    is_input,
+              const char* first_prop_name, ...);
 
 void
 ganv_port_show_control(GanvPort* port);
@@ -65,19 +65,19 @@ ganv_port_hide_control(GanvPort* port);
 
 void
 ganv_port_set_control_is_toggle(GanvPort* port,
-                                       gboolean        is_toggle);
+                                gboolean  is_toggle);
 
 void
 ganv_port_set_control_value(GanvPort* port,
-                                   float           value);
+                            float     value);
 
 void
 ganv_port_set_control_min(GanvPort* port,
-                                 float           min);
+                          float     min);
 
 void
 ganv_port_set_control_max(GanvPort* port,
-                                 float           max);
+                          float     max);
 
 double
 ganv_port_get_natural_width(const GanvPort* port);

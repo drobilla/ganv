@@ -63,6 +63,10 @@ ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
 GnomeCanvasGroup*
 ganv_canvas_get_root(const GanvCanvas* canvas);
 
+void
+ganv_canvas_add_node(GanvCanvas* canvas,
+                     GanvNode*   node);
+
 /** Get the default font size in points. */
 double
 ganv_canvas_get_default_font_size(const GanvCanvas* canvas);

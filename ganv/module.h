@@ -55,6 +55,10 @@ struct _GanvModuleClass {
 
 GType ganv_module_get_type(void);
 
+GanvModule*
+ganv_module_new(GanvCanvas* canvas,
+                const char* first_prop_name, ...);
+
 void
 ganv_module_add_port(GanvModule* module,
                      GanvPort*   port);
