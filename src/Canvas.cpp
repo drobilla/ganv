@@ -1219,7 +1219,14 @@ GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 bool
 GanvCanvasImpl::animate_selected()
 {
+#ifdef g_get_monotonic_time
+	// Only available in glib 2.28
 	const double seconds = g_get_monotonic_time() / 1000000.0;
+#else
+	GTimeVal time;
+	g_get_current_time(&time);
+	const double seconds = time.tv_sec + time.tv_usec / (double)G_USEC_PER_SEC;
+#endif
 
 	FOREACH_ITEM(_selected_items, s) {
 		ganv_node_tick(*s, seconds);
