@@ -288,9 +288,6 @@ resize_horiz(GanvModule* module)
 	double title_w, title_h;
 	title_size(module, &title_w, &title_h);
 
-	printf("MEASURED: %lf\n", m.width);
-	printf("TITLE W: %lf\n", title_w);
-
 	// Basic height contains title, icon
 	double header_height = 2.0 + title_h;
 
