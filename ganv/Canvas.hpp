@@ -74,24 +74,6 @@ public:
 
 	void select_all();
 
-	/**
-	   Add @a item to the current selection.
-	   All edges between selected items will be automatically selected.
-	*/
-	void select_item(Node* item);
-
-	/** Unselect @c item. */
-	void unselect_item(Node* item);
-
-	/** Unselect all ports. */
-	void unselect_ports();
-
-	/** Select @c c. */
-	void select_edge(Edge* e);
-
-	/** Unselect @c c. */
-	void unselect_edge(Edge* c);
-
 	RW_PROPERTY(gboolean, locked);
 
 	/** Return the current zoom factor (pixels per unit). */

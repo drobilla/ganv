@@ -1451,18 +1451,6 @@ Canvas::clear_selection()
 	impl()->clear_selection();
 }
 
-void
-Canvas::select_edge(Edge* edge)
-{
-	impl()->select_edge(edge->gobj());
-}
-
-void
-Canvas::unselect_edge(Edge* edge)
-{
-	impl()->unselect_edge(edge->gobj());
-}
-
 double
 Canvas::get_zoom()
 {
@@ -1500,18 +1488,6 @@ Canvas::select_all()
 }
 
 void
-Canvas::select_item(Ganv::Node* m)
-{
-	impl()->select_item(m->gobj());
-}
-
-void
-Canvas::unselect_item(Ganv::Node* m)
-{
-	impl()->unselect_item(m->gobj());
-}
-
-void
 Canvas::destroy()
 {
 	impl()->_selected_items.clear();
@@ -1528,12 +1504,6 @@ Canvas::destroy()
 	impl()->_connect_port = NULL;
 
 	impl()->_items.clear();
-}
-
-void
-Canvas::unselect_ports()
-{
-	impl()->unselect_ports();
 }
 
 void
