@@ -33,10 +33,10 @@ typedef struct _GanvPortClass GanvPortClass;
 
 typedef struct {
 	GanvBox* rect;
-	float          value;
-	float          min;
-	float          max;
-	gboolean       is_toggle;
+	float    value;
+	float    min;
+	float    max;
+	gboolean is_toggle;
 } GanvPortControl;
 
 struct _GanvPort

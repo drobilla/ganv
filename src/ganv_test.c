@@ -44,6 +44,17 @@ main(int argc, char** argv)
 	                                     "label", "test",
 	                                     NULL);
 
+	GanvPort* cport = ganv_port_new(module, TRUE,
+	                                "label", "Control",
+	                                NULL);
+	ganv_port_show_control(cport);
+
+	GanvPort* tport = ganv_port_new(module, TRUE,
+	                                "label", "Toggle",
+	                                NULL);
+	ganv_port_show_control(tport);
+	ganv_port_set_control_is_toggle(tport, TRUE);
+
 	gnome_canvas_item_show(GNOME_CANVAS_ITEM(module));
 	gnome_canvas_item_raise_to_top(GNOME_CANVAS_ITEM(module));
 

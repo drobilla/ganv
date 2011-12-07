@@ -953,7 +953,7 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 {
 	static GanvEdge* drag_edge = NULL;
 	static GanvNode* drag_node = NULL;
-	static bool            snapped   = false;
+	static bool      snapped   = false;
 
 	if (_drag_state != EDGE) {
 		return false;
@@ -1060,9 +1060,11 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 bool
 GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 {
-	static bool port_dragging         = false;
-	static bool control_dragging      = false;
-	static bool ignore_button_release = false;
+	static bool   port_dragging       = false;
+	static bool   control_dragging    = false;
+	static double control_start_x     = 0;
+	static double control_start_y     = 0;
+	static float  control_start_value = 0;
 
 	bool handled = true;
 
@@ -1071,14 +1073,19 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 	case GDK_BUTTON_PRESS:
 		if (event->button.button == 1) {
 			GanvModule* const module = ganv_port_get_module(port);
-			if (module && _gcanvas->locked && port->is_input) {
-				std::cerr << "FIXME: port control drag" << std::endl;
-#if 0
-				if (port->is_toggled()) {
-					port->toggle();
-					ignore_button_release = true;
+			if (module && port->is_input && port->control) {
+				if (port->control->is_toggle) {
+					if (port->control->value >= 0.5) {
+						ganv_port_set_control_value(port, 0.0);
+					} else {
+						ganv_port_set_control_value(port, 1.0);
+					}
 				} else {
-					control_dragging = true;
+					control_dragging    = true;
+					control_start_x     = event->button.x_root;
+					control_start_y     = event->button.y_root;
+					control_start_value = ganv_port_get_control_value(port);
+					#if 0
 					const double port_x = module->get_x() + port->get_x();
 					float new_control = ((event->button.x - port_x) / (double)port->get_width());
 					if (new_control < 0.0)
@@ -1093,10 +1100,10 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 					if (new_control > port->control_max())
 						new_control = port->control_max();
 					if (new_control != port->control_value())
-						port->set_control(new_control);
+						port->set_control_value(new_control);
+					#endif
 				}
-#endif
-			} else {
+			} else if (!port->is_input) {
 				port_dragging = true;
 			}
 		} else {
@@ -1107,26 +1114,34 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 
 	case GDK_MOTION_NOTIFY:
 		if (control_dragging) {
-			GanvModule* const module = ganv_port_get_module(port);
-			if (module) {
-				const double port_x = ganv_box_get_x1(GANV_BOX(module))
-					+ ganv_box_get_x1(GANV_BOX(port));
-				float new_control = ((event->button.x - port_x)
-				                     / ganv_box_get_width(GANV_BOX(port)));
-				if (new_control < 0.0)
-					new_control = 0.0;
-				else if (new_control > 1.0)
-					new_control = 1.0;
+			const double mouse_x       = event->button.x_root;
+			const double mouse_y       = event->button.y_root;
+			GdkScreen*   screen        = gdk_screen_get_default();
+			const int    screen_width  = gdk_screen_get_width(screen);
+			const int    screen_height = gdk_screen_get_height(screen);
+			const double drag_dx       = mouse_x - control_start_x;
+			const double drag_dy       = mouse_y - control_start_y;
 
-				new_control *= (port->control->max - port->control->min);
-				new_control += port->control->min;
-				assert(new_control >= port->control->min);
-				assert(new_control <= port->control->max);
+			const double range_x = (drag_dx > 0)
+				? (screen_width - control_start_x)
+				: control_start_x;
 
-				if (new_control != port->control->value) {
-					ganv_port_set_control_value(port, new_control);
-				}
-			}
+			const double range_y = (drag_dy > 0)
+				? (screen_height - control_start_y)
+				: control_start_y;
+
+			const double dx = drag_dx / range_x;
+			const double dy = drag_dy / range_y;
+
+			const double value_range = (drag_dx > 0)
+				? port->control->max - control_start_value
+				: control_start_value - port->control->min;
+
+			const double sens = fmaxf(1.0 - fabs(dy), value_range / range_x);
+
+			const double dvalue = (dx * value_range) * sens;
+			const double value = control_start_value + dvalue;
+			ganv_port_set_control_value(port, value);
 		}
 		break;
 
@@ -1147,8 +1162,6 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			port_dragging = false;
 		} else if (control_dragging) {
 			control_dragging = false;
-		} else if (ignore_button_release) {
-			ignore_button_release = false;
 		} else {
 			handled = false;
 		}
