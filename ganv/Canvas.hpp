@@ -121,11 +121,8 @@ public:
 	/** Shift all canvas contents so the top-left object is at (x, y). */
 	void move_contents_to(double x, double y);
 
-	/** Return the width of the canvas. */
-	double width() const;
-
-	/** Return the height of the canvas. */
-	double height() const;
+	RW_PROPERTY(double, width)
+	RW_PROPERTY(double, height)
 
 	/** Resize the canvas to the given dimensions. */
 	void resize(double width, double height);
@@ -190,8 +187,8 @@ public:
 	GanvCanvas*       gobj();
 	const GanvCanvas* gobj() const;
 
-	/** Canvas event handler. */
-	virtual bool on_event(GdkEvent* event);
+	sigc::signal<void, Node*, Node*> signal_connect;
+	sigc::signal<void, Node*, Node*> signal_disconnect;
 
 	/** Signal emitted when the mouse pointer enters an Item. */
 	sigc::signal<void, GnomeCanvasItem*> signal_item_entered;

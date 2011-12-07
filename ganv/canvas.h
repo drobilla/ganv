@@ -44,6 +44,8 @@ struct _GanvCanvas
 	GnomeCanvas            canvas;
 	struct GanvCanvasImpl* impl;
 	GanvDirection          direction;
+	double                 width;
+	double                 height;
 	gboolean               locked;
 };
 
@@ -53,7 +55,10 @@ struct _GanvCanvasClass {
 
 GType ganv_canvas_get_type(void);
 
-GanvCanvas* ganv_canvas_new(void);
+GanvCanvas* ganv_canvas_new(double width, double height);
+
+void
+ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
 
 GnomeCanvasGroup*
 ganv_canvas_get_root(const GanvCanvas* canvas);
@@ -65,6 +70,9 @@ ganv_canvas_get_default_font_size(const GanvCanvas* canvas);
 /** Get the current font size in points. */
 double
 ganv_canvas_get_font_size(const GanvCanvas* canvas);
+
+void
+ganv_canvas_set_font_size(GanvCanvas* canvas, double points);
 
 void
 ganv_canvas_clear_selection(GanvCanvas* canvas);

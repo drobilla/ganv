@@ -50,6 +50,9 @@
 #    include <gvc.h>
 #endif
 
+static guint signal_connect;
+static guint signal_disconnect;
+
 using std::cerr;
 using std::endl;
 using std::list;
@@ -119,18 +122,9 @@ struct HeadTailOrder {
 	}
 };
 
-static gboolean
-on_canvas_event(GnomeCanvasItem* canvasitem,
-                GdkEvent*        ev,
-                void*            canvas)
-{
-	return ((Ganv::Canvas*)canvas)->on_event(ev);
-}
-
 struct GanvCanvasImpl {
-	GanvCanvasImpl(Ganv::Canvas& canvas, GanvCanvas* gobj, double width, double height)
-		: _canvas(canvas)
-		, _gcanvas(gobj)
+	GanvCanvasImpl(GanvCanvas* gobj)
+		: _gcanvas(gobj)
 		, _layout(Glib::wrap(GTK_LAYOUT(_gcanvas)))
 		, _connect_port(NULL)
 		, _last_selected_port(NULL)
@@ -139,31 +133,42 @@ struct GanvCanvasImpl {
 			             gnome_canvas_rect_get_type(),
 			             "x1", 0.0,
 			             "y1", 0.0,
-			             "x2", width,
-			             "y2", height,
+			             "x2", 1.0,
+			             "y2", 1.0,
 			             "fill-color-rgba", 0x000000FF,
 			             NULL))
 		, _select_rect(NULL)
 		, _zoom(1.0)
 		, _font_size(0.0)
-		, _width(width)
-		, _height(height)
 		, _drag_state(NOT_DRAGGING)
 		, _direction(Ganv::Canvas::HORIZONTAL)
 	{
 		_wrapper_key = g_quark_from_string("ganvmm");
 		_move_cursor = gdk_cursor_new(GDK_FLEUR);
 
-		gnome_canvas_set_scroll_region(GNOME_CANVAS(_gcanvas), 0.0, 0.0, width, height);
-
 		g_signal_connect(G_OBJECT(gnome_canvas_root(GNOME_CANVAS(_gcanvas))),
-		                 "event", G_CALLBACK(on_canvas_event), &_canvas);
+		                 "event", G_CALLBACK(on_canvas_event), this);
+
 	}
 
 	~GanvCanvasImpl()
 	{
 		gdk_cursor_unref(_move_cursor);
 	}
+
+	static gboolean
+	on_canvas_event(GnomeCanvasItem* canvasitem,
+	                GdkEvent*        ev,
+	                void*            impl)
+	{
+		return ((GanvCanvasImpl*)impl)->on_event(ev);
+	}
+
+	GnomeCanvasGroup* root() {
+		return gnome_canvas_root(GNOME_CANVAS(_gcanvas));
+	}
+
+	void resize(double width, double height);
 
 	void for_each_edge_from(const GanvNode* tail, GanvEdgeFunction f);
 	void for_each_edge_to(const GanvNode* head, GanvEdgeFunction f);
@@ -176,6 +181,8 @@ struct GanvCanvasImpl {
 	void unselect_edge(GanvEdge* edge);
 	void select_item(GanvNode* item);
 	void unselect_item(GanvNode* item);
+	void unselect_ports();
+	void clear_selection();
 
 	void move_selected_items(double dx, double dy);
 	void selection_move_finished();
@@ -204,6 +211,8 @@ struct GanvCanvasImpl {
 
 	GanvNode* get_node_at(double x, double y);
 
+	bool on_event(GdkEvent* event);
+
 	bool scroll_drag_handler(GdkEvent* event);
 	bool select_drag_handler(GdkEvent* event);
 	bool connect_drag_handler(GdkEvent* event);
@@ -222,9 +231,8 @@ struct GanvCanvasImpl {
 
 	void move_contents_to_internal(double x, double y, double min_x, double min_y);
 
-	Ganv::Canvas& _canvas;
-	GanvCanvas*   _gcanvas;
-	Gtk::Layout*        _layout;
+	GanvCanvas*  _gcanvas;
+	Gtk::Layout* _layout;
 
 	Items         _items;       ///< Items on this canvas
 	Edges         _edges;       ///< Edges ordered (src, dst)
@@ -241,8 +249,6 @@ struct GanvCanvasImpl {
 
 	double _zoom;       ///< Current zoom level
 	double _font_size;  ///< Current font size in points
-	double _width;
-	double _height;
 
 	enum DragState { NOT_DRAGGING, EDGE, SCROLL, SELECT };
 	DragState      _drag_state;
@@ -354,7 +360,7 @@ select_edges(GanvPort* port, void* data)
 void
 GanvCanvasImpl::add_item(GanvNode* n)
 {
-	if (GNOME_CANVAS_ITEM(n)->parent == GNOME_CANVAS_ITEM(_canvas.root())) {
+	if (GNOME_CANVAS_ITEM(n)->parent == GNOME_CANVAS_ITEM(root())) {
 		_items.insert(n);
 	}
 }
@@ -453,7 +459,7 @@ GanvCanvasImpl::layout_dot(bool use_length_hints, const std::string& filename)
 	agsafeset(G, (char*)"remincross", (char*)"true", NULL);
 	agsafeset(G, (char*)"overlap", (char*)"scale", NULL);
 	agsafeset(G, (char*)"nodesep", (char*)"0.0", NULL);
-	gv_set(G, "fontsize", ganv_canvas_get_font_size(_canvas.gobj()));
+	gv_set(G, "fontsize", ganv_canvas_get_font_size(_gcanvas));
 	gv_set(G, "dpi", dpi);
 
 	nodes.gvc = gvc;
@@ -611,8 +617,9 @@ GanvCanvasImpl::are_connected(const GanvNode* tail,
 void
 GanvCanvasImpl::select_port(GanvPort* p, bool unique)
 {
-	if (unique)
-		_canvas.unselect_ports();
+	if (unique) {
+		unselect_ports();
+	}
 	g_object_set(G_OBJECT(p), "selected", TRUE, NULL);
 	SelectedPorts::iterator i = find(_selected_ports.begin(), _selected_ports.end(), p);
 	if (i == _selected_ports.end())
@@ -664,7 +671,7 @@ GanvCanvasImpl::select_port_toggle(GanvPort* port, int mod_state)
 		}
 	} else {
 		if (selected) {
-			_canvas.unselect_ports();
+			unselect_ports();
 		} else {
 			select_port(port, true);
 		}
@@ -730,6 +737,62 @@ GanvCanvasImpl::get_node_at(double x, double y)
 	}
 
 	return NULL;
+}
+
+bool
+GanvCanvasImpl::on_event(GdkEvent* event)
+{
+	static const int scroll_increment = 10;
+	int scroll_x, scroll_y;
+	gnome_canvas_get_scroll_offsets(GNOME_CANVAS(_gcanvas), &scroll_x, &scroll_y);
+
+	switch (event->type) {
+	case GDK_KEY_PRESS:
+		switch (event->key.keyval) {
+		case GDK_Up:
+			scroll_y -= scroll_increment;
+			break;
+		case GDK_Down:
+			scroll_y += scroll_increment;
+			break;
+		case GDK_Left:
+			scroll_x -= scroll_increment;
+			break;
+		case GDK_Right:
+			scroll_x += scroll_increment;
+			break;
+		case GDK_Return:
+			if (_selected_ports.size() > 1) {
+				join_selection();
+				clear_selection();
+			}
+			return true;
+		default:
+			return false;
+		}
+		gnome_canvas_scroll_to(GNOME_CANVAS(_gcanvas), scroll_x, scroll_y);
+		return true;
+
+	case GDK_SCROLL:
+		if ((event->scroll.state & GDK_CONTROL_MASK)) {
+			const double font_size = ganv_canvas_get_font_size(_gcanvas);
+			if (event->scroll.direction == GDK_SCROLL_UP) {
+				ganv_canvas_set_font_size(_gcanvas, font_size * 1.25);
+				return true;
+			} else if (event->scroll.direction == GDK_SCROLL_DOWN) {
+				ganv_canvas_set_font_size(_gcanvas, font_size * 0.75);
+				return true;
+			}
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return scroll_drag_handler(event)
+		|| select_drag_handler(event)
+		|| connect_drag_handler(event);
 }
 
 bool
@@ -810,10 +873,10 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 		assert(_select_rect == NULL);
 		_drag_state = SELECT;
 		if ( !(event->button.state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK)) )
-			_canvas.clear_selection();
+			clear_selection();
 		_select_rect = GANV_BOX(
 			gnome_canvas_item_new(
-				_canvas.root(),
+				root(),
 				ganv_box_get_type(),
 				"x1", event->button.x,
 				"y1", event->button.y,
@@ -911,7 +974,7 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 				                      NULL));
 
 			drag_edge = ganv_edge_new(
-				_canvas.gobj(),
+				_gcanvas,
 				GANV_NODE(_connect_port),
 				drag_node,
 				"color", GANV_NODE(_connect_port)->fill_color,
@@ -960,12 +1023,12 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 				} else {
 					// Connect to selected ports
 					selection_joined_with(_connect_port);
-					_canvas.unselect_ports();
+					unselect_ports();
 					_connect_port = NULL;
 				}
 			} else {  // drag ended on different port
 				ports_joined(_connect_port, GANV_PORT(joinee));
-				_canvas.unselect_ports();
+				unselect_ports();
 				_connect_port = NULL;
 			}
 		}
@@ -976,7 +1039,7 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 			g_object_set(G_OBJECT(_connect_port), "highlighted", FALSE, NULL);
 		}
 
-		_canvas.unselect_ports();
+		unselect_ports();
 		_drag_state   = NOT_DRAGGING;
 		_connect_port = NULL;
 
@@ -1005,7 +1068,8 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 	case GDK_BUTTON_PRESS:
 		if (event->button.button == 1) {
 			GanvModule* const module = ganv_port_get_module(port);
-			if (module && _canvas.get_locked() && port->is_input) {
+			if (module && _gcanvas->locked && port->is_input) {
+				std::cerr << "FIXME: port control drag" << std::endl;
 #if 0
 				if (port->is_toggled()) {
 					port->toggle();
@@ -1067,12 +1131,12 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 		if (port_dragging) {
 			if (_connect_port) { // dragging
 				ports_joined(port, _connect_port);
-				_canvas.unselect_ports();
+				unselect_ports();
 			} else {
 				bool modded = event->button.state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK);
 				if (!modded && _last_selected_port && _last_selected_port->is_input != port->is_input) {
 					selection_joined_with(port);
-					_canvas.unselect_ports();
+					unselect_ports();
 				} else {
 					select_port_toggle(port, event->button.state);
 				}
@@ -1144,10 +1208,13 @@ GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 		return;
 	}
 
-	if (are_connected(GANV_NODE(src_node), GANV_NODE(dst_node)))
-		_canvas.disconnect(Glib::wrap(src_node), Glib::wrap(dst_node));
-	else
-		_canvas.connect(Glib::wrap(src_node), Glib::wrap(dst_node));
+	if (!are_connected(src_node, dst_node)) {
+		g_signal_emit(_gcanvas, signal_connect, 0,
+		              src_node, dst_node, NULL);
+	} else {
+		g_signal_emit(_gcanvas, signal_disconnect, 0,
+		              src_node, dst_node, NULL);
+	}
 }
 
 /** Update animated "rubber band" selection effect. */
@@ -1215,16 +1282,75 @@ GanvCanvasImpl::for_each_edge_on(const GanvNode*  node,
 	for_each_edge_to(node, f);
 }
 
+void
+GanvCanvasImpl::unselect_ports()
+{
+	for (GanvCanvasImpl::SelectedPorts::iterator i = _selected_ports.begin();
+	     i != _selected_ports.end(); ++i)
+		g_object_set(G_OBJECT(*i), "selected", FALSE, NULL);
+
+	_selected_ports.clear();
+	_last_selected_port = NULL;
+}
+
+void
+GanvCanvasImpl::clear_selection()
+{
+	unselect_ports();
+
+	FOREACH_ITEM(_selected_items, i) {
+		gnome_canvas_item_set(GNOME_CANVAS_ITEM(*i), "selected", FALSE, NULL);
+	}
+
+	FOREACH_SELECTED_EDGE(_selected_edges, c) {
+		gnome_canvas_item_set(GNOME_CANVAS_ITEM(*c), "selected", FALSE, NULL);
+	}
+
+	_selected_items.clear();
+	_selected_edges.clear();
+}
+
+void
+GanvCanvasImpl::resize(double width, double height)
+{
+	if (width != _gcanvas->width || height != _gcanvas->height) {
+		gnome_canvas_item_set(
+			GNOME_CANVAS_ITEM(_base_rect),
+			"x2", width,
+			"y2", height,
+			NULL);
+		_gcanvas->width  = width;
+		_gcanvas->height = height;
+		gnome_canvas_set_scroll_region(GNOME_CANVAS(_gcanvas),
+		                               0.0, 0.0, width, height);
+	}
+}
+
 namespace Ganv {
 
-Canvas::Canvas(double width, double height)
-	: _gobj(GANV_CANVAS(ganv_canvas_new()))
+static void
+on_connect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
 {
-	_gobj->impl = new GanvCanvasImpl(*this, _gobj, width, height);
+	Canvas* canvasmm = (Canvas*)data;
+	canvasmm->signal_connect.emit(Glib::wrap(tail), Glib::wrap(head));
+}
 
-	impl()->_font_size = get_default_font_size();
+static void
+on_disconnect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
+{
+	Canvas* canvasmm = (Canvas*)data;
+	canvasmm->signal_disconnect.emit(Glib::wrap(tail), Glib::wrap(head));
+}
 
+Canvas::Canvas(double width, double height)
+	: _gobj(GANV_CANVAS(ganv_canvas_new(width, height)))
+{
 	g_object_set_qdata(G_OBJECT(impl()->_gcanvas), wrapper_key(), this);
+
+	g_signal_connect(gobj(), "connect",
+	                 G_CALLBACK(on_connect), this);
+	g_signal_connect(gobj(), "disconnect",
+	                 G_CALLBACK(on_disconnect), this);
 
 	Glib::signal_timeout().connect(
 		sigc::mem_fun(impl(), &GanvCanvasImpl::animate_selected), 120);
@@ -1317,18 +1443,7 @@ Canvas::zoom_full()
 void
 Canvas::clear_selection()
 {
-	unselect_ports();
-
-	FOREACH_ITEM(impl()->_selected_items, i) {
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(*i), "selected", FALSE, NULL);
-	}
-
-	FOREACH_SELECTED_EDGE(impl()->_selected_edges, c) {
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(*c), "selected", FALSE, NULL);
-	}
-
-	impl()->_selected_items.clear();
-	impl()->_selected_edges.clear();
+	impl()->clear_selection();
 }
 
 void
@@ -1347,18 +1462,6 @@ double
 Canvas::get_zoom()
 {
 	return impl()->_zoom;
-}
-
-double
-Canvas::width() const
-{
-	return impl()->_width;
-}
-
-double
-Canvas::height() const
-{
-	return impl()->_height;
 }
 
 void
@@ -1425,20 +1528,15 @@ Canvas::destroy()
 void
 Canvas::unselect_ports()
 {
-	for (GanvCanvasImpl::SelectedPorts::iterator i = impl()->_selected_ports.begin();
-	     i != impl()->_selected_ports.end(); ++i)
-		g_object_set(G_OBJECT(*i), "selected", FALSE, NULL);
-
-	impl()->_selected_ports.clear();
-	impl()->_last_selected_port = NULL;
+	impl()->unselect_ports();
 }
 
 void
 Canvas::set_default_placement(Node* i)
 {
 	// Simple cascade.  This will get more clever in the future.
-	double x = ((impl()->_width / 2.0) + (impl()->_items.size() * 25));
-	double y = ((impl()->_height / 2.0) + (impl()->_items.size() * 25));
+	double x = ((get_width() / 2.0) + (impl()->_items.size() * 25));
+	double y = ((get_height() / 2.0) + (impl()->_items.size() * 25));
 
 	i->move_to(x, y);
 }
@@ -1470,61 +1568,6 @@ Canvas::get_edge(Node* tail, Node* head) const
 	}
 
 	return NULL;
-}
-
-bool
-Canvas::on_event(GdkEvent* event)
-{
-	static const int scroll_increment = 10;
-	int scroll_x, scroll_y;
-	gnome_canvas_get_scroll_offsets(GNOME_CANVAS(impl()->_gcanvas), &scroll_x, &scroll_y);
-
-	switch (event->type) {
-	case GDK_KEY_PRESS:
-		switch (event->key.keyval) {
-		case GDK_Up:
-			scroll_y -= scroll_increment;
-			break;
-		case GDK_Down:
-			scroll_y += scroll_increment;
-			break;
-		case GDK_Left:
-			scroll_x -= scroll_increment;
-			break;
-		case GDK_Right:
-			scroll_x += scroll_increment;
-			break;
-		case GDK_Return:
-			if (impl()->_selected_ports.size() > 1) {
-				impl()->join_selection();
-				clear_selection();
-			}
-			return true;
-		default:
-			return false;
-		}
-		gnome_canvas_scroll_to(GNOME_CANVAS(impl()->_gcanvas), scroll_x, scroll_y);
-		return true;
-
-	case GDK_SCROLL:
-		if ((event->scroll.state & GDK_CONTROL_MASK)) {
-			if (event->scroll.direction == GDK_SCROLL_UP) {
-				set_font_size(get_font_size() * 1.25);
-				return true;
-			} else if (event->scroll.direction == GDK_SCROLL_DOWN) {
-				set_font_size(get_font_size() * 0.75);
-				return true;
-			}
-		}
-		break;
-
-	default:
-		break;
-	}
-
-	return impl()->scroll_drag_handler(event)
-		|| impl()->select_drag_handler(event)
-		|| impl()->connect_drag_handler(event);
 }
 
 void
@@ -1584,12 +1627,13 @@ Canvas::arrange(bool use_length_hints)
 	//cerr << "CWH: " << _width << ", " << _height << endl;
 	//cerr << "GWH: " << graph_width << ", " << graph_height << endl;
 
-	if (graph_width + 10 > impl()->_width)
-		resize(graph_width + 10, impl()->_height);
-
-	if (graph_height + 10 > impl()->_height)
-		resize(impl()->_width, graph_height + 10);
-
+	const double old_width  = get_width();
+	const double old_height = get_height();
+	const double new_width  = std::max(graph_width + 10.0, old_width);
+	const double new_height = std::max(graph_height + 10.0, old_height);
+	if (new_width != old_width || new_height != old_height) {
+		resize(new_width, new_height);
+	}
 	nodes.cleanup();
 
 	static const double border_width = impl()->_font_size;
@@ -1619,16 +1663,7 @@ Canvas::move_contents_to(double x, double y)
 void
 Canvas::resize(double width, double height)
 {
-	if (width != impl()->_width || height != impl()->_height) {
-		gnome_canvas_item_set(
-			GNOME_CANVAS_ITEM(impl()->_base_rect),
-			"x2", width,
-			"y2", height,
-			NULL);
-		impl()->_width = width;
-		impl()->_height = height;
-		gnome_canvas_set_scroll_region(GNOME_CANVAS(impl()->_gcanvas), 0.0, 0.0, width, height);
-	}
+	impl()->resize(width, height);
 }
 
 void
@@ -1730,6 +1765,8 @@ static GnomeCanvasClass* parent_class;
 
 enum {
 	PROP_0,
+	PROP_WIDTH,
+	PROP_HEIGHT,
 	PROP_LOCKED
 };
 
@@ -1737,6 +1774,8 @@ static void
 ganv_canvas_init(GanvCanvas* canvas)
 {
 	canvas->direction = GANV_HORIZONTAL;
+	canvas->impl = new GanvCanvasImpl(canvas);
+	canvas->impl->_font_size = ganv_canvas_get_default_font_size(canvas);
 }
 
 static void
@@ -1751,6 +1790,12 @@ ganv_canvas_set_property(GObject*      object,
 	GanvCanvas* canvas = GANV_CANVAS(object);
 
 	switch (prop_id) {
+	case PROP_WIDTH:
+		ganv_canvas_resize(canvas, g_value_get_double(value), canvas->height);
+		break;
+	case PROP_HEIGHT:
+		ganv_canvas_resize(canvas, canvas->width, g_value_get_double(value));
+		break;
 	case PROP_LOCKED: {
 		const gboolean tmp = g_value_get_boolean(value);
 		if (canvas->locked != tmp) {
@@ -1781,6 +1826,8 @@ ganv_canvas_get_property(GObject*    object,
 	GanvCanvas* canvas = GANV_CANVAS(object);
 
 	switch (prop_id) {
+		GET_CASE(WIDTH, double, canvas->width)
+		GET_CASE(HEIGHT, double, canvas->height)
 		GET_CASE(LOCKED, boolean, canvas->locked);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -1799,18 +1846,68 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	gobject_class->get_property = ganv_canvas_get_property;
 
 	g_object_class_install_property(
+		gobject_class, PROP_WIDTH, g_param_spec_double(
+			"width",
+			_("width"),
+			_("width of the canvas"),
+			0.0, G_MAXDOUBLE,
+			800.0,
+			(GParamFlags)G_PARAM_READWRITE));
+
+	g_object_class_install_property(
+		gobject_class, PROP_HEIGHT, g_param_spec_double(
+			"height",
+			_("height"),
+			_("height of the canvas"),
+			0.0, G_MAXDOUBLE,
+			600.0,
+			(GParamFlags)G_PARAM_READWRITE));
+
+	g_object_class_install_property(
 		gobject_class, PROP_LOCKED, g_param_spec_boolean(
 			"locked",
 			_("locked"),
 			_("whether canvas items are movable"),
 			FALSE,
 			(GParamFlags)G_PARAM_READWRITE));
+
+	signal_connect = g_signal_new("connect",
+	                              ganv_canvas_get_type(),
+	                              G_SIGNAL_RUN_FIRST,
+	                              0, NULL, NULL, NULL,
+	                              G_TYPE_NONE,
+	                              2,
+	                              ganv_node_get_type(),
+	                              ganv_node_get_type(),
+	                              0);
+
+	signal_disconnect = g_signal_new("disconnect",
+	                                 ganv_canvas_get_type(),
+	                                 G_SIGNAL_RUN_FIRST,
+	                                 0, NULL, NULL, NULL,
+	                                 G_TYPE_NONE,
+	                                 2,
+	                                 ganv_node_get_type(),
+	                                 ganv_node_get_type(),
+	                                 0);
 }
 
 GanvCanvas*
-ganv_canvas_new(void)
+ganv_canvas_new(double width, double height)
 {
-	return (GanvCanvas*)g_object_new(ganv_canvas_get_type(), NULL);
+	GanvCanvas* canvas = GANV_CANVAS(g_object_new(ganv_canvas_get_type(),
+	                                              "width", width,
+	                                              "height", height,
+	                                              NULL));
+	gnome_canvas_set_scroll_region(GNOME_CANVAS(canvas),
+	                               0.0, 0.0, width, height);
+	return canvas;
+}
+
+void
+ganv_canvas_resize(GanvCanvas* canvas, double width, double height)
+{
+	canvas->impl->resize(width, height);
 }
 
 GnomeCanvasGroup*
@@ -1834,15 +1931,21 @@ ganv_canvas_get_font_size(const GanvCanvas* canvas)
 }
 
 void
+ganv_canvas_set_font_size(GanvCanvas* canvas, double points)
+{
+	g_object_set(canvas, "font-size", points, NULL);
+}
+
+void
 ganv_canvas_clear_selection(GanvCanvas* canvas)
 {
-	canvas->impl->_canvas.clear_selection();
+	canvas->impl->clear_selection();
 }
 
 void
 ganv_canvas_move_selected_items(GanvCanvas* canvas,
-                                double            dx,
-                                double            dy)
+                                double      dx,
+                                double      dy)
 {
 	return canvas->impl->move_selected_items(dx, dy);
 }
@@ -1943,7 +2046,7 @@ ganv_canvas_get_move_cursor(const GanvCanvas* canvas)
 gboolean
 ganv_canvas_port_event(GanvCanvas* canvas,
                        GanvPort*   port,
-                       GdkEvent*         event)
+                       GdkEvent*   event)
 {
 	return canvas->impl->port_event(event, port);
 }
