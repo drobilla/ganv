@@ -121,20 +121,6 @@ public:
 	/** Return the current flow direction of the canvas. */
 	FlowDirection direction() const;
 
-	/**
-	   Called whenever a edge is made.
-	   This should be overridden by an implementation to do something.
-	*/
-	virtual void connect(Node* /*tail*/,
-	                     Node* /*head*/) {}
-
-	/**
-	   Called whenever a edge is severed.
-	   This should be overridden by an implementation to do something.
-	*/
-	virtual void disconnect(Node* /*tail*/,
-	                        Node* /*head*/) {}
-
 	typedef void (*NodeFunction)(GanvNode* node, void* data);
 
 	void for_each_node(NodeFunction f, void* data);
@@ -169,6 +155,7 @@ public:
 	GanvCanvas*       gobj();
 	const GanvCanvas* gobj() const;
 
+	sigc::signal<bool, GdkEvent*>    signal_event;
 	sigc::signal<void, Node*, Node*> signal_connect;
 	sigc::signal<void, Node*, Node*> signal_disconnect;
 

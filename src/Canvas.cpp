@@ -742,10 +742,12 @@ GanvCanvasImpl::on_event(GdkEvent* event)
 {
 	static const int scroll_increment = 10;
 	int scroll_x, scroll_y;
-	gnome_canvas_get_scroll_offsets(GNOME_CANVAS(_gcanvas), &scroll_x, &scroll_y);
 
+	bool handled = false;
 	switch (event->type) {
 	case GDK_KEY_PRESS:
+		handled = true;
+		gnome_canvas_get_scroll_offsets(GNOME_CANVAS(_gcanvas), &scroll_x, &scroll_y);
 		switch (event->key.keyval) {
 		case GDK_Up:
 			scroll_y -= scroll_increment;
@@ -764,12 +766,15 @@ GanvCanvasImpl::on_event(GdkEvent* event)
 				join_selection();
 				clear_selection();
 			}
-			return true;
+			break;
 		default:
-			return false;
+			handled = false;
 		}
-		gnome_canvas_scroll_to(GNOME_CANVAS(_gcanvas), scroll_x, scroll_y);
-		return true;
+		if (handled) {
+			gnome_canvas_scroll_to(GNOME_CANVAS(_gcanvas), scroll_x, scroll_y);
+			return true;
+		}
+		break;
 
 	case GDK_SCROLL:
 		if ((event->scroll.state & GDK_CONTROL_MASK)) {
@@ -1333,6 +1338,14 @@ GanvCanvasImpl::resize(double width, double height)
 
 namespace Ganv {
 
+static gboolean
+on_event_after(GnomeCanvasItem* canvasitem,
+               GdkEvent*        ev,
+               void*            canvas)
+{
+	return ((Canvas*)canvas)->signal_event.emit(ev);
+}
+
 static void
 on_connect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
 {
@@ -1352,6 +1365,8 @@ Canvas::Canvas(double width, double height)
 {
 	g_object_set_qdata(G_OBJECT(impl()->_gcanvas), wrapper_key(), this);
 
+	g_signal_connect_after(gobj(), "event",
+	                       G_CALLBACK(on_event_after), this);
 	g_signal_connect(gobj(), "connect",
 	                 G_CALLBACK(on_connect), this);
 	g_signal_connect(gobj(), "disconnect",
