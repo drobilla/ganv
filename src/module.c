@@ -67,11 +67,14 @@ ganv_module_destroy(GtkObject* object)
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_MODULE(object));
 
-	g_ptr_array_free(GANV_MODULE(object)->ports, TRUE);
-
 	GanvModule* module = GANV_MODULE(object);
-	FOREACH_PORT(module->ports, p) {
-		gtk_object_destroy(GTK_OBJECT(*p));
+
+	if (module->ports) {
+		FOREACH_PORT(module->ports, p) {
+			gtk_object_destroy(GTK_OBJECT(*p));
+		}
+		g_ptr_array_free(module->ports, TRUE);
+		module->ports = NULL;
 	}
 
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {
@@ -284,6 +287,9 @@ resize_horiz(GanvModule* module)
 
 	double title_w, title_h;
 	title_size(module, &title_w, &title_h);
+
+	printf("MEASURED: %lf\n", m.width);
+	printf("TITLE W: %lf\n", title_w);
 
 	// Basic height contains title, icon
 	double header_height = 2.0 + title_h;
@@ -534,7 +540,7 @@ ganv_module_class_init(GanvModuleClass* class)
 	GObjectClass*         gobject_class = (GObjectClass*)class;
 	GtkObjectClass*       object_class  = (GtkObjectClass*)class;
 	GnomeCanvasItemClass* item_class    = (GnomeCanvasItemClass*)class;
-	GanvNodeClass*  node_class    = (GanvNodeClass*)class;
+	GanvNodeClass*        node_class    = (GanvNodeClass*)class;
 
 	parent_class = GANV_BOX_CLASS(g_type_class_peek_parent(class));
 
@@ -552,21 +558,23 @@ ganv_module_class_init(GanvModuleClass* class)
 
 GanvModule*
 ganv_module_new(GanvCanvas* canvas,
-                const char* first_prop_name, ...)
+                const char* first_property_name, ...)
 {
 	GanvModule* module = GANV_MODULE(
-		g_object_new(ganv_module_get_type(), NULL));
+		g_object_new(ganv_module_get_type(), "canvas", canvas, NULL));
 
-	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(module);
 	va_list args;
-	va_start(args, first_prop_name);
-	gnome_canvas_item_construct(item,
-	                            gnome_canvas_root(GNOME_CANVAS(canvas)),
-	                            first_prop_name, args);
+	va_start(args, first_property_name);
+	g_object_set_valist(G_OBJECT(module), first_property_name, args);
 	va_end(args);
 
-	ganv_canvas_add_node(canvas, GANV_NODE(module));
 	return module;
+}
+
+guint
+ganv_module_num_ports(const GanvModule* module)
+{
+	return module->ports ? module->ports->len : 0;
 }
 
 void
@@ -635,7 +643,7 @@ ganv_module_add_port(GanvModule* module,
 		GNOME_CANVAS_ITEM(module)->canvas);
 
 	place_title(module, canvas->direction);
-
+	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(module));
 }
 
 void

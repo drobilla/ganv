@@ -59,6 +59,9 @@ GanvModule*
 ganv_module_new(GanvCanvas* canvas,
                 const char* first_prop_name, ...);
 
+guint
+ganv_module_num_ports(const GanvModule* module);
+	
 void
 ganv_module_add_port(GanvModule* module,
                      GanvPort*   port);

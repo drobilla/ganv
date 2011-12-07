@@ -48,6 +48,7 @@ struct _GanvText
 	GanvTextCoords   coords;
 	GanvTextCoords   old_coords;
 	guint            color;
+	gboolean         needs_layout;
 };
 
 struct _GanvTextClass {

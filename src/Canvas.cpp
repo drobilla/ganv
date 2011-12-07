@@ -379,7 +379,7 @@ GanvCanvasImpl::remove_item(GanvNode* item)
 	// Remove children ports from selection if item is a module
 	if (GANV_IS_MODULE(item)) {
 		GanvModule* const module = GANV_MODULE(item);
-		for (unsigned i = 0; i < module->ports->len; ++i) {
+		for (unsigned i = 0; i < ganv_module_num_ports(module); ++i) {
 			unselect_port((GanvPort*)g_ptr_array_index(
 				              module->ports, i));
 		}

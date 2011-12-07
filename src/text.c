@@ -49,9 +49,10 @@ ganv_text_init(GanvText* text)
 	text->coords.height = 1.0;
 	text->old_coords = text->coords;
 
-	text->surface = NULL;
-	text->text    = NULL;
-	text->color   = 0xFFFFFFFF;
+	text->surface      = NULL;
+	text->text         = NULL;
+	text->color        = 0xFFFFFFFF;
+	text->needs_layout = FALSE;
 }
 
 static void
@@ -80,11 +81,11 @@ ganv_text_destroy(GtkObject* object)
 static void
 ganv_text_layout(GanvText* text)
 {
-	GnomeCanvasItem*  item      = GNOME_CANVAS_ITEM(text);
-	GanvCanvas* canvas    = GANV_CANVAS(item->canvas);
-	GtkWidget*        widget    = GTK_WIDGET(canvas);
-	double            font_size = ganv_canvas_get_font_size(canvas);
-	guint             color     = 0xFFFFFFFF;
+	GnomeCanvasItem* item      = GNOME_CANVAS_ITEM(text);
+	GanvCanvas*      canvas    = GANV_CANVAS(item->canvas);
+	GtkWidget*       widget    = GTK_WIDGET(canvas);
+	double           font_size = ganv_canvas_get_font_size(canvas);
+	guint            color     = 0xFFFFFFFF;
 
 	GtkStyle*             style   = gtk_rc_get_style(widget);
 	PangoFontDescription* font    = pango_font_description_copy(style->font_desc);
@@ -129,6 +130,7 @@ ganv_text_layout(GanvText* text)
 	g_object_unref(layout);
 	pango_font_description_free(font);
 	
+	text->needs_layout = FALSE;
 	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(text));
 }
 
@@ -152,7 +154,7 @@ ganv_text_set_property(GObject*      object,
 	case PROP_TEXT:
 		free(text->text);
 		text->text = g_value_dup_string(value);
-		ganv_text_layout(text);
+		text->needs_layout = TRUE;
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -171,13 +173,18 @@ ganv_text_get_property(GObject*    object,
 
 	GanvText* text = GANV_TEXT(object);
 
+	if (text->needs_layout && (prop_id == PROP_WIDTH
+	                           || prop_id == PROP_HEIGHT)) {
+		ganv_text_layout(text);
+	}
+		
 	switch (prop_id) {
-		GET_CASE(TEXT, string, text->text)
-			GET_CASE(X, double, text->coords.x);
+		GET_CASE(TEXT, string, text->text);
+		GET_CASE(X, double, text->coords.x);
 		GET_CASE(Y, double, text->coords.y);
 		GET_CASE(WIDTH, double, text->coords.width);
 		GET_CASE(HEIGHT, double, text->coords.height);
-		GET_CASE(COLOR, uint, text->color)
+		GET_CASE(COLOR, uint, text->color);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -190,6 +197,10 @@ ganv_text_bounds_item(GnomeCanvasItem* item,
                       double* x2, double* y2)
 {
 	GanvText* text = GANV_TEXT(item);
+
+	if (text->needs_layout) {
+		ganv_text_layout(text);
+	}
 
 	*x1 = MIN(text->coords.x, text->coords.x + text->coords.width);
 	*y1 = MIN(text->coords.y, text->coords.y + text->coords.height);

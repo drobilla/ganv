@@ -7,7 +7,8 @@ win.set_title("Ganv Python Test")
 win.connect("destroy", lambda obj: Gtk.main_quit())
 
 canvas = Ganv.Canvas.new(1024, 768)
-
+module = Ganv.Module(canvas=canvas,
+                     label="Test")
 win.add(canvas)
 win.show_all()
 win.present()

@@ -29,6 +29,7 @@ static GnomeCanvasGroupClass* parent_class;
 
 enum {
 	PROP_0,
+	PROP_CANVAS,
 	PROP_PARTNER,
 	PROP_LABEL,
 	PROP_DASH_LENGTH,
@@ -93,6 +94,7 @@ ganv_node_destroy(GtkObject* object)
 	ganv_node_disconnect(node);
 	if (item->canvas) {
 		ganv_canvas_remove_node(GANV_CANVAS(item->canvas), node);
+		item->canvas = NULL;
 	}
 
 	node->partner = NULL;
@@ -111,7 +113,8 @@ ganv_node_set_property(GObject*      object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_NODE(object));
 
-	GanvNode* node = GANV_NODE(object);
+	GanvNode*        node = GANV_NODE(object);
+	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(object);
 
 	switch (prop_id) {
 		SET_CASE(PARTNER, object, node->partner);
@@ -120,13 +123,23 @@ ganv_node_set_property(GObject*      object,
 		SET_CASE(BORDER_WIDTH, double, node->border_width);
 		SET_CASE(FILL_COLOR, uint, node->fill_color);
 		SET_CASE(BORDER_COLOR, uint, node->border_color);
-		SET_CASE(CAN_TAIL, boolean, node->can_tail)
-			SET_CASE(CAN_HEAD, boolean, node->can_head)
-			SET_CASE(SELECTED, boolean, node->selected)
-			SET_CASE(HIGHLIGHTED, boolean, node->highlighted)
-			SET_CASE(DRAGGABLE, boolean, node->draggable)
+		SET_CASE(CAN_TAIL, boolean, node->can_tail);
+		SET_CASE(CAN_HEAD, boolean, node->can_head);
+		SET_CASE(SELECTED, boolean, node->selected);
+		SET_CASE(HIGHLIGHTED, boolean, node->highlighted);
+		SET_CASE(DRAGGABLE, boolean, node->draggable);
+	case PROP_CANVAS:
+		if (!item->parent) {
+			GnomeCanvas* canvas = GNOME_CANVAS(g_value_get_object(value));
+			g_object_set(object, "parent", gnome_canvas_root(canvas), NULL);
+			ganv_canvas_add_node(GANV_CANVAS(canvas), node);
+		} else {
+			g_warning("Cannot change `canvas' property after construction");
+		}
+		break;
 	case PROP_LABEL:
 		ganv_node_set_label(node, g_value_get_string(value));
+		gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(object));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -143,7 +156,8 @@ ganv_node_get_property(GObject*    object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_NODE(object));
 
-	GanvNode* node = GANV_NODE(object);
+	GanvNode*        node = GANV_NODE(object);
+	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(object);
 
 	typedef char* gstring;
 
@@ -155,11 +169,14 @@ ganv_node_get_property(GObject*    object,
 		GET_CASE(BORDER_WIDTH, double, node->border_width);
 		GET_CASE(FILL_COLOR, uint, node->fill_color);
 		GET_CASE(BORDER_COLOR, uint, node->border_color);
-		GET_CASE(CAN_TAIL, boolean, node->can_tail)
-			GET_CASE(CAN_HEAD, boolean, node->can_head)
-			GET_CASE(SELECTED, boolean, node->selected)
-			GET_CASE(HIGHLIGHTED, boolean, node->highlighted)
-			GET_CASE(DRAGGABLE, boolean, node->draggable)
+		GET_CASE(CAN_TAIL, boolean, node->can_tail);
+		GET_CASE(CAN_HEAD, boolean, node->can_head);
+		GET_CASE(SELECTED, boolean, node->selected);
+		GET_CASE(HIGHLIGHTED, boolean, node->highlighted);
+		GET_CASE(DRAGGABLE, boolean, node->draggable);
+	case PROP_CANVAS:
+		g_value_set_object(value, item->canvas);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -423,6 +440,14 @@ ganv_node_class_init(GanvNodeClass* class)
 
 	gobject_class->set_property = ganv_node_set_property;
 	gobject_class->get_property = ganv_node_get_property;
+
+	g_object_class_install_property(
+		gobject_class, PROP_CANVAS, g_param_spec_object(
+			"canvas",
+			_("canvas"),
+			_("the canvas this node is on."),
+			GANV_TYPE_CANVAS,
+			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_PARTNER, g_param_spec_object(

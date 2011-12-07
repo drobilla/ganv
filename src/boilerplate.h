@@ -26,7 +26,10 @@ typedef gpointer gobject;
 		const g##type tmp = g_value_get_##type(value); \
 		if (field != tmp) { \
 			field = tmp; \
-			gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(object)); \
+			GnomeCanvasItem* item = GNOME_CANVAS_ITEM(object); \
+			if (item->canvas) { \
+				gnome_canvas_item_request_update(item); \
+			} \
 		} \
 		break; \
 	}
