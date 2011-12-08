@@ -55,7 +55,9 @@ on_event(GanvNode* node, GdkEvent* event)
 static void
 ganv_node_init(GanvNode* node)
 {
-	GanvNodeImpl* impl = GANV_NODE_GET_PRIVATE(node);
+	GanvNodeImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		node, GANV_TYPE_NODE, GanvNodeImpl);
+
 	node->impl = impl;
 
 	impl->partner      = NULL;

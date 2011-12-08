@@ -29,7 +29,6 @@ G_BEGIN_DECLS
 #define GANV_IS_NODE(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_NODE))
 #define GANV_IS_NODE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_NODE))
 #define GANV_NODE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_NODE, GanvNodeClass))
-#define GANV_NODE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GANV_TYPE_NODE, GanvNodeImpl))
 
 typedef struct _GanvNodeClass GanvNodeClass;
 typedef struct _GanvNodeImpl GanvNodeImpl;

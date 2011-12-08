@@ -47,7 +47,9 @@ enum {
 static void
 ganv_module_init(GanvModule* module)
 {
-	GanvModuleImpl* impl = GANV_MODULE_GET_PRIVATE(module);
+	GanvModuleImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		module, GANV_TYPE_MODULE, GanvModuleImpl);
+
 	module->impl = impl;
 
 	GANV_NODE(module)->impl->can_head = FALSE;

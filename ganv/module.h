@@ -23,13 +23,12 @@
 
 G_BEGIN_DECLS
 
-#define GANV_TYPE_MODULE             (ganv_module_get_type())
-#define GANV_MODULE(obj)             (GTK_CHECK_CAST((obj), GANV_TYPE_MODULE, GanvModule))
-#define GANV_MODULE_CLASS(klass)     (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_MODULE, GanvModuleClass))
-#define GANV_IS_MODULE(obj)          (GTK_CHECK_TYPE((obj), GANV_TYPE_MODULE))
-#define GANV_IS_MODULE_CLASS(klass)  (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_MODULE))
-#define GANV_MODULE_GET_CLASS(obj)   (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_MODULE, GanvModuleClass))
-#define GANV_MODULE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GANV_TYPE_MODULE, GanvModuleImpl))
+#define GANV_TYPE_MODULE            (ganv_module_get_type())
+#define GANV_MODULE(obj)            (GTK_CHECK_CAST((obj), GANV_TYPE_MODULE, GanvModule))
+#define GANV_MODULE_CLASS(klass)    (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_MODULE, GanvModuleClass))
+#define GANV_IS_MODULE(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_MODULE))
+#define GANV_IS_MODULE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_MODULE))
+#define GANV_MODULE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_MODULE, GanvModuleClass))
 
 typedef struct _GanvModuleClass GanvModuleClass;
 typedef struct _GanvModuleImpl GanvModuleImpl;

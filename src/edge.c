@@ -59,7 +59,9 @@ static GnomeCanvasItemClass* parent_class;
 static void
 ganv_edge_init(GanvEdge* edge)
 {
-	GanvEdgeImpl* impl = GANV_EDGE_GET_PRIVATE(edge);
+	GanvEdgeImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		edge, GANV_TYPE_EDGE, GanvEdgeImpl);
+
 	edge->impl = impl;
 
 	impl->tail = NULL;

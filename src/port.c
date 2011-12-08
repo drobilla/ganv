@@ -38,7 +38,9 @@ enum {
 static void
 ganv_port_init(GanvPort* port)
 {
-	port->impl           = GANV_PORT_GET_PRIVATE(port);
+	port->impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		port, GANV_TYPE_PORT, GanvPortImpl);
+
 	port->impl->is_input = TRUE;
 }
 

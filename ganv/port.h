@@ -22,13 +22,12 @@ struct _GanvModule;
 
 G_BEGIN_DECLS
 
-#define GANV_TYPE_PORT             (ganv_port_get_type())
-#define GANV_PORT(obj)             (GTK_CHECK_CAST((obj), GANV_TYPE_PORT, GanvPort))
-#define GANV_PORT_CLASS(klass)     (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_PORT, GanvPortClass))
-#define GANV_IS_PORT(obj)          (GTK_CHECK_TYPE((obj), GANV_TYPE_PORT))
-#define GANV_IS_PORT_CLASS(klass)  (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_PORT))
-#define GANV_PORT_GET_CLASS(obj)   (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_PORT, GanvPortClass))
-#define GANV_PORT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GANV_TYPE_PORT, GanvPortImpl))
+#define GANV_TYPE_PORT            (ganv_port_get_type())
+#define GANV_PORT(obj)            (GTK_CHECK_CAST((obj), GANV_TYPE_PORT, GanvPort))
+#define GANV_PORT_CLASS(klass)    (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_PORT, GanvPortClass))
+#define GANV_IS_PORT(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_PORT))
+#define GANV_IS_PORT_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_PORT))
+#define GANV_PORT_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_PORT, GanvPortClass))
 
 typedef struct _GanvPortClass GanvPortClass;
 typedef struct _GanvPortImpl  GanvPortImpl;

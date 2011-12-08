@@ -20,13 +20,12 @@
 
 G_BEGIN_DECLS
 
-#define GANV_TYPE_BOX             (ganv_box_get_type())
-#define GANV_BOX(obj)             (GTK_CHECK_CAST((obj), GANV_TYPE_BOX, GanvBox))
-#define GANV_BOX_CLASS(klass)     (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_BOX, GanvBoxClass))
-#define GANV_IS_BOX(obj)          (GTK_CHECK_TYPE((obj), GANV_TYPE_BOX))
-#define GANV_IS_BOX_CLASS(klass)  (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_BOX))
-#define GANV_BOX_GET_CLASS(obj)   (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_BOX, GanvBoxClass))
-#define GANV_BOX_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GANV_TYPE_BOX, GanvBoxImpl))
+#define GANV_TYPE_BOX            (ganv_box_get_type())
+#define GANV_BOX(obj)            (GTK_CHECK_CAST((obj), GANV_TYPE_BOX, GanvBox))
+#define GANV_BOX_CLASS(klass)    (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_BOX, GanvBoxClass))
+#define GANV_IS_BOX(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_BOX))
+#define GANV_IS_BOX_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_BOX))
+#define GANV_BOX_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_BOX, GanvBoxClass))
 
 typedef struct _GanvBoxClass GanvBoxClass;
 typedef struct _GanvBoxImpl  GanvBoxImpl;

@@ -45,7 +45,9 @@ enum {
 static void
 ganv_text_init(GanvText* text)
 {
-	GanvTextImpl* impl = GANV_TEXT_GET_PRIVATE(text);
+	GanvTextImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		text, GANV_TYPE_TEXT, GanvTextImpl);
+
 	text->impl = impl;
 
 	memset(&impl->coords, '\0', sizeof(GanvTextCoords));

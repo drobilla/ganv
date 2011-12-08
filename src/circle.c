@@ -35,7 +35,8 @@ enum {
 static void
 ganv_circle_init(GanvCircle* circle)
 {
-	circle->impl = GANV_CIRCLE_GET_PRIVATE(circle);
+	circle->impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		circle, GANV_TYPE_CIRCLE, GanvCircleImpl);
 
 	memset(&circle->impl->coords, '\0', sizeof(GanvCircleCoords));
 	circle->impl->coords.radius = 8.0;

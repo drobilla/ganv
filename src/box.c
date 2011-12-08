@@ -47,7 +47,8 @@ enum {
 static void
 ganv_box_init(GanvBox* box)
 {
-	box->impl = GANV_BOX_GET_PRIVATE(box);
+	box->impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		box, GANV_TYPE_BOX, GanvBoxImpl);
 
 	memset(&box->impl->coords, '\0', sizeof(GanvBoxCoords));
 	box->impl->coords.border_width = box->node.impl->border_width;
