@@ -53,9 +53,9 @@ ganv_circle_destroy(GtkObject* object)
 
 static void
 ganv_circle_set_property(GObject*      object,
-                                guint         prop_id,
-                                const GValue* value,
-                                GParamSpec*   pspec)
+                         guint         prop_id,
+                         const GValue* value,
+                         GParamSpec*   pspec)
 {
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_CIRCLE(object));
@@ -72,9 +72,9 @@ ganv_circle_set_property(GObject*      object,
 
 static void
 ganv_circle_get_property(GObject*    object,
-                                guint       prop_id,
-                                GValue*     value,
-                                GParamSpec* pspec)
+                         guint       prop_id,
+                         GValue*     value,
+                         GParamSpec* pspec)
 {
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_CIRCLE(object));
@@ -91,10 +91,10 @@ ganv_circle_get_property(GObject*    object,
 
 static gboolean
 ganv_circle_is_within(const GanvNode* self,
-                             double                x1,
-                             double                y1,
-                             double                x2,
-                             double                y2)
+                      double                x1,
+                      double                y1,
+                      double                x2,
+                      double                y2)
 {
 	double x, y;
 	g_object_get(G_OBJECT(self), "x", &x, "y", &y, NULL);
@@ -107,11 +107,11 @@ ganv_circle_is_within(const GanvNode* self,
 
 static void
 ganv_circle_tail_vector(const GanvNode* self,
-                               const GanvNode* head,
-                               double*               x,
-                               double*               y,
-                               double*               dx,
-                               double*               dy)
+                        const GanvNode* head,
+                        double*         x,
+                        double*         y,
+                        double*         dx,
+                        double*         dy)
 {
 	g_object_get(G_OBJECT(self), "x", x, "y", y, NULL);
 	gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(self)->parent, x, y);
@@ -121,11 +121,11 @@ ganv_circle_tail_vector(const GanvNode* self,
 
 static void
 ganv_circle_head_vector(const GanvNode* self,
-                               const GanvNode* tail,
-                               double*               x,
-                               double*               y,
-                               double*               dx,
-                               double*               dy)
+                        const GanvNode* tail,
+                        double*         x,
+                        double*         y,
+                        double*         dx,
+                        double*         dy)
 {
 	GanvCircle* circle = GANV_CIRCLE(self);
 
@@ -157,9 +157,9 @@ ganv_circle_head_vector(const GanvNode* self,
 }
 
 static void
-request_redraw(GnomeCanvasItem*              item,
+request_redraw(GnomeCanvasItem*        item,
                const GanvCircleCoords* coords,
-               gboolean                      world)
+               gboolean                world)
 {
 	const double w  = coords->width;
 
@@ -186,8 +186,8 @@ coords_i2w(GnomeCanvasItem* item, GanvCircleCoords* coords)
 
 static void
 ganv_circle_bounds_item(GnomeCanvasItem* item,
-                               double* x1, double* y1,
-                               double* x2, double* y2)
+                        double* x1, double* y1,
+                        double* x2, double* y2)
 {
 	const GanvCircle*       circle = GANV_CIRCLE(item);
 	const GanvCircleCoords* coords = &circle->coords;
@@ -199,8 +199,8 @@ ganv_circle_bounds_item(GnomeCanvasItem* item,
 
 static void
 ganv_circle_bounds(GnomeCanvasItem* item,
-                          double* x1, double* y1,
-                          double* x2, double* y2)
+                   double* x1, double* y1,
+                   double* x2, double* y2)
 {
 	ganv_circle_bounds_item(item, x1, y1, x2, y2);
 	gnome_canvas_item_i2w(item, x1, y1);
@@ -209,9 +209,9 @@ ganv_circle_bounds(GnomeCanvasItem* item,
 
 static void
 ganv_circle_update(GnomeCanvasItem* item,
-                          double*          affine,
-                          ArtSVP*          clip_path,
-                          int              flags)
+                   double*          affine,
+                   ArtSVP*          clip_path,
+                   int              flags)
 {
 	GanvCircle* circle = GANV_CIRCLE(item);
 
@@ -242,16 +242,16 @@ ganv_circle_update(GnomeCanvasItem* item,
 
 static void
 ganv_circle_render(GnomeCanvasItem* item,
-                          GnomeCanvasBuf*  buf)
+                   GnomeCanvasBuf*  buf)
 {
 	// Not implemented
 }
 
 static void
 ganv_circle_draw(GnomeCanvasItem* item,
-                        GdkDrawable* drawable,
-                        int x, int y,
-                        int width, int height)
+                 GdkDrawable* drawable,
+                 int x, int y,
+                 int width, int height)
 {
 	GanvCircle* me = GANV_CIRCLE(item);
 	cairo_t*          cr = gdk_cairo_create(drawable);
@@ -291,9 +291,9 @@ ganv_circle_draw(GnomeCanvasItem* item,
 
 static double
 ganv_circle_point(GnomeCanvasItem* item,
-                         double x, double y,
-                         int cx, int cy,
-                         GnomeCanvasItem** actual_item)
+                  double x, double y,
+                  int cx, int cy,
+                  GnomeCanvasItem** actual_item)
 {
 	const GanvCircle*       circle = GANV_CIRCLE(item);
 	const GanvCircleCoords* coords = &circle->coords;

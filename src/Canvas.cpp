@@ -310,7 +310,6 @@ void
 GanvCanvasImpl::selection_move_finished()
 {
 	FOREACH_ITEM(_selected_items, i) {
-		std::cerr << "FIXME: selection move finished" << std::endl;
 		double x, y;
 		g_object_get(*i, "x", &x, "y", &y, NULL);
 		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
@@ -1644,7 +1643,6 @@ Canvas::arrange(bool use_length_hints)
 	gnome_canvas_scroll_to(GNOME_CANVAS(impl()->_gcanvas), 0, 0);
 
 	FOREACH_ITEM(impl()->_items, i) {
-		std::cerr << "FIXME: arrange moved" << std::endl;
 		double x, y;
 		g_object_get(*i, "x", &x, "y", &y, NULL);
 		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
