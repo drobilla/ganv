@@ -45,6 +45,7 @@
 #include "ganv/node.h"
 
 #include "./color.h"
+#include "./ganv-private.h"
 
 #ifdef HAVE_AGRAPH
 #    include <gvc.h>
@@ -310,7 +311,9 @@ GanvCanvasImpl::selection_move_finished()
 {
 	FOREACH_ITEM(_selected_items, i) {
 		std::cerr << "FIXME: selection move finished" << std::endl;
-		//Glib::wrap(*i)->signal_moved.emit();
+		double x, y;
+		g_object_get(*i, "x", &x, "y", &y, NULL);
+		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
 	}
 }
 
@@ -1106,9 +1109,6 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			} else if (!port->is_input) {
 				port_dragging = true;
 			}
-		} else {
-			// FIXME
-			//return Glib::wrap(port)->on_click(&event->button);
 		}
 		break;
 
@@ -1645,7 +1645,9 @@ Canvas::arrange(bool use_length_hints)
 
 	FOREACH_ITEM(impl()->_items, i) {
 		std::cerr << "FIXME: arrange moved" << std::endl;
-		Glib::wrap((*i))->signal_moved.emit();
+		double x, y;
+		g_object_get(*i, "x", &x, "y", &y, NULL);
+		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
 	}
 #endif
 }

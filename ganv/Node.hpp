@@ -36,7 +36,9 @@ class Node : public Item {
 public:
 	Node(Canvas* canvas, GanvNode* gobj)
 		: Item(GNOME_CANVAS_ITEM(g_object_ref(gobj)))
-	{}
+	{
+		g_signal_connect(gobj, "moved", G_CALLBACK(on_moved), this);
+	}
 
 	~Node() {
 		g_object_unref(_gobj);
@@ -71,7 +73,11 @@ public:
 
 	METHOD0(ganv_node, disconnect);
 
-	sigc::signal<void> signal_moved;
+	sigc::signal<void, double, double> signal_moved;
+
+	static void on_moved(GanvNode* node, double x, double y) {
+		Glib::wrap(node)->signal_moved.emit(x, y);
+	}
 };
 
 } // namespace Ganv

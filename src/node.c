@@ -23,6 +23,8 @@
 #include "./ganv-private.h"
 #include "./gettext.h"
 
+guint signal_moved;
+
 G_DEFINE_TYPE(GanvNode, ganv_node, GNOME_TYPE_CANVAS_GROUP)
 
 static GnomeCanvasGroupClass* parent_class;
@@ -373,9 +375,13 @@ ganv_node_default_on_event(GanvNode* node,
 			gnome_canvas_item_ungrab(GNOME_CANVAS_ITEM(node), event->button.time);
 			dragging = FALSE;
 			if (event->button.x != drag_start_x || event->button.y != drag_start_y) {
-				// Dragged
-				// FIXME: emit moved signal
-				ganv_canvas_selection_move_finished(canvas);
+				if (selected) {
+					ganv_canvas_selection_move_finished(canvas);
+				} else {
+					double x, y;
+					g_object_get(node, "x", &x, "y", &y, NULL);
+					g_signal_emit(node, signal_moved, 0, x, y, NULL);
+				}
 			} else {
 				// Clicked
 				if (selected) {
@@ -554,6 +560,16 @@ to its partner."),
 			_("whether this object is draggable"),
 			0,
 			G_PARAM_READWRITE));
+
+	signal_moved = g_signal_new("moved",
+	                            ganv_node_get_type(),
+	                            G_SIGNAL_RUN_FIRST,
+	                            0, NULL, NULL, NULL,
+	                            G_TYPE_NONE,
+	                            2,
+	                            G_TYPE_DOUBLE,
+	                            G_TYPE_DOUBLE,
+	                            0);
 
 	object_class->destroy = ganv_node_destroy;
 

@@ -16,6 +16,12 @@
 #ifndef GANV_PRIVATE_H
 #define GANV_PRIVATE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+	
+extern guint signal_moved;
+
 void
 ganv_canvas_add_node(GanvCanvas* canvas,
                      GanvNode*   node);
@@ -63,5 +69,9 @@ gboolean
 ganv_canvas_port_event(GanvCanvas* canvas,
                        GanvPort*   port,
                        GdkEvent*   event);
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif
 
 #endif  /* GANV_PRIVATE_H */
