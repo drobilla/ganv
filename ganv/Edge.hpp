@@ -73,7 +73,7 @@ public:
 	                           double x2, double y2) const {
 		return ganv_edge_is_within(gobj(), x1, y1, x2, y2);
 	}
-	
+
 	RW_PROPERTY(gboolean, curved)
 	RW_PROPERTY(gboolean, selected)
 	RW_PROPERTY(gboolean, highlighted)

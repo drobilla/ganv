@@ -46,5 +46,5 @@ Port::get_module() const
 {
 	return Glib::wrap(ganv_port_get_module(gobj()));
 }
-	
+
 } // namespace Ganv

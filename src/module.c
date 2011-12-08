@@ -714,7 +714,7 @@ ganv_module_get_empty_port_depth(const GanvModule* module)
 		GNOME_CANVAS_ITEM(module)->canvas);
 
 	return ganv_canvas_get_font_size(canvas);
-}	
+}
 
 void
 ganv_module_set_icon(GanvModule* module,

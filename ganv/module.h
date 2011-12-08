@@ -35,7 +35,7 @@ typedef struct _GanvModuleClass GanvModuleClass;
 typedef struct _GanvModuleImpl GanvModuleImpl;
 
 typedef void (*GanvPortFunction)(GanvPort* port, void* data);
-	
+
 struct _GanvModule
 {
 	GanvBox         box;
@@ -58,7 +58,7 @@ ganv_module_num_ports(const GanvModule* module);
 GanvPort*
 ganv_module_get_port(GanvModule* module,
                      guint       index);
-	
+
 void
 ganv_module_add_port(GanvModule* module,
                      GanvPort*   port);

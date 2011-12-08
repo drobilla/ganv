@@ -135,7 +135,7 @@ ganv_text_layout(GanvText* text)
 	cairo_destroy(cr);
 	g_object_unref(layout);
 	pango_font_description_free(font);
-	
+
 	impl->needs_layout = FALSE;
 	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(text));
 }
@@ -185,7 +185,7 @@ ganv_text_get_property(GObject*    object,
 	                           || prop_id == PROP_HEIGHT)) {
 		ganv_text_layout(text);
 	}
-		
+
 	switch (prop_id) {
 		GET_CASE(TEXT, string, impl->text);
 		GET_CASE(X, double, impl->coords.x);
@@ -308,7 +308,7 @@ ganv_text_draw(GnomeCanvasItem* item,
 	// Round to the nearest pixel so text isn't blurry
 	wx = lrint(wx - x);
 	wy = lrint(wy - y);
-	
+
 	cairo_set_source_surface(cr, impl->surface, wx, wy);
 	cairo_paint(cr);
 

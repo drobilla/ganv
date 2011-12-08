@@ -336,7 +336,7 @@ select_if_tail_is_selected(GanvEdge* edge)
 		g_object_get(ganv_port_get_module(GANV_PORT(tail)),
 		             "selected", &selected, NULL);
 	}
-		
+
 	if (selected) {
 		ganv_edge_select(edge);
 	}
@@ -352,7 +352,7 @@ select_if_head_is_selected(GanvEdge* edge)
 		g_object_get(ganv_port_get_module(GANV_PORT(head)),
 		             "selected", &selected, NULL);
 	}
-		
+
 	if (selected) {
 		ganv_edge_select(edge);
 	}

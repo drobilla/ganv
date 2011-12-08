@@ -86,7 +86,7 @@ ganv_edge_get_tail(const GanvEdge* edge);
 
 GanvNode*
 ganv_edge_get_head(const GanvEdge* edge);
-	
+
 G_END_DECLS
 
 #endif  /* GANV_EDGE_H */
