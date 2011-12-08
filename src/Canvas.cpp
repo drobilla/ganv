@@ -1067,10 +1067,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 	static double control_start_y     = 0;
 	static float  control_start_value = 0;
 
-	bool handled = true;
-
-	switch (event->type) {
-
+switch (event->type) {
 	case GDK_BUTTON_PRESS:
 		if (event->button.button == 1) {
 			GanvModule* const module = ganv_port_get_module(port);
@@ -1086,26 +1083,11 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 					control_start_x     = event->button.x_root;
 					control_start_y     = event->button.y_root;
 					control_start_value = ganv_port_get_control_value(port);
-					#if 0
-					const double port_x = module->get_x() + port->get_x();
-					float new_control = ((event->button.x - port_x) / (double)port->get_width());
-					if (new_control < 0.0)
-						new_control = 0.0;
-					else if (new_control > 1.0)
-						new_control = 1.0;
-
-					new_control *= (port->control_max() - port->control_min());
-					new_control += port->control_min();
-					if (new_control < port->control_min())
-						new_control = port->control_min();
-					if (new_control > port->control_max())
-						new_control = port->control_max();
-					if (new_control != port->control_value())
-						port->set_control_value(new_control);
-					#endif
 				}
+				return true;
 			} else if (!port->is_input) {
 				port_dragging = true;
+				return true;
 			}
 		}
 		break;
@@ -1140,6 +1122,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			const double dvalue = (dx * value_range) * sens;
 			const double value = control_start_value + dvalue;
 			ganv_port_set_control_value(port, value);
+			return true;
 		}
 		break;
 
@@ -1158,20 +1141,18 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 				}
 			}
 			port_dragging = false;
+			return true;
 		} else if (control_dragging) {
 			control_dragging = false;
-		} else {
-			handled = false;
+			return true;
 		}
 		break;
 
 	case GDK_ENTER_NOTIFY:
-		//signal_item_entered.emit(port);
 		gboolean selected;
 		g_object_get(G_OBJECT(port), "selected", &selected, NULL);
 		if (!control_dragging && !selected) {
 			g_object_set(G_OBJECT(port), "highlighted", TRUE, NULL);
-			return true;
 		}
 		break;
 
@@ -1184,17 +1165,17 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 				GNOME_CANVAS_ITEM(_base_rect),
 				GDK_BUTTON_PRESS_MASK|GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 				NULL, event->crossing.time);
+			return true;
 		} else if (!control_dragging) {
 			g_object_set(G_OBJECT(port), "highlighted", FALSE, NULL);
 		}
-		//signal_item_left.emit(port);
 		break;
 
 	default:
-		handled = false;
+		break;
 	}
 
-	return handled;
+	return false;
 }
 
 /** Called when two ports are 'toggled' (connected or disconnected)

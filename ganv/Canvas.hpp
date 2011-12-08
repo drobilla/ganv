@@ -149,12 +149,6 @@ public:
 	sigc::signal<void, Node*, Node*> signal_connect;
 	sigc::signal<void, Node*, Node*> signal_disconnect;
 
-	/** Signal emitted when the mouse pointer enters an Item. */
-	sigc::signal<void, GnomeCanvasItem*> signal_item_entered;
-
-	/** Signal emitted when the mouse pointer leaves an Item. */
-	sigc::signal<void, GnomeCanvasItem*> signal_item_left;
-
 private:
 	Canvas(const Canvas&);  ///< Noncopyable
 	const Canvas& operator=(const Canvas&);  ///< Noncopyable

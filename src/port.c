@@ -199,8 +199,8 @@ ganv_port_set_height(GanvBox* box,
 static gboolean
 on_event(GanvNode* node, GdkEvent* event)
 {
-	GnomeCanvasItem*  item   = GNOME_CANVAS_ITEM(node);
-	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
+	GnomeCanvasItem* item   = GNOME_CANVAS_ITEM(node);
+	GanvCanvas*      canvas = GANV_CANVAS(item->canvas);
 
 	return ganv_canvas_port_event(canvas, GANV_PORT(node), event);
 }
