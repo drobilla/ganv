@@ -109,17 +109,7 @@ public:
 	/** Resize the canvas to the given dimensions. */
 	void resize(double width, double height);
 
-	/** The direction of the "signal flow" on the canvas. */
-	enum FlowDirection {
-		HORIZONTAL,
-		VERTICAL
-	};
-
-	/** Set the flow direction of the canvas. */
-	void set_direction(FlowDirection d);
-
-	/** Return the current flow direction of the canvas. */
-	FlowDirection direction() const;
+	RW_PROPERTY(GanvDirection, direction);
 
 	typedef void (*NodeFunction)(GanvNode* node, void* data);
 

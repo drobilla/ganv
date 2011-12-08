@@ -168,7 +168,7 @@ measure(GanvModule* module, Metrics* m)
 
 	GanvDirection direction = canvas->direction;
 
-	if (direction == GANV_VERTICAL) {
+	if (direction == GANV_DIRECTION_DOWN) {
 		static const double PAD = 2.0;
 
 		double contents_width = PAD;
@@ -257,7 +257,7 @@ place_title(GanvModule* module, GanvDirection dir)
 
 	if (!canvas_title) {
 		return;
-	} else if (dir == GANV_HORIZONTAL) {
+	} else if (dir == GANV_DIRECTION_RIGHT) {
 		if (module->icon_box) {
 			gnome_canvas_item_set(GNOME_CANVAS_ITEM(canvas_title),
 			                      "x", MODULE_ICON_SIZE + 1.0,
@@ -353,7 +353,7 @@ resize_horiz(GanvModule* module)
 
 	ganv_box_set_height(&module->box, height);
 
-	place_title(module, GANV_HORIZONTAL);
+	place_title(module, GANV_DIRECTION_RIGHT);
 }
 
 static void
@@ -418,7 +418,7 @@ resize_vert(GanvModule* module)
 	ganv_box_set_width(GANV_BOX(module), m.width);
 	ganv_box_set_height(GANV_BOX(module), height);
 
-	place_title(module, GANV_VERTICAL);
+	place_title(module, GANV_DIRECTION_DOWN);
 }
 
 static void
@@ -466,10 +466,10 @@ layout(GanvNode* self)
 	}
 
 	switch (canvas->direction) {
-	case GANV_HORIZONTAL:
+	case GANV_DIRECTION_RIGHT:
 		resize_horiz(module);
 		break;
-	case GANV_VERTICAL:
+	case GANV_DIRECTION_DOWN:
 		resize_vert(module);
 		break;
 	}

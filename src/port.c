@@ -270,7 +270,7 @@ ganv_port_new(GanvModule* module,
 	if (!node->label) {
 		const double depth   = ganv_module_get_empty_port_depth(module);
 		const double breadth = ganv_module_get_empty_port_breadth(module);
-		if (canvas->direction == GANV_HORIZONTAL) {
+		if (canvas->direction == GANV_DIRECTION_RIGHT) {
 			ganv_box_set_width(box, depth);
 			ganv_box_set_height(box, breadth);
 		} else {

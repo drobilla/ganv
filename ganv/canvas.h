@@ -35,8 +35,8 @@ struct GanvCanvasImpl;
 typedef struct _GanvCanvasClass GanvCanvasClass;
 
 typedef enum {
-	GANV_VERTICAL,
-	GANV_HORIZONTAL
+	GANV_DIRECTION_DOWN,
+	GANV_DIRECTION_RIGHT
 } GanvDirection;
 
 struct _GanvCanvas

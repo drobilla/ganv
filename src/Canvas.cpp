@@ -54,6 +54,8 @@
 static guint signal_connect;
 static guint signal_disconnect;
 
+static GEnumValue dir_values[3];
+
 using std::cerr;
 using std::endl;
 using std::list;
@@ -142,7 +144,6 @@ struct GanvCanvasImpl {
 		, _zoom(1.0)
 		, _font_size(0.0)
 		, _drag_state(NOT_DRAGGING)
-		, _direction(Ganv::Canvas::HORIZONTAL)
 	{
 		_wrapper_key = g_quark_from_string("ganvmm");
 		_move_cursor = gdk_cursor_new(GDK_FLEUR);
@@ -256,8 +257,6 @@ struct GanvCanvasImpl {
 
 	GQuark     _wrapper_key;
 	GdkCursor* _move_cursor;
-
-	Ganv::Canvas::FlowDirection _direction;
 };
 
 static GanvEdge
@@ -465,7 +464,7 @@ GanvCanvasImpl::layout_dot(bool use_length_hints, const std::string& filename)
 	nodes.gvc = gvc;
 	nodes.G   = G;
 
-	if (_direction == Ganv::Canvas::HORIZONTAL) {
+	if (_gcanvas->direction == GANV_DIRECTION_RIGHT) {
 		agraphattr(G, (char*)"rankdir", (char*)"LR");
 	} else {
 		agraphattr(G, (char*)"rankdir", (char*)"TD");
@@ -1485,27 +1484,6 @@ Canvas::get_zoom()
 }
 
 void
-Canvas::set_direction(FlowDirection d)
-{
-	impl()->_direction = d;
-	std::cerr << "FIXME: set direction" << std::endl;
-#if 0
-	FOREACH_ITEM(impl()->_items, i) {
-		Module* mod = dynamic_cast<Module*>(*i);
-		if (mod) {
-			mod->set_show_port_labels(d == Canvas::HORIZONTAL);
-		}
-	}
-#endif
-}
-
-Canvas::FlowDirection
-Canvas::direction() const
-{
-	return impl()->_direction;
-}
-
-void
 Canvas::select_all()
 {
 	clear_selection();
@@ -1770,13 +1748,14 @@ enum {
 	PROP_0,
 	PROP_WIDTH,
 	PROP_HEIGHT,
+	PROP_DIRECTION,
 	PROP_LOCKED
 };
 
 static void
 ganv_canvas_init(GanvCanvas* canvas)
 {
-	canvas->direction = GANV_HORIZONTAL;
+	canvas->direction = GANV_DIRECTION_RIGHT;
 	canvas->impl = new GanvCanvasImpl(canvas);
 	canvas->impl->_font_size = ganv_canvas_get_default_font_size(canvas);
 }
@@ -1864,6 +1843,24 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 			_("height of the canvas"),
 			0.0, G_MAXDOUBLE,
 			600.0,
+			(GParamFlags)G_PARAM_READWRITE));
+
+	GEnumValue down_dir  = { GANV_DIRECTION_DOWN, "down", "down" };
+	GEnumValue right_dir = { GANV_DIRECTION_RIGHT, "right", "right" };
+	GEnumValue null_dir  = { 0, 0, 0 };
+	dir_values[0] = down_dir;
+	dir_values[1] = right_dir;
+	dir_values[2] = null_dir;
+	GType dir_type = g_enum_register_static("GanvDirection",
+	                                        dir_values);
+
+	g_object_class_install_property(
+		gobject_class, PROP_DIRECTION, g_param_spec_enum(
+			"direction",
+			_("direction"),
+			_("direction of the signal flow on the canvas"),
+			dir_type,
+			GANV_DIRECTION_RIGHT,
 			(GParamFlags)G_PARAM_READWRITE));
 
 	g_object_class_install_property(
