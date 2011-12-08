@@ -26,6 +26,7 @@
 #include "./color.h"
 #include "./boilerplate.h"
 #include "./gettext.h"
+#include "./ganv-private.h"
 
 G_DEFINE_TYPE(GanvText, ganv_text, GNOME_TYPE_CANVAS_ITEM)
 
@@ -44,15 +45,18 @@ enum {
 static void
 ganv_text_init(GanvText* text)
 {
-	memset(&text->coords, '\0', sizeof(GanvTextCoords));
-	text->coords.width  = 1.0;
-	text->coords.height = 1.0;
-	text->old_coords = text->coords;
+	GanvTextImpl* impl = GANV_TEXT_GET_PRIVATE(text);
+	text->impl = impl;
 
-	text->surface      = NULL;
-	text->text         = NULL;
-	text->color        = 0xFFFFFFFF;
-	text->needs_layout = FALSE;
+	memset(&impl->coords, '\0', sizeof(GanvTextCoords));
+	impl->coords.width  = 1.0;
+	impl->coords.height = 1.0;
+	impl->old_coords = impl->coords;
+
+	impl->surface      = NULL;
+	impl->text         = NULL;
+	impl->color        = 0xFFFFFFFF;
+	impl->needs_layout = FALSE;
 }
 
 static void
@@ -61,16 +65,17 @@ ganv_text_destroy(GtkObject* object)
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_TEXT(object));
 
-	GanvText* text = GANV_TEXT(object);
+	GanvText*     text = GANV_TEXT(object);
+	GanvTextImpl* impl = text->impl;
 
-	if (text->text) {
-		g_free(text->text);
-		text->text = NULL;
+	if (impl->text) {
+		g_free(impl->text);
+		impl->text = NULL;
 	}
 
-	if (text->surface) {
-		cairo_surface_destroy(text->surface);
-		text->surface = NULL;
+	if (impl->surface) {
+		cairo_surface_destroy(impl->surface);
+		impl->surface = NULL;
 	}
 
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {
@@ -81,6 +86,7 @@ ganv_text_destroy(GtkObject* object)
 static void
 ganv_text_layout(GanvText* text)
 {
+	GanvTextImpl*    impl      = text->impl;
 	GnomeCanvasItem* item      = GNOME_CANVAS_ITEM(text);
 	GanvCanvas*      canvas    = GANV_CANVAS(item->canvas);
 	GtkWidget*       widget    = GTK_WIDGET(canvas);
@@ -89,7 +95,7 @@ ganv_text_layout(GanvText* text)
 
 	GtkStyle*             style   = gtk_rc_get_style(widget);
 	PangoFontDescription* font    = pango_font_description_copy(style->font_desc);
-	PangoLayout*          layout  = gtk_widget_create_pango_layout(widget, text->text);
+	PangoLayout*          layout  = gtk_widget_create_pango_layout(widget, impl->text);
 	PangoContext*         context = pango_layout_get_context(layout);
 	cairo_font_options_t* options = cairo_font_options_copy(
 		pango_cairo_context_get_font_options(context));
@@ -107,17 +113,17 @@ ganv_text_layout(GanvText* text)
 	int width, height;
 	pango_layout_get_pixel_size(layout, &width, &height);
 
-	text->coords.width = width;
-	text->coords.height = height;
+	impl->coords.width = width;
+	impl->coords.height = height;
 
-	if (text->surface) {
-		cairo_surface_destroy(text->surface);
+	if (impl->surface) {
+		cairo_surface_destroy(impl->surface);
 	}
 
-	text->surface = cairo_image_surface_create(
+	impl->surface = cairo_image_surface_create(
 		CAIRO_FORMAT_ARGB32, width, height);
 
-	cairo_t* cr = cairo_create(text->surface);
+	cairo_t* cr = cairo_create(impl->surface);
 
 	double r, g, b, a;
 	color_to_rgba(color, &r, &g, &b, &a);
@@ -130,7 +136,7 @@ ganv_text_layout(GanvText* text)
 	g_object_unref(layout);
 	pango_font_description_free(font);
 	
-	text->needs_layout = FALSE;
+	impl->needs_layout = FALSE;
 	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(text));
 }
 
@@ -143,18 +149,19 @@ ganv_text_set_property(GObject*      object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_TEXT(object));
 
-	GanvText* text = GANV_TEXT(object);
+	GanvText*     text = GANV_TEXT(object);
+	GanvTextImpl* impl = text->impl;
 
 	switch (prop_id) {
-		SET_CASE(X, double, text->coords.x);
-		SET_CASE(Y, double, text->coords.y);
-		SET_CASE(WIDTH, double, text->coords.width);
-		SET_CASE(HEIGHT, double, text->coords.height);
-		SET_CASE(COLOR, uint, text->color)
+		SET_CASE(X, double, impl->coords.x);
+		SET_CASE(Y, double, impl->coords.y);
+		SET_CASE(WIDTH, double, impl->coords.width);
+		SET_CASE(HEIGHT, double, impl->coords.height);
+		SET_CASE(COLOR, uint, impl->color)
 	case PROP_TEXT:
-		free(text->text);
-		text->text = g_value_dup_string(value);
-		text->needs_layout = TRUE;
+		free(impl->text);
+		impl->text = g_value_dup_string(value);
+		impl->needs_layout = TRUE;
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -171,20 +178,21 @@ ganv_text_get_property(GObject*    object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_TEXT(object));
 
-	GanvText* text = GANV_TEXT(object);
+	GanvText*     text = GANV_TEXT(object);
+	GanvTextImpl* impl = text->impl;
 
-	if (text->needs_layout && (prop_id == PROP_WIDTH
+	if (impl->needs_layout && (prop_id == PROP_WIDTH
 	                           || prop_id == PROP_HEIGHT)) {
 		ganv_text_layout(text);
 	}
 		
 	switch (prop_id) {
-		GET_CASE(TEXT, string, text->text);
-		GET_CASE(X, double, text->coords.x);
-		GET_CASE(Y, double, text->coords.y);
-		GET_CASE(WIDTH, double, text->coords.width);
-		GET_CASE(HEIGHT, double, text->coords.height);
-		GET_CASE(COLOR, uint, text->color);
+		GET_CASE(TEXT, string, impl->text);
+		GET_CASE(X, double, impl->coords.x);
+		GET_CASE(Y, double, impl->coords.y);
+		GET_CASE(WIDTH, double, impl->coords.width);
+		GET_CASE(HEIGHT, double, impl->coords.height);
+		GET_CASE(COLOR, uint, impl->color);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -196,16 +204,17 @@ ganv_text_bounds_item(GnomeCanvasItem* item,
                       double* x1, double* y1,
                       double* x2, double* y2)
 {
-	GanvText* text = GANV_TEXT(item);
+	GanvText*     text = GANV_TEXT(item);
+	GanvTextImpl* impl = text->impl;
 
-	if (text->needs_layout) {
+	if (impl->needs_layout) {
 		ganv_text_layout(text);
 	}
 
-	*x1 = MIN(text->coords.x, text->coords.x + text->coords.width);
-	*y1 = MIN(text->coords.y, text->coords.y + text->coords.height);
-	*x2 = MAX(text->coords.x, text->coords.x + text->coords.width);
-	*y2 = MAX(text->coords.y, text->coords.y + text->coords.height);
+	*x1 = MIN(impl->coords.x, impl->coords.x + impl->coords.width);
+	*y1 = MIN(impl->coords.y, impl->coords.y + impl->coords.height);
+	*x2 = MAX(impl->coords.x, impl->coords.x + impl->coords.width);
+	*y2 = MAX(impl->coords.y, impl->coords.y + impl->coords.height);
 }
 
 static void
@@ -238,7 +247,7 @@ ganv_text_update(GnomeCanvasItem* item,
 }
 
 static double
-ganv_text_point(GnomeCanvasItem*  item,
+ganv_text_point(GnomeCanvasItem* item,
                 double x, double y,
                 int cx, int cy,
                 GnomeCanvasItem** actual_item)
@@ -288,18 +297,19 @@ ganv_text_draw(GnomeCanvasItem* item,
                int x, int y,
                int width, int height)
 {
-	GanvText* text = GANV_TEXT(item);
-	cairo_t*        cr   = gdk_cairo_create(drawable);
+	GanvText*     text = GANV_TEXT(item);
+	GanvTextImpl* impl = text->impl;
+	cairo_t*      cr   = gdk_cairo_create(drawable);
 
-	double wx = text->coords.x;
-	double wy = text->coords.y;
+	double wx = impl->coords.x;
+	double wy = impl->coords.y;
 	gnome_canvas_item_i2w(item, &wx, &wy);
 
 	// Round to the nearest pixel so text isn't blurry
 	wx = lrint(wx - x);
 	wy = lrint(wy - y);
 	
-	cairo_set_source_surface(cr, text->surface, wx, wy);
+	cairo_set_source_surface(cr, impl->surface, wx, wy);
 	cairo_paint(cr);
 
 	cairo_destroy(cr);
@@ -313,6 +323,8 @@ ganv_text_class_init(GanvTextClass* class)
 	GnomeCanvasItemClass* item_class    = (GnomeCanvasItemClass*)class;
 
 	parent_class = GNOME_CANVAS_ITEM_CLASS(g_type_class_peek_parent(class));
+
+	g_type_class_add_private(class, sizeof(GanvTextImpl));
 
 	gobject_class->set_property = ganv_text_set_property;
 	gobject_class->get_property = ganv_text_get_property;

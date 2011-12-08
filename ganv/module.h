@@ -23,30 +23,23 @@
 
 G_BEGIN_DECLS
 
-#define GANV_TYPE_MODULE            (ganv_module_get_type())
-#define GANV_MODULE(obj)            (GTK_CHECK_CAST((obj), GANV_TYPE_MODULE, GanvModule))
-#define GANV_MODULE_CLASS(klass)    (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_MODULE, GanvModuleClass))
-#define GANV_IS_MODULE(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_MODULE))
-#define GANV_IS_MODULE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_MODULE))
-#define GANV_MODULE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_MODULE, GanvModuleClass))
+#define GANV_TYPE_MODULE             (ganv_module_get_type())
+#define GANV_MODULE(obj)             (GTK_CHECK_CAST((obj), GANV_TYPE_MODULE, GanvModule))
+#define GANV_MODULE_CLASS(klass)     (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_MODULE, GanvModuleClass))
+#define GANV_IS_MODULE(obj)          (GTK_CHECK_TYPE((obj), GANV_TYPE_MODULE))
+#define GANV_IS_MODULE_CLASS(klass)  (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_MODULE))
+#define GANV_MODULE_GET_CLASS(obj)   (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_MODULE, GanvModuleClass))
+#define GANV_MODULE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GANV_TYPE_MODULE, GanvModuleImpl))
 
 typedef struct _GanvModuleClass GanvModuleClass;
+typedef struct _GanvModuleImpl GanvModuleImpl;
 
 typedef void (*GanvPortFunction)(GanvPort* port, void* data);
 	
 struct _GanvModule
 {
-	GanvBox          box;
-	GPtrArray*       ports;
-	GnomeCanvasItem* icon_box;
-	GnomeCanvasItem* embed_item;
-	int              embed_width;
-	int              embed_height;
-	double           widest_input;
-	double           widest_output;
-	gboolean         show_port_labels;
-	gboolean         must_resize;
-	gboolean         port_size_changed;
+	GanvBox         box;
+	GanvModuleImpl* impl;
 };
 
 struct _GanvModuleClass {
@@ -61,6 +54,10 @@ ganv_module_new(GanvCanvas* canvas,
 
 guint
 ganv_module_num_ports(const GanvModule* module);
+
+GanvPort*
+ganv_module_get_port(GanvModule* module,
+                     guint       index);
 	
 void
 ganv_module_add_port(GanvModule* module,

@@ -22,6 +22,7 @@ typedef struct _GanvItem   GanvItem;
 typedef struct _GanvModule GanvModule;
 typedef struct _GanvNode   GanvNode;
 typedef struct _GanvPort   GanvPort;
+typedef struct _GanvBox    GanvBox;
 
-#endif // GANV_TYPES_H
+#endif  /* GANV_TYPES_H */
 

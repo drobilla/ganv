@@ -18,37 +18,24 @@
 
 #include <libgnomecanvas/libgnomecanvas.h>
 
-#include <cairo.h>
-
 G_BEGIN_DECLS
 
-#define GANV_TYPE_TEXT            (ganv_text_get_type())
-#define GANV_TEXT(obj)            (GTK_CHECK_CAST((obj), GANV_TYPE_TEXT, GanvText))
-#define GANV_TEXT_CLASS(klass)    (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_TEXT, GanvTextClass))
-#define GANV_IS_TEXT(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_TEXT))
-#define GANV_IS_TEXT_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_TEXT))
-#define GANV_TEXT_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_TEXT, GanvTextClass))
+#define GANV_TYPE_TEXT             (ganv_text_get_type())
+#define GANV_TEXT(obj)             (GTK_CHECK_CAST((obj), GANV_TYPE_TEXT, GanvText))
+#define GANV_TEXT_CLASS(klass)     (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_TEXT, GanvTextClass))
+#define GANV_IS_TEXT(obj)          (GTK_CHECK_TYPE((obj), GANV_TYPE_TEXT))
+#define GANV_IS_TEXT_CLASS(klass)  (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_TEXT))
+#define GANV_TEXT_GET_CLASS(obj)   (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_TEXT, GanvTextClass))
+#define GANV_TEXT_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GANV_TYPE_TEXT, GanvTextImpl))
 
 typedef struct _GanvText      GanvText;
 typedef struct _GanvTextClass GanvTextClass;
-
-typedef struct
-{
-	double x;
-	double y;
-	double width;
-	double height;
-} GanvTextCoords;
+typedef struct _GanvTextImpl  GanvTextImpl;
 
 struct _GanvText
 {
-	GnomeCanvasItem  item;
-	cairo_surface_t* surface;
-	char*            text;
-	GanvTextCoords   coords;
-	GanvTextCoords   old_coords;
-	guint            color;
-	gboolean         needs_layout;
+	GnomeCanvasItem item;
+	GanvTextImpl*   impl;
 };
 
 struct _GanvTextClass {

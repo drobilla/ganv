@@ -19,8 +19,136 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-	
+
+#include <cairo.h>
+
+#include "ganv/types.h"
+
 extern guint signal_moved;
+
+/* Box */
+
+typedef struct {
+	double   x1, y1, x2, y2;
+	double   border_width;
+	gboolean stacked;
+} GanvBoxCoords;
+
+struct _GanvBoxImpl {
+	GanvBoxCoords coords;
+	GanvBoxCoords old_coords;
+	double        radius_tl;
+	double        radius_tr;
+	double        radius_br;
+	double        radius_bl;
+};
+
+/* Circle */
+
+typedef struct {
+	double x, y, radius;
+	double width;
+} GanvCircleCoords;
+
+struct _GanvCircleImpl {
+	GanvCircleCoords coords;
+	GanvCircleCoords old_coords;
+};
+
+/* Edge */
+
+typedef struct {
+	double   x1, y1, x2, y2;
+	double   cx1, cy1, cx2, cy2;
+	double   handle_x, handle_y, handle_radius;
+	double   width;
+	gboolean curved;
+	gboolean arrowhead;
+} GanvEdgeCoords;
+
+struct _GanvEdgeImpl
+{
+	GanvNode*       tail;
+	GanvNode*       head;
+	GanvEdgeCoords  coords;
+	GanvEdgeCoords  old_coords;
+	double          dash_length;
+	double          dash_offset;
+	guint           color;
+	gboolean        selected;
+	gboolean        highlighted;
+	gboolean        ghost;
+};
+
+/* Module */
+
+struct _GanvModuleImpl
+{
+	GPtrArray*       ports;
+	GnomeCanvasItem* icon_box;
+	GnomeCanvasItem* embed_item;
+	int              embed_width;
+	int              embed_height;
+	double           widest_input;
+	double           widest_output;
+	gboolean         show_port_labels;
+	gboolean         must_resize;
+	gboolean         port_size_changed;
+};
+
+/* Node */
+
+struct _GanvNodeImpl {
+	struct _GanvNode* partner;
+	GanvText*         label;
+	double            dash_length;
+	double            dash_offset;
+	double            border_width;
+	guint             fill_color;
+	guint             border_color;
+	gboolean          can_tail;
+	gboolean          can_head;
+	gboolean          selected;
+	gboolean          highlighted;
+	gboolean          draggable;
+};
+
+/* Port */
+
+typedef struct {
+	GanvBox* rect;
+	float    value;
+	float    min;
+	float    max;
+	gboolean is_toggle;
+} GanvPortControl;
+
+struct _GanvPortImpl {
+	GanvPortControl* control;
+	gboolean         is_input;
+};
+
+/* Text */
+
+typedef struct
+{
+	double x;
+	double y;
+	double width;
+	double height;
+} GanvTextCoords;
+
+struct _GanvTextImpl
+{
+	cairo_surface_t* surface;
+	char*            text;
+	GanvTextCoords   coords;
+	GanvTextCoords   old_coords;
+	guint            color;
+	gboolean         needs_layout;
+};
+
+/* Canvas */
 
 void
 ganv_canvas_add_node(GanvCanvas* canvas,

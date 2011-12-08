@@ -59,19 +59,22 @@ static GnomeCanvasItemClass* parent_class;
 static void
 ganv_edge_init(GanvEdge* edge)
 {
-	edge->tail = NULL;
-	edge->head = NULL;
+	GanvEdgeImpl* impl = GANV_EDGE_GET_PRIVATE(edge);
+	edge->impl = impl;
 
-	memset(&edge->coords, '\0', sizeof(GanvEdgeCoords));
-	edge->coords.width         = 2.0;
-	edge->coords.handle_radius = 4.0;
-	edge->coords.curved        = FALSE;
-	edge->coords.arrowhead     = FALSE;
+	impl->tail = NULL;
+	impl->head = NULL;
 
-	edge->old_coords  = edge->coords;
-	edge->dash_length = 0.0;
-	edge->dash_offset = 0.0;
-	edge->color       = 0xA0A0A0FF;
+	memset(&impl->coords, '\0', sizeof(GanvEdgeCoords));
+	impl->coords.width         = 2.0;
+	impl->coords.handle_radius = 4.0;
+	impl->coords.curved        = FALSE;
+	impl->coords.arrowhead     = FALSE;
+
+	impl->old_coords  = impl->coords;
+	impl->dash_length = 0.0;
+	impl->dash_offset = 0.0;
+	impl->color       = 0xA0A0A0FF;
 }
 
 static void
@@ -82,7 +85,7 @@ ganv_edge_destroy(GtkObject* object)
 
 	GanvEdge*   edge   = GANV_EDGE(object);
 	GanvCanvas* canvas = GANV_CANVAS(edge->item.canvas);
-	if (canvas && !edge->ghost) {
+	if (canvas && !edge->impl->ghost) {
 		ganv_canvas_remove_edge(canvas, edge);
 		edge->item.canvas = NULL;
 	}
@@ -103,21 +106,22 @@ ganv_edge_set_property(GObject*      object,
 	g_return_if_fail(GANV_IS_EDGE(object));
 
 	GanvEdge*       edge   = GANV_EDGE(object);
-	GanvEdgeCoords* coords = &edge->coords;
+	GanvEdgeImpl*   impl   = edge->impl;
+	GanvEdgeCoords* coords = &impl->coords;
 
 	switch (prop_id) {
-		SET_CASE(TAIL, object, edge->tail);
-		SET_CASE(HEAD, object, edge->head);
+		SET_CASE(TAIL, object, impl->tail);
+		SET_CASE(HEAD, object, impl->head);
 		SET_CASE(WIDTH, double, coords->width);
 		SET_CASE(HANDLE_RADIUS, double, coords->handle_radius);
-		SET_CASE(DASH_LENGTH, double, edge->dash_length);
-		SET_CASE(DASH_OFFSET, double, edge->dash_offset);
-		SET_CASE(COLOR, uint, edge->color);
-		SET_CASE(CURVED, boolean, edge->coords.curved);
-		SET_CASE(ARROWHEAD, boolean, edge->coords.arrowhead);
-		SET_CASE(SELECTED, boolean, edge->selected);
-		SET_CASE(HIGHLIGHTED, boolean, edge->highlighted);
-		SET_CASE(GHOST, boolean, edge->ghost);
+		SET_CASE(DASH_LENGTH, double, impl->dash_length);
+		SET_CASE(DASH_OFFSET, double, impl->dash_offset);
+		SET_CASE(COLOR, uint, impl->color);
+		SET_CASE(CURVED, boolean, impl->coords.curved);
+		SET_CASE(ARROWHEAD, boolean, impl->coords.arrowhead);
+		SET_CASE(SELECTED, boolean, impl->selected);
+		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
+		SET_CASE(GHOST, boolean, impl->ghost);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -133,21 +137,22 @@ ganv_edge_get_property(GObject*    object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_EDGE(object));
 
-	GanvEdge* edge = GANV_EDGE(object);
+	GanvEdge*     edge = GANV_EDGE(object);
+	GanvEdgeImpl* impl = edge->impl;
 
 	switch (prop_id) {
-		GET_CASE(TAIL, object, edge->tail);
-		GET_CASE(HEAD, object, edge->head);
-		GET_CASE(WIDTH, double, edge->coords.width);
-		SET_CASE(HANDLE_RADIUS, double, edge->coords.handle_radius);
-		GET_CASE(DASH_LENGTH, double, edge->dash_length);
-		GET_CASE(DASH_OFFSET, double, edge->dash_offset);
-		GET_CASE(COLOR, uint, edge->color);
-		GET_CASE(CURVED, boolean, edge->coords.curved);
-		GET_CASE(ARROWHEAD, boolean, edge->coords.arrowhead);
-		GET_CASE(SELECTED, boolean, edge->selected);
-		GET_CASE(HIGHLIGHTED, boolean, edge->highlighted);
-		SET_CASE(GHOST, boolean, edge->ghost);
+		GET_CASE(TAIL, object, impl->tail);
+		GET_CASE(HEAD, object, impl->head);
+		GET_CASE(WIDTH, double, impl->coords.width);
+		SET_CASE(HANDLE_RADIUS, double, impl->coords.handle_radius);
+		GET_CASE(DASH_LENGTH, double, impl->dash_length);
+		GET_CASE(DASH_OFFSET, double, impl->dash_offset);
+		GET_CASE(COLOR, uint, impl->color);
+		GET_CASE(CURVED, boolean, impl->coords.curved);
+		GET_CASE(ARROWHEAD, boolean, impl->coords.arrowhead);
+		GET_CASE(SELECTED, boolean, impl->selected);
+		GET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
+		SET_CASE(GHOST, boolean, impl->ghost);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -219,13 +224,14 @@ ganv_edge_bounds(GnomeCanvasItem* item,
                  double* x1, double* y1,
                  double* x2, double* y2)
 {
-	GanvEdge* edge = GANV_EDGE(item);
+	GanvEdge*     edge = GANV_EDGE(item);
+	GanvEdgeImpl* impl = edge->impl;
 
 	// TODO: This is not correct for curved edges
-	*x1 = MIN(edge->coords.x1, edge->coords.x2);
-	*y1 = MIN(edge->coords.y1, edge->coords.y2);
-	*x2 = MAX(edge->coords.x1, edge->coords.x2);
-	*y2 = MAX(edge->coords.y1, edge->coords.y2);
+	*x1 = MIN(impl->coords.x1, impl->coords.x2);
+	*y1 = MIN(impl->coords.y1, impl->coords.y2);
+	*x2 = MAX(impl->coords.x1, impl->coords.x2);
+	*y2 = MAX(impl->coords.y1, impl->coords.y2);
 }
 
 static void
@@ -234,22 +240,23 @@ ganv_edge_update(GnomeCanvasItem* item,
                  ArtSVP*          clip_path,
                  int              flags)
 {
-	GanvEdge* edge = GANV_EDGE(item);
+	GanvEdge*     edge = GANV_EDGE(item);
+	GanvEdgeImpl* impl = edge->impl;
 
 	if (parent_class->update) {
 		(*parent_class->update)(item, affine, clip_path, flags);
 	}
 
 	// Request redraw of old location
-	request_redraw(item->canvas, &edge->old_coords);
+	request_redraw(item->canvas, &impl->old_coords);
 
 	// Calculate new coordinates from tail and head
-	GanvEdgeCoords* coords = &edge->coords;
-	GANV_NODE_GET_CLASS(edge->tail)->tail_vector(
-		edge->tail, edge->head,
+	GanvEdgeCoords* coords = &impl->coords;
+	GANV_NODE_GET_CLASS(impl->tail)->tail_vector(
+		impl->tail, impl->head,
 		&coords->x1, &coords->y1, &coords->cx1, &coords->cy1);
-	GANV_NODE_GET_CLASS(edge->head)->head_vector(
-		edge->head, edge->tail,
+	GANV_NODE_GET_CLASS(impl->head)->head_vector(
+		impl->head, impl->tail,
 		&coords->x2, &coords->y2, &coords->cx2, &coords->cy2);
 
 	const double dx = coords->x2 - coords->x1;
@@ -263,7 +270,7 @@ ganv_edge_update(GnomeCanvasItem* item,
 	coords->cy2 += coords->y2;
 
 	// Update old coordinates
-	edge->old_coords = edge->coords;
+	impl->old_coords = impl->coords;
 
 	// Get bounding box
 	double x1, x2, y1, y2;
@@ -282,7 +289,7 @@ ganv_edge_update(GnomeCanvasItem* item,
 	gnome_canvas_w2c_d(GNOME_CANVAS(item->canvas), x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
-	request_redraw(item->canvas, &edge->coords);
+	request_redraw(item->canvas, &impl->coords);
 }
 
 static void
@@ -298,56 +305,52 @@ ganv_edge_draw(GnomeCanvasItem* item,
                int x, int y,
                int width, int height)
 {
-	GanvEdge* me = GANV_EDGE(item);
-	cairo_t*  cr = gdk_cairo_create(drawable);
+	GanvEdge*     edge = GANV_EDGE(item);
+	GanvEdgeImpl* impl = edge->impl;
+	cairo_t*      cr   = gdk_cairo_create(drawable);
 
-	double src_x  = me->coords.x1 - x;
-	double src_y  = me->coords.y1 - y;
-	//double src_cx = me->coords.cx1 - x;
-	//double src_cy = me->coords.cy1 - y;
-	double dst_x  = me->coords.x2 - x;
-	double dst_y  = me->coords.y2 - y;
-	//double dst_cx = me->coords.cx2 - x;
-	//double dst_cy = me->coords.cy2 - y;
-
-	double dx = src_x - dst_x;
-	double dy = src_y - dst_y;
+	double src_x = impl->coords.x1 - x;
+	double src_y = impl->coords.y1 - y;
+	double dst_x = impl->coords.x2 - x;
+	double dst_y = impl->coords.y2 - y;
+	double dx    = src_x - dst_x;
+	double dy    = src_y - dst_y;
 
 	double r, g, b, a;
-	if (me->highlighted) {
-		color_to_rgba(highlight_color(me->color, 0x20), &r, &g, &b, &a);
+	if (impl->highlighted) {
+		color_to_rgba(highlight_color(impl->color, 0x20), &r, &g, &b, &a);
 	} else {
-		color_to_rgba(me->color, &r, &g, &b, &a);
+		color_to_rgba(impl->color, &r, &g, &b, &a);
 	}
 	cairo_set_source_rgba(cr, r, g, b, a);
 
-	cairo_set_line_width(cr, me->coords.width);
+	cairo_set_line_width(cr, impl->coords.width);
 	cairo_move_to(cr, src_x, src_y);
 
-	const double dash_length = (me->selected ? 4.0 : me->dash_length);
+	const double dash_length = (impl->selected ? 4.0 : impl->dash_length);
 	if (dash_length > 0.0) {
 		double dashed[2] = { dash_length, dash_length };
-		cairo_set_dash(cr, dashed, 2, me->dash_offset);
+		cairo_set_dash(cr, dashed, 2, impl->dash_offset);
 	}
 
 	const double join_x = (src_x + dst_x) / 2.0;
 	const double join_y = (src_y + dst_y) / 2.0;
 
-	if (me->coords.curved) {
+	if (impl->coords.curved) {
 		// Curved line as 2 paths which join at the middle point
 
 		// Path 1 (src_x, src_y) -> (join_x, join_y)
 		// Control point 1
-		const double src_x1 = me->coords.cx1 - x;
-		const double src_y1 = me->coords.cy1 - y;
+		const double src_x1 = impl->coords.cx1 - x;
+		const double src_y1 = impl->coords.cy1 - y;
 		// Control point 2
 		const double src_x2 = (join_x + src_x1) / 2.0;
 		const double src_y2 = (join_y + src_y1) / 2.0;
 
 		// Path 2, (join_x, join_y) -> (dst_x, dst_y)
 		// Control point 1
-		const double dst_x1 = me->coords.cx2 - x;
-		const double dst_y1 = me->coords.cy2 - y;
+		const double dst_x1 = impl->coords.cx2 - x;
+		const double dst_y1 = impl->coords.cy2 - y;
 		// Control point 2
 		const double dst_x2 = (join_x + dst_x1) / 2.0;
 		const double dst_y2 = (join_y + dst_y1) / 2.0;
@@ -356,7 +359,7 @@ ganv_edge_draw(GnomeCanvasItem* item,
 		cairo_curve_to(cr, src_x1, src_y1, src_x2, src_y2, join_x, join_y);
 		cairo_curve_to(cr, dst_x2, dst_y2, dst_x1, dst_y1, dst_x, dst_y);
 
-		if (me->coords.arrowhead) {
+		if (impl->coords.arrowhead) {
 			cairo_line_to(cr, dst_x - 12, dst_y - 4);
 			cairo_move_to(cr, dst_x, dst_y);
 			cairo_line_to(cr, dst_x - 12, dst_y + 4);
@@ -390,7 +393,7 @@ ganv_edge_draw(GnomeCanvasItem* item,
 		cairo_move_to(cr, src_x, src_y);
 		cairo_line_to(cr, dst_x, dst_y);
 
-		if (me->coords.arrowhead) {
+		if (impl->coords.arrowhead) {
 			const double ah  = sqrt(dx * dx + dy * dy);
 			const double adx = dx / ah * 10.0;
 			const double ady = dy / ah * 10.0;
@@ -408,7 +411,7 @@ ganv_edge_draw(GnomeCanvasItem* item,
 	cairo_stroke(cr);
 
 	cairo_move_to(cr, join_x, join_y);
-	cairo_arc(cr, join_x, join_y, me->coords.handle_radius, 0, 2 * M_PI);
+	cairo_arc(cr, join_x, join_y, impl->coords.handle_radius, 0, 2 * M_PI);
 	cairo_fill(cr);
 
 	cairo_destroy(cr);
@@ -421,7 +424,7 @@ ganv_edge_point(GnomeCanvasItem* item,
                 GnomeCanvasItem** actual_item)
 {
 	const GanvEdge*       edge = GANV_EDGE(item);
-	const GanvEdgeCoords* coords = &edge->coords;
+	const GanvEdgeCoords* coords = &edge->impl->coords;
 
 	const double dx = fabs(x - coords->handle_x);
 	const double dy = fabs(y - coords->handle_y);
@@ -445,8 +448,8 @@ ganv_edge_is_within(const GanvEdge* edge,
                     double          x2,
                     double          y2)
 {
-	const double handle_x = edge->coords.handle_x;
-	const double handle_y = edge->coords.handle_y;
+	const double handle_x = edge->impl->coords.handle_x;
+	const double handle_y = edge->impl->coords.handle_y;
 
 	return handle_x >= x1
 		&& handle_x <= x2
@@ -462,6 +465,8 @@ ganv_edge_class_init(GanvEdgeClass* class)
 	GnomeCanvasItemClass* item_class    = (GnomeCanvasItemClass*)class;
 
 	parent_class = GNOME_CANVAS_ITEM_CLASS(g_type_class_peek_parent(class));
+
+	g_type_class_add_private(class, sizeof(GanvEdgeImpl));
 
 	gobject_class->set_property = ganv_edge_set_property;
 	gobject_class->get_property = ganv_edge_get_property;
@@ -592,10 +597,10 @@ ganv_edge_new(GanvCanvas* canvas,
 	                            first_prop_name, args);
 	va_end(args);
 
-	edge->tail = tail;
-	edge->head = head;
+	edge->impl->tail = tail;
+	edge->impl->head = head;
 
-	if (!edge->ghost) {
+	if (!edge->impl->ghost) {
 		ganv_canvas_add_edge(canvas, edge);
 	}
 	return edge;
@@ -624,7 +629,7 @@ ganv_edge_unselect(GanvEdge* edge)
 void
 ganv_edge_highlight(GanvEdge* edge)
 {
-	edge->highlighted = TRUE;
+	edge->impl->highlighted = TRUE;
 	gnome_canvas_item_raise_to_top(GNOME_CANVAS_ITEM(edge));
 	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(edge));
 }
@@ -632,7 +637,7 @@ ganv_edge_highlight(GanvEdge* edge)
 void
 ganv_edge_unhighlight(GanvEdge* edge)
 {
-	edge->highlighted = FALSE;
+	edge->impl->highlighted = FALSE;
 	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(edge));
 }
 
@@ -648,9 +653,21 @@ ganv_edge_tick(GanvEdge* edge,
 void
 ganv_edge_remove(GanvEdge* edge)
 {
-	if (!edge->ghost) {
+	if (!edge->impl->ghost) {
 		ganv_canvas_remove_edge(
 			GANV_CANVAS(edge->item.canvas),
 			edge);
 	}
+}
+
+GanvNode*
+ganv_edge_get_tail(const GanvEdge* edge)
+{
+	return edge->impl->tail;
+}
+
+GanvNode*
+ganv_edge_get_head(const GanvEdge* edge)
+{
+	return edge->impl->head;
 }

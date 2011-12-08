@@ -20,26 +20,22 @@
 
 G_BEGIN_DECLS
 
-#define GANV_TYPE_CIRCLE            (ganv_circle_get_type())
-#define GANV_CIRCLE(obj)            (GTK_CHECK_CAST((obj), GANV_TYPE_CIRCLE, GanvCircle))
-#define GANV_CIRCLE_CLASS(klass)    (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_CIRCLE, GanvCircleClass))
-#define GANV_IS_CIRCLE(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_CIRCLE))
-#define GANV_IS_CIRCLE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_CIRCLE))
-#define GANV_CIRCLE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_CIRCLE, GanvCircleClass))
+#define GANV_TYPE_CIRCLE             (ganv_circle_get_type())
+#define GANV_CIRCLE(obj)             (GTK_CHECK_CAST((obj), GANV_TYPE_CIRCLE, GanvCircle))
+#define GANV_CIRCLE_CLASS(klass)     (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_CIRCLE, GanvCircleClass))
+#define GANV_IS_CIRCLE(obj)          (GTK_CHECK_TYPE((obj), GANV_TYPE_CIRCLE))
+#define GANV_IS_CIRCLE_CLASS(klass)  (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_CIRCLE))
+#define GANV_CIRCLE_GET_CLASS(obj)   (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_CIRCLE, GanvCircleClass))
+#define GANV_CIRCLE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GANV_TYPE_CIRCLE, GanvCircleImpl))
 
 typedef struct _GanvCircle      GanvCircle;
 typedef struct _GanvCircleClass GanvCircleClass;
-
-typedef struct {
-	double x, y, radius;
-	double width;
-} GanvCircleCoords;
+typedef struct _GanvCircleImpl  GanvCircleImpl;
 
 struct _GanvCircle
 {
-	GanvNode         node;
-	GanvCircleCoords coords;
-	GanvCircleCoords old_coords;
+	GanvNode        node;
+	GanvCircleImpl* impl;
 };
 
 struct _GanvCircleClass {

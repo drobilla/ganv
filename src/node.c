@@ -55,18 +55,21 @@ on_event(GanvNode* node, GdkEvent* event)
 static void
 ganv_node_init(GanvNode* node)
 {
-	node->partner      = NULL;
-	node->label        = NULL;
-	node->dash_length  = 0.0;
-	node->dash_offset  = 0.0;
-	node->border_width = 2.0;
-	node->fill_color   = DEFAULT_FILL_COLOR;
-	node->border_color = DEFAULT_BORDER_COLOR;
-	node->can_tail     = FALSE;
-	node->can_head     = FALSE;
-	node->selected     = FALSE;
-	node->highlighted  = FALSE;
-	node->draggable    = FALSE;
+	GanvNodeImpl* impl = GANV_NODE_GET_PRIVATE(node);
+	node->impl = impl;
+
+	impl->partner      = NULL;
+	impl->label        = NULL;
+	impl->dash_length  = 0.0;
+	impl->dash_offset  = 0.0;
+	impl->border_width = 2.0;
+	impl->fill_color   = DEFAULT_FILL_COLOR;
+	impl->border_color = DEFAULT_BORDER_COLOR;
+	impl->can_tail     = FALSE;
+	impl->can_head     = FALSE;
+	impl->selected     = FALSE;
+	impl->highlighted  = FALSE;
+	impl->draggable    = FALSE;
 
 	g_signal_connect(G_OBJECT(node),
 	                 "event", G_CALLBACK(on_event), node);
@@ -86,10 +89,11 @@ ganv_node_destroy(GtkObject* object)
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_NODE(object));
 
-	GanvNode* node = GANV_NODE(object);
-	if (node->label) {
-		gtk_object_destroy(GTK_OBJECT(node->label));
-		node->label = NULL;
+	GanvNode*     node = GANV_NODE(object);
+	GanvNodeImpl* impl = node->impl;
+	if (impl->label) {
+		gtk_object_destroy(GTK_OBJECT(impl->label));
+		impl->label = NULL;
 	}
 
 	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(object);
@@ -99,7 +103,7 @@ ganv_node_destroy(GtkObject* object)
 		item->canvas = NULL;
 	}
 
-	node->partner = NULL;
+	impl->partner = NULL;
 
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {
 		(*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
@@ -116,20 +120,21 @@ ganv_node_set_property(GObject*      object,
 	g_return_if_fail(GANV_IS_NODE(object));
 
 	GanvNode*        node = GANV_NODE(object);
+	GanvNodeImpl*    impl = node->impl;
 	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(object);
 
 	switch (prop_id) {
-		SET_CASE(PARTNER, object, node->partner);
-		SET_CASE(DASH_LENGTH, double, node->dash_length);
-		SET_CASE(DASH_OFFSET, double, node->dash_offset);
-		SET_CASE(BORDER_WIDTH, double, node->border_width);
-		SET_CASE(FILL_COLOR, uint, node->fill_color);
-		SET_CASE(BORDER_COLOR, uint, node->border_color);
-		SET_CASE(CAN_TAIL, boolean, node->can_tail);
-		SET_CASE(CAN_HEAD, boolean, node->can_head);
-		SET_CASE(SELECTED, boolean, node->selected);
-		SET_CASE(HIGHLIGHTED, boolean, node->highlighted);
-		SET_CASE(DRAGGABLE, boolean, node->draggable);
+		SET_CASE(PARTNER, object, impl->partner);
+		SET_CASE(DASH_LENGTH, double, impl->dash_length);
+		SET_CASE(DASH_OFFSET, double, impl->dash_offset);
+		SET_CASE(BORDER_WIDTH, double, impl->border_width);
+		SET_CASE(FILL_COLOR, uint, impl->fill_color);
+		SET_CASE(BORDER_COLOR, uint, impl->border_color);
+		SET_CASE(CAN_TAIL, boolean, impl->can_tail);
+		SET_CASE(CAN_HEAD, boolean, impl->can_head);
+		SET_CASE(SELECTED, boolean, impl->selected);
+		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
+		SET_CASE(DRAGGABLE, boolean, impl->draggable);
 	case PROP_CANVAS:
 		if (!item->parent) {
 			GnomeCanvas* canvas = GNOME_CANVAS(g_value_get_object(value));
@@ -159,23 +164,24 @@ ganv_node_get_property(GObject*    object,
 	g_return_if_fail(GANV_IS_NODE(object));
 
 	GanvNode*        node = GANV_NODE(object);
+	GanvNodeImpl*    impl = node->impl;
 	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(object);
 
 	typedef char* gstring;
 
 	switch (prop_id) {
-		GET_CASE(PARTNER, object, node->partner);
-		GET_CASE(LABEL, string, node->label->text);
-		GET_CASE(DASH_LENGTH, double, node->dash_length);
-		GET_CASE(DASH_OFFSET, double, node->dash_offset);
-		GET_CASE(BORDER_WIDTH, double, node->border_width);
-		GET_CASE(FILL_COLOR, uint, node->fill_color);
-		GET_CASE(BORDER_COLOR, uint, node->border_color);
-		GET_CASE(CAN_TAIL, boolean, node->can_tail);
-		GET_CASE(CAN_HEAD, boolean, node->can_head);
-		GET_CASE(SELECTED, boolean, node->selected);
-		GET_CASE(HIGHLIGHTED, boolean, node->highlighted);
-		GET_CASE(DRAGGABLE, boolean, node->draggable);
+		GET_CASE(PARTNER, object, impl->partner);
+		GET_CASE(LABEL, string, impl->label->impl->text);
+		GET_CASE(DASH_LENGTH, double, impl->dash_length);
+		GET_CASE(DASH_OFFSET, double, impl->dash_offset);
+		GET_CASE(BORDER_WIDTH, double, impl->border_width);
+		GET_CASE(FILL_COLOR, uint, impl->fill_color);
+		GET_CASE(BORDER_COLOR, uint, impl->border_color);
+		GET_CASE(CAN_TAIL, boolean, impl->can_tail);
+		GET_CASE(CAN_HEAD, boolean, impl->can_head);
+		GET_CASE(SELECTED, boolean, impl->selected);
+		GET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
+		GET_CASE(DRAGGABLE, boolean, impl->draggable);
 	case PROP_CANVAS:
 		g_value_set_object(value, item->canvas);
 		break;
@@ -227,41 +233,38 @@ ganv_node_get_draw_properties(const GanvNode* node,
                               double*         border_color,
                               double*         fill_color)
 {
-	*dash_length  = node->dash_length;
-	*border_color = node->border_color;
-	*fill_color   = node->fill_color;
+	GanvNodeImpl* impl = node->impl;
 
-	if (node->selected) {
+	*dash_length  = impl->dash_length;
+	*border_color = impl->border_color;
+	*fill_color   = impl->fill_color;
+
+	if (impl->selected) {
 		*dash_length  = 4.0;
-		*border_color = highlight_color(node->border_color, 0x20);
+		*border_color = highlight_color(impl->border_color, 0x20);
 	}
 
-	if (node->highlighted) {
-		*fill_color   = highlight_color(node->fill_color, 0x20);
-		*border_color = highlight_color(node->border_color, 0x20);
+	if (impl->highlighted) {
+		*fill_color   = highlight_color(impl->fill_color, 0x20);
+		*border_color = highlight_color(impl->border_color, 0x20);
 	}
-}
-
-const char*
-ganv_node_get_label(const GanvNode* node)
-{
-	return node->label ? node->label->text : NULL;
 }
 
 void
 ganv_node_set_label(GanvNode* node, const char* str)
 {
+	GanvNodeImpl* impl = node->impl;
 	if (str[0] == '\0' || !str) {
-		if (node->label) {
-			gtk_object_destroy(GTK_OBJECT(node->label));
-			node->label = NULL;
+		if (impl->label) {
+			gtk_object_destroy(GTK_OBJECT(impl->label));
+			impl->label = NULL;
 		}
-	} else if (node->label) {
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(node->label),
+	} else if (impl->label) {
+		gnome_canvas_item_set(GNOME_CANVAS_ITEM(impl->label),
 		                      "text", str,
 		                      NULL);
 	} else {
-		node->label = GANV_TEXT(gnome_canvas_item_new(
+		impl->label = GANV_TEXT(gnome_canvas_item_new(
 			                        GNOME_CANVAS_GROUP(node),
 			                        ganv_text_get_type(),
 			                        "text", str,
@@ -277,10 +280,10 @@ ganv_node_set_label(GanvNode* node, const char* str)
 
 static void
 ganv_node_default_tick(GanvNode* self,
-                       double          seconds)
+                       double    seconds)
 {
 	GanvNode* node = GANV_NODE(self);
-	node->dash_offset = seconds * 8.0;
+	node->impl->dash_offset = seconds * 8.0;
 	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(self));
 }
 
@@ -315,10 +318,10 @@ ganv_node_default_move_to(GanvNode* node,
 	                      "x", x,
 	                      "y", y,
 	                      NULL);
-	if (node->can_tail) {
+	if (node->impl->can_tail) {
 		ganv_canvas_for_each_edge_from(
 			canvas, node, ganv_edge_update_location);
-	} else if (node->can_head) {
+	} else if (node->impl->can_head) {
 		ganv_canvas_for_each_edge_to(
 			canvas, node, ganv_edge_update_location);
 	}
@@ -357,7 +360,7 @@ ganv_node_default_on_event(GanvNode* node,
 		drag_start_y = event->button.y;
 		last_x       = event->button.x;
 		last_y       = event->button.y;
-		if (!canvas->locked && node->draggable && event->button.button == 1) {
+		if (!canvas->locked && node->impl->draggable && event->button.button == 1) {
 			gnome_canvas_item_grab(
 				GNOME_CANVAS_ITEM(node),
 				GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK|GDK_BUTTON_PRESS_MASK,
@@ -443,6 +446,8 @@ ganv_node_class_init(GanvNodeClass* class)
 	GnomeCanvasItemClass* item_class    = (GnomeCanvasItemClass*)class;
 
 	parent_class = GNOME_CANVAS_GROUP_CLASS(g_type_class_peek_parent(class));
+
+	g_type_class_add_private(class, sizeof(GanvNodeImpl));
 
 	gobject_class->set_property = ganv_node_set_property;
 	gobject_class->get_property = ganv_node_get_property;
@@ -582,4 +587,106 @@ to its partner."),
 	class->tail_vector       = ganv_node_default_tail_vector;
 	class->head_vector       = ganv_node_default_head_vector;
 	class->on_event          = ganv_node_default_on_event;
+}
+gboolean
+ganv_node_can_tail(const GanvNode* self)
+{
+	return self->impl->can_tail;
+}
+
+gboolean
+ganv_node_can_head(const GanvNode* self)
+{
+	return self->impl->can_head;
+}
+
+gboolean
+ganv_node_is_within(const GanvNode* self,
+                    double          x1,
+                    double          y1,
+                    double          x2,
+                    double          y2)
+{
+	return GANV_NODE_GET_CLASS(self)->is_within(
+		self, x1, y1, x2, y2);
+}
+
+void
+ganv_node_tick(GanvNode* self,
+               double    seconds)
+{
+	GanvNodeClass* klass = GANV_NODE_GET_CLASS(self);
+	if (klass->tick) {
+		klass->tick(self, seconds);
+	}
+}
+
+void
+ganv_node_tail_vector(const GanvNode* self,
+                      const GanvNode* head,
+                      double*         x1,
+                      double*         y1,
+                      double*         x2,
+                      double*         y2)
+{
+	GANV_NODE_GET_CLASS(self)->tail_vector(
+		self, head, x1, y1, x2, y2);
+}
+
+void
+ganv_node_head_vector(const GanvNode* self,
+                      const GanvNode* tail,
+                      double*         x1,
+                      double*         y1,
+                      double*         x2,
+                      double*         y2)
+{
+	GANV_NODE_GET_CLASS(self)->head_vector(
+		self, tail, x1, y1, x2, y2);
+}
+
+const char*
+ganv_node_get_label(const GanvNode* node)
+{
+	return node->impl->label ? node->impl->label->impl->text : NULL;
+}
+
+GanvNode*
+ganv_node_get_partner(const GanvNode* node)
+{
+	return node->impl->partner;
+}
+
+void ganv_node_set_label(GanvNode*   node,
+                         const char* str);
+
+void
+ganv_node_move(GanvNode* node,
+               double    dx,
+               double    dy)
+{
+	GANV_NODE_GET_CLASS(node)->move(node, dx, dy);
+}
+
+void
+ganv_node_move_to(GanvNode* node,
+                  double    x,
+                  double    y)
+{
+	GANV_NODE_GET_CLASS(node)->move_to(node, x, y);
+}
+
+void
+ganv_node_resize(GanvNode* node)
+{
+	GanvNodeClass* klass = GANV_NODE_GET_CLASS(node);
+	if (klass->resize) {
+		klass->resize(node);
+	}
+}
+
+void
+ganv_node_disconnect(GanvNode* node)
+{
+	GANV_NODE_GET_CLASS(node)->disconnect(node);
 }

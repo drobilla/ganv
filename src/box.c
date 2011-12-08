@@ -23,6 +23,7 @@
 #include "./boilerplate.h"
 #include "./color.h"
 #include "./gettext.h"
+#include "./ganv-private.h"
 
 static const double STACKED_OFFSET = 4.0;
 
@@ -46,14 +47,16 @@ enum {
 static void
 ganv_box_init(GanvBox* box)
 {
-	memset(&box->coords, '\0', sizeof(GanvBoxCoords));
-	box->coords.border_width = box->node.border_width;
+	box->impl = GANV_BOX_GET_PRIVATE(box);
 
-	box->old_coords = box->coords;
-	box->radius_tl  = 0.0;
-	box->radius_tr  = 0.0;
-	box->radius_br  = 0.0;
-	box->radius_bl  = 0.0;
+	memset(&box->impl->coords, '\0', sizeof(GanvBoxCoords));
+	box->impl->coords.border_width = box->node.impl->border_width;
+
+	box->impl->old_coords = box->impl->coords;
+	box->impl->radius_tl  = 0.0;
+	box->impl->radius_tr  = 0.0;
+	box->impl->radius_br  = 0.0;
+	box->impl->radius_bl  = 0.0;
 }
 
 static void
@@ -77,17 +80,18 @@ ganv_box_set_property(GObject*      object,
 	g_return_if_fail(GANV_IS_BOX(object));
 
 	GanvBox*       box    = GANV_BOX(object);
-	GanvBoxCoords* coords = &box->coords;
+	GanvBoxImpl*   impl   = box->impl;
+	GanvBoxCoords* coords = &impl->coords;
 
 	switch (prop_id) {
 		SET_CASE(X1, double, coords->x1);
 		SET_CASE(Y1, double, coords->y1);
 		SET_CASE(X2, double, coords->x2);
 		SET_CASE(Y2, double, coords->y2);
-		SET_CASE(RADIUS_TL, double, box->radius_tl);
-		SET_CASE(RADIUS_TR, double, box->radius_tr);
-		SET_CASE(RADIUS_BR, double, box->radius_br);
-		SET_CASE(RADIUS_BL, double, box->radius_bl);
+		SET_CASE(RADIUS_TL, double, impl->radius_tl);
+		SET_CASE(RADIUS_TR, double, impl->radius_tr);
+		SET_CASE(RADIUS_BR, double, impl->radius_br);
+		SET_CASE(RADIUS_BL, double, impl->radius_bl);
 		SET_CASE(STACKED, boolean, coords->stacked);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -104,18 +108,20 @@ ganv_box_get_property(GObject*    object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_BOX(object));
 
-	GanvBox* box = GANV_BOX(object);
+	GanvBox*       box    = GANV_BOX(object);
+	GanvBoxImpl*   impl   = box->impl;
+	GanvBoxCoords* coords = &impl->coords;
 
 	switch (prop_id) {
-		GET_CASE(X1, double, box->coords.x1);
-		GET_CASE(X2, double, box->coords.x2);
-		GET_CASE(Y1, double, box->coords.y1);
-		GET_CASE(Y2, double, box->coords.y2);
-		GET_CASE(RADIUS_TL, double, box->radius_tl);
-		GET_CASE(RADIUS_TR, double, box->radius_tr);
-		GET_CASE(RADIUS_BR, double, box->radius_br);
-		GET_CASE(RADIUS_BL, double, box->radius_bl);
-		GET_CASE(STACKED, boolean, box->coords.stacked);
+		GET_CASE(X1, double, coords->x1);
+		GET_CASE(X2, double, coords->x2);
+		GET_CASE(Y1, double, coords->y1);
+		GET_CASE(Y2, double, coords->y2);
+		GET_CASE(RADIUS_TL, double, impl->radius_tl);
+		GET_CASE(RADIUS_TR, double, impl->radius_tr);
+		GET_CASE(RADIUS_BR, double, impl->radius_br);
+		GET_CASE(RADIUS_BL, double, impl->radius_bl);
+		GET_CASE(STACKED, boolean, impl->coords.stacked);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -170,7 +176,7 @@ ganv_box_bounds(GnomeCanvasItem* item,
 {
 	// Note this will not be correct if children are outside the box bounds
 	GanvBox* box = GANV_BOX(item);
-	ganv_box_bounds_item(&box->coords, x1, y1, x2, y2);
+	ganv_box_bounds_item(&box->impl->coords, x1, y1, x2, y2);
 	gnome_canvas_item_i2w(item, x1, y1);
 	gnome_canvas_item_i2w(item, x2, y2);
 }
@@ -181,19 +187,20 @@ ganv_box_update(GnomeCanvasItem* item,
                 ArtSVP*          clip_path,
                 int              flags)
 {
-	GanvBox* box = GANV_BOX(item);
-	box->coords.border_width = box->node.border_width;
+	GanvBox*     box  = GANV_BOX(item);
+	GanvBoxImpl* impl = box->impl;
+	impl->coords.border_width = box->node.impl->border_width;
 
 	// Request redraw of old location
-	request_redraw(item, &box->old_coords, TRUE);
+	request_redraw(item, &impl->old_coords, TRUE);
 
 	GnomeCanvasItemClass* item_class = GNOME_CANVAS_ITEM_CLASS(parent_class);
 	item_class->update(item, affine, clip_path, flags);
 
 	// Store old coordinates in world relative coordinates in case the
 	// group we are in moves between now and the next update
-	box->old_coords = box->coords;
-	coords_i2w(item, &box->old_coords);
+	impl->old_coords = impl->coords;
+	coords_i2w(item, &impl->old_coords);
 
 	// Get bounding box
 	double x1, x2, y1, y2;
@@ -204,7 +211,7 @@ ganv_box_update(GnomeCanvasItem* item,
 	gnome_canvas_w2c_d(GNOME_CANVAS(item->canvas), x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
-	request_redraw(item, &box->coords, FALSE);
+	request_redraw(item, &impl->coords, FALSE);
 
 }
 
@@ -221,48 +228,49 @@ ganv_box_draw(GnomeCanvasItem* item,
               int cx, int cy,
               int width, int height)
 {
-	GanvBox* me = GANV_BOX(item);
-	cairo_t*       cr = gdk_cairo_create(drawable);
+	GanvBox*     box  = GANV_BOX(item);
+	GanvBoxImpl* impl = box->impl;
+	cairo_t*     cr   = gdk_cairo_create(drawable);
 
-	double x1 = me->coords.x1;
-	double y1 = me->coords.y1;
-	double x2 = me->coords.x2;
-	double y2 = me->coords.y2;
+	double x1 = impl->coords.x1;
+	double y1 = impl->coords.y1;
+	double x2 = impl->coords.x2;
+	double y2 = impl->coords.y2;
 	gnome_canvas_item_i2w(item, &x1, &y1);
 	gnome_canvas_item_i2w(item, &x2, &y2);
 
 	double dash_length, border_color, fill_color;
 	ganv_node_get_draw_properties(
-		&me->node, &dash_length, &border_color, &fill_color);
+		&box->node, &dash_length, &border_color, &fill_color);
 
 	double r, g, b, a;
 
 	double degrees = M_PI / 180.0;
 
-	for (int i = (me->coords.stacked ? 1 : 0); i >= 0; --i) {
+	for (int i = (impl->coords.stacked ? 1 : 0); i >= 0; --i) {
 		const int x = cx - (STACKED_OFFSET * i);
 		const int y = cy - (STACKED_OFFSET * i);
 
-		if (me->radius_tl == 0.0 && me->radius_tr == 0.0
-		    && me->radius_br == 0.0 && me->radius_bl == 0.0) {
+		if (impl->radius_tl == 0.0 && impl->radius_tr == 0.0
+		    && impl->radius_br == 0.0 && impl->radius_bl == 0.0) {
 			// Simple rectangle
 			cairo_rectangle(cr, x1 - x, y1 - y, x2 - x1, y2 - y1);
 		} else {
 			// Rounded rectangle
 			cairo_new_sub_path(cr);
 			cairo_arc(cr,
-			          x2 - x - me->radius_tr,
-			          y1 - y + me->radius_tr,
-			          me->radius_tr, -90 * degrees, 0 * degrees);
+			          x2 - x - impl->radius_tr,
+			          y1 - y + impl->radius_tr,
+			          impl->radius_tr, -90 * degrees, 0 * degrees);
 			cairo_arc(cr,
-			          x2 - x - me->radius_br, y2 - y - me->radius_br,
-			          me->radius_br, 0 * degrees, 90 * degrees);
+			          x2 - x - impl->radius_br, y2 - y - impl->radius_br,
+			          impl->radius_br, 0 * degrees, 90 * degrees);
 			cairo_arc(cr,
-			          x1 - x + me->radius_bl, y2 - y - me->radius_bl,
-			          me->radius_bl, 90 * degrees, 180 * degrees);
+			          x1 - x + impl->radius_bl, y2 - y - impl->radius_bl,
+			          impl->radius_bl, 90 * degrees, 180 * degrees);
 			cairo_arc(cr,
-			          x1 - x + me->radius_tl, y1 - y + me->radius_tl,
-			          me->radius_tl, 180 * degrees, 270 * degrees);
+			          x1 - x + impl->radius_tl, y1 - y + impl->radius_tl,
+			          impl->radius_tl, 180 * degrees, 270 * degrees);
 			cairo_close_path(cr);
 		}
 
@@ -272,12 +280,12 @@ ganv_box_draw(GnomeCanvasItem* item,
 		cairo_fill_preserve(cr);
 
 		// Border
-		if (me->coords.border_width > 0.0) {
+		if (impl->coords.border_width > 0.0) {
 			color_to_rgba(border_color, &r, &g, &b, &a);
 			cairo_set_source_rgba(cr, r, g, b, a);
-			cairo_set_line_width(cr, me->coords.border_width);
+			cairo_set_line_width(cr, impl->coords.border_width);
 			if (dash_length > 0) {
-				cairo_set_dash(cr, &dash_length, 1, me->node.dash_offset);
+				cairo_set_dash(cr, &dash_length, 1, box->node.impl->dash_offset);
 			}
 		}
 		cairo_stroke(cr);
@@ -295,12 +303,13 @@ ganv_box_point(GnomeCanvasItem* item,
                int cx, int cy,
                GnomeCanvasItem** actual_item)
 {
-	GanvBox* box = GANV_BOX(item);
+	GanvBox*     box  = GANV_BOX(item);
+	GanvBoxImpl* impl = box->impl;
 
 	*actual_item = NULL;
 
 	double x1, y1, x2, y2;
-	ganv_box_bounds_item(&box->coords, &x1, &y1, &x2, &y2);
+	ganv_box_bounds_item(&impl->coords, &x1, &y1, &x2, &y2);
 
 	// Point is inside the box (distance 0)
 	if ((x >= x1) && (y >= y1) && (x <= x2) && (y <= y2)) {
@@ -389,6 +398,8 @@ ganv_box_class_init(GanvBoxClass* class)
 	GanvNodeClass*        node_class    = (GanvNodeClass*)class;
 
 	parent_class = GANV_NODE_CLASS(g_type_class_peek_parent(class));
+
+	g_type_class_add_private(class, sizeof(GanvBoxImpl));
 
 	gobject_class->set_property = ganv_box_set_property;
 	gobject_class->get_property = ganv_box_get_property;
@@ -490,13 +501,71 @@ ganv_box_class_init(GanvBoxClass* class)
 void
 ganv_box_normalize(GanvBox* box)
 {
-	const double x1 = box->coords.x1;
-	const double y1 = box->coords.y1;
-	const double x2 = box->coords.x2;
-	const double y2 = box->coords.y2;
+	GanvBoxCoords* coords = &box->impl->coords;
 
-	box->coords.x1 = MIN(x1, x2);
-	box->coords.y1 = MIN(y1, y2);
-	box->coords.x2 = MAX(x1, x2);
-	box->coords.y2 = MAX(y1, y2);
+	const double x1 = coords->x1;
+	const double y1 = coords->y1;
+	const double x2 = coords->x2;
+	const double y2 = coords->y2;
+
+	coords->x1 = MIN(x1, x2);
+	coords->y1 = MIN(y1, y2);
+	coords->x2 = MAX(x1, x2);
+	coords->y2 = MAX(y1, y2);
+}
+
+double
+ganv_box_get_x1(const GanvBox* box)
+{
+	return box->impl->coords.x1;
+}
+
+double
+ganv_box_get_y1(const GanvBox* box)
+{
+	return box->impl->coords.y1;
+}
+
+double
+ganv_box_get_x2(const GanvBox* box)
+{
+	return box->impl->coords.x2;
+}
+
+double
+ganv_box_get_y2(const GanvBox* box)
+{
+	return box->impl->coords.y2;
+}
+
+double
+ganv_box_get_width(const GanvBox* box)
+{
+	return box->impl->coords.x2 - box->impl->coords.x1;
+}
+
+void
+ganv_box_set_width(GanvBox* box,
+                   double   width)
+{
+	GANV_BOX_GET_CLASS(box)->set_width(box, width);
+}
+
+double
+ganv_box_get_height(const GanvBox* box)
+{
+	return box->impl->coords.y2 - box->impl->coords.y1;
+}
+
+void
+ganv_box_set_height(GanvBox* box,
+                    double   height)
+{
+	GANV_BOX_GET_CLASS(box)->set_height(box, height);
+}
+
+double
+ganv_box_get_border_width(const GanvBox* box)
+{
+	return box->impl->coords.border_width;
 }

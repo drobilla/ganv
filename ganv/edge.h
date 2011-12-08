@@ -23,37 +23,21 @@
 
 G_BEGIN_DECLS
 
-#define GANV_TYPE_EDGE            (ganv_edge_get_type())
-#define GANV_EDGE(obj)            (GTK_CHECK_CAST((obj), GANV_TYPE_EDGE, GanvEdge))
-#define GANV_EDGE_CLASS(klass)    (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_EDGE, GanvEdgeClass))
-#define GANV_IS_EDGE(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_EDGE))
-#define GANV_IS_EDGE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_EDGE))
-#define GANV_EDGE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_EDGE, GanvEdgeClass))
+#define GANV_TYPE_EDGE             (ganv_edge_get_type())
+#define GANV_EDGE(obj)             (GTK_CHECK_CAST((obj), GANV_TYPE_EDGE, GanvEdge))
+#define GANV_EDGE_CLASS(klass)     (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_EDGE, GanvEdgeClass))
+#define GANV_IS_EDGE(obj)          (GTK_CHECK_TYPE((obj), GANV_TYPE_EDGE))
+#define GANV_IS_EDGE_CLASS(klass)  (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_EDGE))
+#define GANV_EDGE_GET_CLASS(obj)   (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_EDGE, GanvEdgeClass))
+#define GANV_EDGE_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GANV_TYPE_EDGE, GanvEdgeImpl))
 
 typedef struct _GanvEdgeClass GanvEdgeClass;
-
-typedef struct {
-	double   x1, y1, x2, y2;
-	double   cx1, cy1, cx2, cy2;
-	double   handle_x, handle_y, handle_radius;
-	double   width;
-	gboolean curved;
-	gboolean arrowhead;
-} GanvEdgeCoords;
+typedef struct _GanvEdgeImpl GanvEdgeImpl;
 
 struct _GanvEdge
 {
 	GnomeCanvasItem item;
-	GanvNode*       tail;
-	GanvNode*       head;
-	GanvEdgeCoords  coords;
-	GanvEdgeCoords  old_coords;
-	double          dash_length;
-	double          dash_offset;
-	guint           color;
-	gboolean        selected;
-	gboolean        highlighted;
-	gboolean        ghost;
+	GanvEdgeImpl*   impl;
 };
 
 struct _GanvEdgeClass {
@@ -97,17 +81,11 @@ void
 ganv_edge_tick(GanvEdge* edge,
                double    seconds);
 
-static inline GanvNode*
-ganv_edge_get_tail(const GanvEdge* edge)
-{
-	return edge->tail;
-}
+GanvNode*
+ganv_edge_get_tail(const GanvEdge* edge);
 
-static inline GanvNode*
-ganv_edge_get_head(const GanvEdge* edge)
-{
-	return edge->head;
-}
+GanvNode*
+ganv_edge_get_head(const GanvEdge* edge);
 	
 G_END_DECLS
 

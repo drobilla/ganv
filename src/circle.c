@@ -21,6 +21,7 @@
 #include "./color.h"
 #include "./boilerplate.h"
 #include "./gettext.h"
+#include "./ganv-private.h"
 
 G_DEFINE_TYPE(GanvCircle, ganv_circle, GANV_TYPE_NODE)
 
@@ -34,10 +35,12 @@ enum {
 static void
 ganv_circle_init(GanvCircle* circle)
 {
-	memset(&circle->coords, '\0', sizeof(GanvCircleCoords));
-	circle->coords.radius = 8.0;
-	circle->coords.width  = 2.0;
-	circle->old_coords    = circle->coords;
+	circle->impl = GANV_CIRCLE_GET_PRIVATE(circle);
+
+	memset(&circle->impl->coords, '\0', sizeof(GanvCircleCoords));
+	circle->impl->coords.radius = 8.0;
+	circle->impl->coords.width  = 2.0;
+	circle->impl->old_coords    = circle->impl->coords;
 }
 
 static void
@@ -63,7 +66,7 @@ ganv_circle_set_property(GObject*      object,
 	GanvCircle* circle = GANV_CIRCLE(object);
 
 	switch (prop_id) {
-		SET_CASE(RADIUS, double, circle->coords.radius);
+		SET_CASE(RADIUS, double, circle->impl->coords.radius);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -82,7 +85,7 @@ ganv_circle_get_property(GObject*    object,
 	GanvCircle* circle = GANV_CIRCLE(object);
 
 	switch (prop_id) {
-		GET_CASE(RADIUS, double, circle->coords.radius);
+		GET_CASE(RADIUS, double, circle->impl->coords.radius);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -91,10 +94,10 @@ ganv_circle_get_property(GObject*    object,
 
 static gboolean
 ganv_circle_is_within(const GanvNode* self,
-                      double                x1,
-                      double                y1,
-                      double                x2,
-                      double                y2)
+                      double          x1,
+                      double          y1,
+                      double          x2,
+                      double          y2)
 {
 	double x, y;
 	g_object_get(G_OBJECT(self), "x", &x, "y", &y, NULL);
@@ -144,7 +147,7 @@ ganv_circle_head_vector(const GanvNode* self,
 	const double h     = sqrt((xdist * xdist) + (ydist * ydist));
 	const double theta = asin(xdist / (h + DBL_EPSILON));
 	const double y_mod = (cy < tail_y) ? 1 : -1;
-	const double ret_h = h - circle->coords.radius;
+	const double ret_h = h - circle->impl->coords.radius;
 	const double ret_x = tail_x - sin(theta) * ret_h;
 	const double ret_y = tail_y - cos(theta) * ret_h * y_mod;
 
@@ -190,7 +193,7 @@ ganv_circle_bounds_item(GnomeCanvasItem* item,
                         double* x2, double* y2)
 {
 	const GanvCircle*       circle = GANV_CIRCLE(item);
-	const GanvCircleCoords* coords = &circle->coords;
+	const GanvCircleCoords* coords = &circle->impl->coords;
 	*x1 = coords->x - coords->radius - coords->width;
 	*y1 = coords->y - coords->radius - coords->width;
 	*x2 = coords->x + coords->radius + coords->width;
@@ -213,7 +216,8 @@ ganv_circle_update(GnomeCanvasItem* item,
                    ArtSVP*          clip_path,
                    int              flags)
 {
-	GanvCircle* circle = GANV_CIRCLE(item);
+	GanvCircle*     circle = GANV_CIRCLE(item);
+	GanvCircleImpl* impl   = circle->impl;
 
 	GnomeCanvasItemClass* item_class = GNOME_CANVAS_ITEM_CLASS(parent_class);
 	if (item_class->update) {
@@ -221,12 +225,12 @@ ganv_circle_update(GnomeCanvasItem* item,
 	}
 
 	// Request redraw of old location
-	request_redraw(item, &circle->old_coords, TRUE);
+	request_redraw(item, &impl->old_coords, TRUE);
 
 	// Store old coordinates in world relative coordinates in case the
 	// group we are in moves between now and the next update
-	circle->old_coords = circle->coords;
-	coords_i2w(item, &circle->old_coords);
+	impl->old_coords = impl->coords;
+	coords_i2w(item, &impl->old_coords);
 
 	// Get bounding circle
 	double x1, x2, y1, y2;
@@ -237,7 +241,7 @@ ganv_circle_update(GnomeCanvasItem* item,
 	gnome_canvas_w2c_d(GNOME_CANVAS(item->canvas), x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
-	request_redraw(item, &circle->coords, FALSE);
+	request_redraw(item, &impl->coords, FALSE);
 }
 
 static void
@@ -253,23 +257,24 @@ ganv_circle_draw(GnomeCanvasItem* item,
                  int x, int y,
                  int width, int height)
 {
-	GanvCircle* me = GANV_CIRCLE(item);
-	cairo_t*          cr = gdk_cairo_create(drawable);
+	GanvCircle*     circle = GANV_CIRCLE(item);
+	GanvCircleImpl* impl   = circle->impl;
+	cairo_t*        cr     = gdk_cairo_create(drawable);
 
 	double r, g, b, a;
 
-	double cx = me->coords.x;
-	double cy = me->coords.y;
+	double cx = impl->coords.x;
+	double cy = impl->coords.y;
 	gnome_canvas_item_i2w(item, &cx, &cy);
 
 	double dash_length, border_color, fill_color;
 	ganv_node_get_draw_properties(
-		&me->node, &dash_length, &border_color, &fill_color);
+		&circle->node, &dash_length, &border_color, &fill_color);
 
 	cairo_arc(cr,
 	          cx - x,
 	          cy - y,
-	          me->coords.radius,
+	          impl->coords.radius,
 	          0, 2 * M_PI);
 
 	// Fill
@@ -280,9 +285,9 @@ ganv_circle_draw(GnomeCanvasItem* item,
 	// Border
 	color_to_rgba(border_color, &r, &g, &b, &a);
 	cairo_set_source_rgba(cr, r, g, b, a);
-	cairo_set_line_width(cr, me->coords.width);
+	cairo_set_line_width(cr, impl->coords.width);
 	if (dash_length > 0) {
-		cairo_set_dash(cr, &dash_length, 1, me->node.dash_offset);
+		cairo_set_dash(cr, &dash_length, 1, circle->node.impl->dash_offset);
 	}
 	cairo_stroke(cr);
 
@@ -296,7 +301,7 @@ ganv_circle_point(GnomeCanvasItem* item,
                   GnomeCanvasItem** actual_item)
 {
 	const GanvCircle*       circle = GANV_CIRCLE(item);
-	const GanvCircleCoords* coords = &circle->coords;
+	const GanvCircleCoords* coords = &circle->impl->coords;
 
 	*actual_item = item;
 
@@ -322,6 +327,8 @@ ganv_circle_class_init(GanvCircleClass* class)
 	GanvNodeClass*        node_class    = (GanvNodeClass*)class;
 
 	parent_class = GANV_NODE_CLASS(g_type_class_peek_parent(class));
+
+	g_type_class_add_private(class, sizeof(GanvCircleImpl));
 
 	gobject_class->set_property = ganv_circle_set_property;
 	gobject_class->get_property = ganv_circle_get_property;

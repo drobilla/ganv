@@ -112,16 +112,18 @@ static const uint32_t SELECT_RECT_BORDER_COLOUR = 0x2E4445FF;
 /** Order edges by (tail, head) */
 struct TailHeadOrder {
 	inline bool operator()(const GanvEdge* a, const GanvEdge* b) const {
-		return ((a->tail < b->tail)
-		        || (a->tail == b->tail && a->head < b->head));
+		return ((a->impl->tail < b->impl->tail)
+		        || (a->impl->tail == b->impl->tail
+		            && a->impl->head < b->impl->head));
 	}
 };
 
 /** Order edges by (head, tail) */
 struct HeadTailOrder {
 	inline bool operator()(const GanvEdge* a, const GanvEdge* b) const {
-		return ((a->head < b->head)
-		        || (a->head == b->head && a->tail < b->tail));
+		return ((a->impl->head < b->impl->head)
+		        || (a->impl->head == b->impl->head
+		            && a->impl->tail < b->impl->tail));
 	}
 };
 
@@ -259,28 +261,37 @@ struct GanvCanvasImpl {
 	GdkCursor* _move_cursor;
 };
 
-static GanvEdge
-make_edge_search_key(const GanvNode* tail, const GanvNode* head)
+typedef struct {
+	GnomeCanvasItem item;
+	GanvEdgeImpl*   impl;
+	GanvEdgeImpl    impl_data;
+} GanvEdgeKey;
+
+static void
+make_edge_search_key(GanvEdgeKey*    key,
+                     const GanvNode* tail,
+                     const GanvNode* head)
 {
-	GanvEdge key;
-	memset(&key, '\0', sizeof(GanvEdge));
-	key.tail = const_cast<GanvNode*>(tail);
-	key.head = const_cast<GanvNode*>(head);
-	return key;
+	memset(key, '\0', sizeof(GanvEdgeKey));
+	key->impl = &key->impl_data;
+	key->impl->tail = const_cast<GanvNode*>(tail);
+	key->impl->head = const_cast<GanvNode*>(head);
 }
 
 GanvCanvasImpl::Edges::const_iterator
 GanvCanvasImpl::first_edge_from(const GanvNode* tail)
 {
-	GanvEdge key = make_edge_search_key(tail, NULL);
-	return _edges.lower_bound(&key);
+	GanvEdgeKey key;
+	make_edge_search_key(&key, tail, NULL);
+	return _edges.lower_bound((GanvEdge*)&key);
 }
 
 GanvCanvasImpl::DstEdges::const_iterator
 GanvCanvasImpl::first_edge_to(const GanvNode* head)
 {
-	GanvEdge key = make_edge_search_key(NULL, head);
-	return _dst_edges.lower_bound(&key);
+	GanvEdgeKey key;
+	make_edge_search_key(&key, NULL, head);
+	return _dst_edges.lower_bound((GanvEdge*)&key);
 }
 
 void
@@ -318,10 +329,11 @@ GanvCanvasImpl::selection_move_finished()
 static void
 select_if_tail_is_selected(GanvEdge* edge)
 {
-	gboolean selected;
-	g_object_get(edge->tail, "selected", &selected, NULL);
-	if (!selected && GANV_IS_PORT(edge->tail)) {
-		g_object_get(ganv_port_get_module(GANV_PORT(edge->tail)),
+	GanvNode* tail = edge->impl->tail;
+	gboolean  selected;
+	g_object_get(tail, "selected", &selected, NULL);
+	if (!selected && GANV_IS_PORT(tail)) {
+		g_object_get(ganv_port_get_module(GANV_PORT(tail)),
 		             "selected", &selected, NULL);
 	}
 		
@@ -333,10 +345,11 @@ select_if_tail_is_selected(GanvEdge* edge)
 static void
 select_if_head_is_selected(GanvEdge* edge)
 {
-	gboolean selected;
-	g_object_get(edge->head, "selected", &selected, NULL);
-	if (!selected && GANV_IS_PORT(edge->head)) {
-		g_object_get(ganv_port_get_module(GANV_PORT(edge->head)),
+	GanvNode* head = edge->impl->head;
+	gboolean  selected;
+	g_object_get(head, "selected", &selected, NULL);
+	if (!selected && GANV_IS_PORT(head)) {
+		g_object_get(ganv_port_get_module(GANV_PORT(head)),
 		             "selected", &selected, NULL);
 	}
 		
@@ -349,7 +362,7 @@ static void
 select_edges(GanvPort* port, void* data)
 {
 	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
-	if (port->is_input) {
+	if (port->impl->is_input) {
 		impl->for_each_edge_to(GANV_NODE(port),
 		                       select_if_tail_is_selected);
 	} else {
@@ -381,8 +394,7 @@ GanvCanvasImpl::remove_item(GanvNode* item)
 	if (GANV_IS_MODULE(item)) {
 		GanvModule* const module = GANV_MODULE(item);
 		for (unsigned i = 0; i < ganv_module_num_ports(module); ++i) {
-			unselect_port((GanvPort*)g_ptr_array_index(
-				              module->ports, i));
+			unselect_port(ganv_module_get_port(module, i));
 		}
 	}
 
@@ -411,7 +423,7 @@ static void
 unselect_edges(GanvPort* port, void* data)
 {
 	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
-	if (port->is_input) {
+	if (port->impl->is_input) {
 		impl->for_each_edge_to(GANV_NODE(port),
 		                       ganv_edge_unselect);
 	} else {
@@ -499,7 +511,7 @@ GanvCanvasImpl::layout_dot(bool use_length_hints, const std::string& filename)
 			if (label) {
 				agsafeset(node, (char*)"label", (char*)label, NULL);
 				double width, height;
-				g_object_get((*i)->label, "width", &width, "height", &height, NULL);
+				g_object_get((*i)->impl->label, "width", &width, "height", &height, NULL);
 				gv_set(node, "width", width / dpi);
 				gv_set(node, "height", height / dpi);
 			}
@@ -507,8 +519,8 @@ GanvCanvasImpl::layout_dot(bool use_length_hints, const std::string& filename)
 
 			// Make a node in the subgraph for each port on this module
 			GanvModule* const m = GANV_MODULE(*i);
-			for (size_t i = 0; i < m->ports->len; ++i) {
-				GanvPort* port = (GanvPort*)g_ptr_array_index(m->ports, i);
+			for (size_t i = 0; i < ganv_module_num_ports(m); ++i) {
+				GanvPort* port = ganv_module_get_port(m, i);
 				ss.str("");
 				ss << "p" << id++;
 				Agnode_t* pnode = agnode(subg, (char*)ss.str().c_str());
@@ -551,8 +563,8 @@ GanvCanvasImpl::layout_dot(bool use_length_hints, const std::string& filename)
 	FOREACH_EDGE(_edges, i) {
 		const GanvEdge* const edge = *i;
 
-		GVNodes::iterator tail_i = nodes.find(edge->tail);
-		GVNodes::iterator head_i = nodes.find(edge->head);
+		GVNodes::iterator tail_i = nodes.find(edge->impl->tail);
+		GVNodes::iterator head_i = nodes.find(edge->impl->head);
 
 		if (tail_i != nodes.end() && head_i != nodes.end()) {
 			agedge(G, tail_i->second, head_i->second);
@@ -609,8 +621,9 @@ bool
 GanvCanvasImpl::are_connected(const GanvNode* tail,
                               const GanvNode* head)
 {
-	GanvEdge key = make_edge_search_key(tail, head);
-	return (_edges.find(&key) != _edges.end());
+	GanvEdgeKey key;
+	make_edge_search_key(&key, tail, head);
+	return (_edges.find((GanvEdge*)&key) != _edges.end());
 }
 
 void
@@ -644,13 +657,13 @@ GanvCanvasImpl::select_port_toggle(GanvPort* port, int mod_state)
 			GanvPort* old_last_selected = _last_selected_port;
 			GanvPort* first             = NULL;
 			bool            done              = false;
-			for (size_t i = 0; i < m->ports->len; ++i) {
-				GanvPort* const p = (GanvPort*)g_ptr_array_index(m->ports, i);
+			for (size_t i = 0; i < ganv_module_num_ports(m); ++i) {
+				GanvPort* const p = ganv_module_get_port(m, i);
 				if (!first && !done && (p == _last_selected_port || p == port)) {
 					first = p;
 				}
 
-				if (first && !done && p->is_input == first->is_input) {
+				if (first && !done && p->impl->is_input == first->impl->is_input) {
 					select_port(p, false);
 				} else {
 					unselect_port(p);
@@ -702,7 +715,7 @@ GanvCanvasImpl::join_selection()
 	vector<GanvPort*> inputs;
 	vector<GanvPort*> outputs;
 	FOREACH_SELECTED_PORT(i) {
-		if ((*i)->is_input) {
+		if ((*i)->impl->is_input) {
 			inputs.push_back(*i);
 		} else {
 			outputs.push_back(*i);
@@ -981,7 +994,7 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 				_gcanvas,
 				GANV_NODE(_connect_port),
 				drag_node,
-				"color", GANV_NODE(_connect_port)->fill_color,
+				"color", GANV_NODE(_connect_port)->impl->fill_color,
 				"curved", TRUE,
 				"ghost", TRUE,
 				NULL);
@@ -1071,9 +1084,9 @@ switch (event->type) {
 	case GDK_BUTTON_PRESS:
 		if (event->button.button == 1) {
 			GanvModule* const module = ganv_port_get_module(port);
-			if (module && port->is_input && port->control) {
-				if (port->control->is_toggle) {
-					if (port->control->value >= 0.5) {
+			if (module && port->impl->is_input && port->impl->control) {
+				if (port->impl->control->is_toggle) {
+					if (port->impl->control->value >= 0.5) {
 						ganv_port_set_control_value(port, 0.0);
 					} else {
 						ganv_port_set_control_value(port, 1.0);
@@ -1085,7 +1098,7 @@ switch (event->type) {
 					control_start_value = ganv_port_get_control_value(port);
 				}
 				return true;
-			} else if (!port->is_input) {
+			} else if (!port->impl->is_input) {
 				port_dragging = true;
 				return true;
 			}
@@ -1114,8 +1127,8 @@ switch (event->type) {
 			const double dy = drag_dy / range_y;
 
 			const double value_range = (drag_dx > 0)
-				? port->control->max - control_start_value
-				: control_start_value - port->control->min;
+				? port->impl->control->max - control_start_value
+				: control_start_value - port->impl->control->min;
 
 			const double sens = fmaxf(1.0 - fabs(dy), value_range / range_x);
 
@@ -1133,7 +1146,7 @@ switch (event->type) {
 				unselect_ports();
 			} else {
 				bool modded = event->button.state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK);
-				if (!modded && _last_selected_port && _last_selected_port->is_input != port->is_input) {
+				if (!modded && _last_selected_port && _last_selected_port->impl->is_input != port->impl->is_input) {
 					selection_joined_with(port);
 					unselect_ports();
 				} else {
@@ -1193,10 +1206,10 @@ GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 	GanvNode* src_node;
 	GanvNode* dst_node;
 
-	if (port2->is_input && !port1->is_input) {
+	if (port2->impl->is_input && !port1->impl->is_input) {
 		src_node = GANV_NODE(port1);
 		dst_node = GANV_NODE(port2);
-	} else if (!port2->is_input && port1->is_input) {
+	} else if (!port2->impl->is_input && port1->impl->is_input) {
 		src_node = GANV_NODE(port2);
 		dst_node = GANV_NODE(port1);
 	} else {
@@ -1255,7 +1268,7 @@ GanvCanvasImpl::for_each_edge_from(const GanvNode*  tail,
                                    GanvEdgeFunction f)
 {
 	for (GanvCanvasImpl::Edges::const_iterator i = first_edge_from(tail);
-	     i != _edges.end() && (*i)->tail == tail;) {
+	     i != _edges.end() && (*i)->impl->tail == tail;) {
 		GanvCanvasImpl::Edges::const_iterator next = i;
 		++next;
 		f((*i));
@@ -1268,7 +1281,7 @@ GanvCanvasImpl::for_each_edge_to(const GanvNode*  head,
                                  GanvEdgeFunction f)
 {
 	for (GanvCanvasImpl::Edges::const_iterator i = first_edge_to(head);
-	     i != _dst_edges.end() && (*i)->head == head;) {
+	     i != _dst_edges.end() && (*i)->impl->head == head;) {
 		GanvCanvasImpl::Edges::const_iterator next = i;
 		++next;
 		f((*i));
@@ -1521,8 +1534,8 @@ Edge*
 Canvas::get_edge(Node* tail, Node* head) const
 {
 	FOREACH_EDGE(impl()->_edges, i) {
-		const GanvNode* const t = (*i)->tail;
-		const GanvNode* const h = (*i)->head;
+		const GanvNode* const t = (*i)->impl->tail;
+		const GanvNode* const h = (*i)->impl->head;
 
 		if (t == tail->gobj() && h == head->gobj())
 			return Glib::wrap(*i);

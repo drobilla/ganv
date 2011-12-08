@@ -65,31 +65,45 @@ public:
 	template<typename P, typename C>
 	class iterator_base {
 	public:
-		iterator_base(C** p) : _ptr(p) {}
+		iterator_base(GanvModule* m, guint i) : _module(m), _index(i) {}
 		template<typename T, typename U>
 		iterator_base(const iterator_base<T, U>& i)
-			: _ptr(const_cast<C**>(i._ptr))
+			: _module(i._module)
+			, _index(i._index)
 		{}
-		P* operator*()  const { return Glib::wrap(*_ptr); }
-		P* operator->() const { return Glib::wrap(*_ptr); }
-		iterator_base operator++(int) { return iterator_base<P, C>(_ptr + 1); }
-		iterator_base& operator++()   { ++_ptr; return *this; }
-		bool operator==(const iterator_base<P, C>& i) const { return _ptr == i._ptr; }
-		bool operator!=(const iterator_base<P, C>& i) const { return _ptr != i._ptr; }
+		P* operator*() const {
+			return Glib::wrap(ganv_module_get_port(_module, _index));
+		}
+		P* operator->() const {
+			return Glib::wrap(ganv_module_get_port(_module, _index));
+		}
+		iterator_base operator++(int) const {
+			return iterator_base<P, C>(_index + 1);
+		}
+		iterator_base& operator++() {
+			++_index; return *this;
+		}
+		bool operator==(const iterator_base<P, C>& i) const {
+			return _index == i._index;
+		}
+		bool operator!=(const iterator_base<P, C>& i) const {
+			return _index != i._index;
+		}
 	private:
 		template<typename T, typename U> friend class iterator_base;
-		C** _ptr;
+		GanvModule* _module;
+		guint       _index;
 	};
 
 	typedef iterator_base<Port, GanvPort>             iterator;
 	typedef iterator_base<const Port, const GanvPort> const_iterator;
 
-	iterator       begin()       { return iterator((GanvPort**)gobj()->ports->pdata); }
-	iterator       end()         { return iterator((GanvPort**)gobj()->ports->pdata + gobj()->ports->len); }
-	iterator       back()        { return iterator((GanvPort**)gobj()->ports->pdata + gobj()->ports->len - 1); }
-	const_iterator begin() const { return const_iterator((const GanvPort**)gobj()->ports->pdata); }
-	const_iterator end()   const { return const_iterator((const GanvPort**)gobj()->ports->pdata + gobj()->ports->len); }
-	const_iterator back()  const { return const_iterator((const GanvPort**)gobj()->ports->pdata + gobj()->ports->len - 1); }
+	iterator       begin()       { return iterator(gobj(), 0); }
+	iterator       end()         { return iterator(gobj(), num_ports()); }
+	iterator       back()        { return iterator(gobj(), num_ports() - 1); }
+	const_iterator begin() const { return iterator(const_cast<GanvModule*>(gobj()), 0); }
+	const_iterator end()   const { return iterator(const_cast<GanvModule*>(gobj()), num_ports()); }
+	const_iterator back()  const { return iterator(const_cast<GanvModule*>(gobj()), num_ports() - 1); }
 
 	void set_icon(Gdk::Pixbuf* icon) {
 		ganv_module_set_icon(gobj(), icon->gobj());
@@ -103,7 +117,7 @@ public:
 		ganv_module_for_each_port(gobj(), f, data);
 	}
 
-	size_t num_ports() const { return gobj()->ports->len; }
+	guint num_ports() const { return ganv_module_num_ports(gobj()); }
 
 	RW_PROPERTY(gboolean, stacked)
 	RW_PROPERTY(gboolean, show_port_labels)

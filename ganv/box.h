@@ -20,31 +20,21 @@
 
 G_BEGIN_DECLS
 
-#define GANV_TYPE_BOX            (ganv_box_get_type())
-#define GANV_BOX(obj)            (GTK_CHECK_CAST((obj), GANV_TYPE_BOX, GanvBox))
-#define GANV_BOX_CLASS(klass)    (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_BOX, GanvBoxClass))
-#define GANV_IS_BOX(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_BOX))
-#define GANV_IS_BOX_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_BOX))
-#define GANV_BOX_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_BOX, GanvBoxClass))
+#define GANV_TYPE_BOX             (ganv_box_get_type())
+#define GANV_BOX(obj)             (GTK_CHECK_CAST((obj), GANV_TYPE_BOX, GanvBox))
+#define GANV_BOX_CLASS(klass)     (GTK_CHECK_CLASS_CAST((klass), GANV_TYPE_BOX, GanvBoxClass))
+#define GANV_IS_BOX(obj)          (GTK_CHECK_TYPE((obj), GANV_TYPE_BOX))
+#define GANV_IS_BOX_CLASS(klass)  (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_BOX))
+#define GANV_BOX_GET_CLASS(obj)   (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_BOX, GanvBoxClass))
+#define GANV_BOX_GET_PRIVATE(obj) (G_TYPE_INSTANCE_GET_PRIVATE((obj), GANV_TYPE_BOX, GanvBoxImpl))
 
-typedef struct _GanvBox      GanvBox;
 typedef struct _GanvBoxClass GanvBoxClass;
-
-typedef struct {
-	double   x1, y1, x2, y2;
-	double   border_width;
-	gboolean stacked;
-} GanvBoxCoords;
+typedef struct _GanvBoxImpl  GanvBoxImpl;
 
 struct _GanvBox
 {
-	GanvNode      node;
-	GanvBoxCoords coords;
-	GanvBoxCoords old_coords;
-	double        radius_tl;
-	double        radius_tr;
-	double        radius_br;
-	double        radius_bl;
+	GanvNode     node;
+	GanvBoxImpl* impl;
 };
 
 struct _GanvBoxClass {
@@ -57,63 +47,16 @@ struct _GanvBoxClass {
 	                   double   height);
 };
 
-GType ganv_box_get_type(void);
-
-static inline double
-ganv_box_get_x1(const GanvBox* box)
-{
-	return box->coords.x1;
-}
-
-static inline double
-ganv_box_get_y1(const GanvBox* box)
-{
-	return box->coords.y1;
-}
-
-static inline double
-ganv_box_get_x2(const GanvBox* box)
-{
-	return box->coords.x2;
-}
-
-static inline double
-ganv_box_get_y2(const GanvBox* box)
-{
-	return box->coords.y2;
-}
-
-static inline double
-ganv_box_get_width(const GanvBox* box)
-{
-	return box->coords.x2 - box->coords.x1;
-}
-
-static inline void
-ganv_box_set_width(GanvBox* box,
-                   double   width)
-{
-	GANV_BOX_GET_CLASS(box)->set_width(box, width);
-}
-
-static inline double
-ganv_box_get_height(const GanvBox* box)
-{
-	return box->coords.y2 - box->coords.y1;
-}
-
-static inline void
-ganv_box_set_height(GanvBox* box,
-                    double   height)
-{
-	GANV_BOX_GET_CLASS(box)->set_height(box, height);
-}
-
-static inline double
-ganv_box_get_border_width(const GanvBox* box)
-{
-	return box->coords.border_width;
-}
+GType  ganv_box_get_type(void);
+double ganv_box_get_x1(const GanvBox* box);
+double ganv_box_get_y1(const GanvBox* box);
+double ganv_box_get_x2(const GanvBox* box);
+double ganv_box_get_y2(const GanvBox* box);
+double ganv_box_get_width(const GanvBox* box);
+void   ganv_box_set_width(GanvBox* box, double width);
+double ganv_box_get_height(const GanvBox* box);
+void   ganv_box_set_height(GanvBox* box, double height);
+double ganv_box_get_border_width(const GanvBox* box);
 
 void
 ganv_box_normalize(GanvBox* box);
