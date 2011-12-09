@@ -36,6 +36,11 @@ struct _GanvBox
 	GanvBoxImpl* impl;
 };
 
+/**
+ * GanvBoxClass:
+ * @set_width: Set the width of the box.
+ * @set_height: Set the height of the box.
+ */
 struct _GanvBoxClass {
 	GanvNodeClass parent_class;
 
@@ -57,8 +62,13 @@ double ganv_box_get_height(const GanvBox* box);
 void   ganv_box_set_height(GanvBox* box, double height);
 double ganv_box_get_border_width(const GanvBox* box);
 
-void
-ganv_box_normalize(GanvBox* box);
+/**
+ * ganv_box_normalize:
+ * @box: The box to normalize.
+ *
+ * Normalize the box coordinates such that x1 < x2 and y1 < y2.
+ */
+void ganv_box_normalize(GanvBox* box);
 
 G_END_DECLS
 

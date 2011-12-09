@@ -117,14 +117,17 @@ ganv_node_head_vector(const GanvNode* self,
                       double*         y2);
 
 /**
-   Get the colours that should currently be used for drawing this node.
-   Note these may not be identical to the property values because of
-   highlighting and selection.
-*/
-void ganv_node_get_draw_properties(const GanvNode* node,
-                                   double*         dash_length,
-                                   double*         border_color,
-                                   double*         fill_color);
+ * ganv_node_get_draw_properties:
+ *
+ * Get the colours that should currently be used for drawing this node.  Note
+ * these may not be identical to the property values because of highlighting
+ * and selection.
+ */
+void
+ganv_node_get_draw_properties(const GanvNode* node,
+                              double*         dash_length,
+                              double*         border_color,
+                              double*         fill_color);
 
 const char* ganv_node_get_label(const GanvNode* node);
 

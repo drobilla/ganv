@@ -78,7 +78,9 @@ ganv_module_embed(GanvModule* module,
 
 /**
  * ganv_module_for_each_port:
+ * @module: The module.
  * @f: (scope call): A function to call on every port on @module.
+ * @data: User data to pass to @f.
  */
 void
 ganv_module_for_each_port(GanvModule*      module,

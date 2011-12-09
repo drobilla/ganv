@@ -31,6 +31,12 @@ typedef struct _GanvCircle      GanvCircle;
 typedef struct _GanvCircleClass GanvCircleClass;
 typedef struct _GanvCircleImpl  GanvCircleImpl;
 
+/**
+ * GanvCircle:
+ *
+ * A circular #GanvNode.  A #GanvCircle is a leaf, that is, it does not contain
+ * any child nodes (though, like any #GanvNode, it may have a label).
+ */
 struct _GanvCircle
 {
 	GanvNode        node;

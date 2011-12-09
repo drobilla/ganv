@@ -76,7 +76,9 @@ ganv_port_get_natural_width(const GanvPort* port);
 
 /**
  * ganv_port_get_module:
- * Return value: (transfer none): The module @a port is on.
+ * @port: The port.
+ *
+ * Return value: (transfer none): The module @port is on.
  */
 GanvModule* ganv_port_get_module(const GanvPort* port);
 

@@ -16,6 +16,14 @@
 #ifndef GANV_CANVAS_H
 #define GANV_CANVAS_H
 
+/**
+ * SECTION:ganv
+ * 
+ * @version: 1.0.0
+ * @Version: 1.0.0
+ *
+ * #GanvCanvas is possibly the greatest thing, ever.
+ */
 #include <libgnomecanvas/libgnomecanvas.h>
 
 #include "ganv/types.h"
@@ -34,6 +42,14 @@ struct GanvCanvasImpl;
 
 typedef struct _GanvCanvasClass GanvCanvasClass;
 
+/**
+ * GanvDirection:
+ * @GANV_DIRECTION_DOWN: Signal flows from top to bottom.
+ * @GANV_DIRECTION_RIGHT: Signal flows from left to right.
+ *
+ * Specifies the direction of signal flow on the canvas, which affects the
+ * appearance of modules and how the canvas is auto-arranged.
+ */
 typedef enum {
 	GANV_DIRECTION_DOWN,
 	GANV_DIRECTION_RIGHT
@@ -85,6 +101,8 @@ typedef void (*GanvEdgeFunction)(GanvEdge* edge);
 
 /**
  * ganv_canvas_for_each_edge_from:
+ * @canvas: The canvas.
+ * @tail: The tail to enumerate every edge for.
  * @f: (scope call): A function to call on every edge leaving @tail.
  */
 void
@@ -94,6 +112,8 @@ ganv_canvas_for_each_edge_from(GanvCanvas*      canvas,
 
 /**
  * ganv_canvas_for_each_edge_to:
+ * @canvas: The canvas.
+ * @head: The head to enumerate every edge for.
  * @f: (scope call): A function to call on every edge entering @head.
  */
 void
@@ -103,6 +123,8 @@ ganv_canvas_for_each_edge_to(GanvCanvas*      canvas,
 
 /**
  * ganv_canvas_for_each_edge_on:
+ * @canvas: The canvas.
+ * @node: The node to enumerate every edge for.
  * @f: (scope call): A function to call on every edge attached to @node.
  */
 void
