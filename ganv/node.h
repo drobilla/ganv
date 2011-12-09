@@ -131,6 +131,10 @@ ganv_node_get_draw_properties(const GanvNode* node,
 
 const char* ganv_node_get_label(const GanvNode* node);
 
+/**
+ * ganv_node_get_partner:
+ * Return value: (transfer none): The partner of @node.
+ */
 GanvNode*
 ganv_node_get_partner(const GanvNode* node);
 

@@ -229,8 +229,8 @@ ganv_port_class_init(GanvPortClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_IS_INPUT, g_param_spec_boolean(
 			"is-input",
-			_("is input"),
-			_("whether this port is an input (or an output, if false)"),
+			_("Is input"),
+			_("Whether this port is an input, rather than an output."),
 			0,
 			G_PARAM_READWRITE));
 

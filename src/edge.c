@@ -476,24 +476,24 @@ ganv_edge_class_init(GanvEdgeClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_TAIL, g_param_spec_object(
 			"tail",
-			_("tail"),
-			_("node this edge starts from"),
+			_("Tail"),
+			_("Node this edge starts from."),
 			GANV_TYPE_NODE,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_HEAD, g_param_spec_object(
 			"head",
-			_("head"),
-			_("node this edge ends at"),
+			_("Head"),
+			_("Node this edge ends at."),
 			GANV_TYPE_NODE,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_WIDTH, g_param_spec_double(
 			"width",
-			_("line width"),
-			_("width of line in canvas units"),
+			_("Line width"),
+			_("Width of edge line."),
 			0.0, G_MAXDOUBLE,
 			2.0,
 			G_PARAM_READWRITE));
@@ -501,8 +501,8 @@ ganv_edge_class_init(GanvEdgeClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_HANDLE_RADIUS, g_param_spec_double(
 			"handle-radius",
-			_("handle radius"),
-			_("radius of handle in canvas units"),
+			_("Gandle radius"),
+			_("Radius of handle in canvas units."),
 			0.0, G_MAXDOUBLE,
 			4.0,
 			G_PARAM_READWRITE));
@@ -510,8 +510,8 @@ ganv_edge_class_init(GanvEdgeClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_DASH_LENGTH, g_param_spec_double(
 			"dash-length",
-			_("line dash length"),
-			_("length of dashes, or zero for no dashing"),
+			_("Line dash length"),
+			_("Length of line dashes, or zero for no dashing."),
 			0.0, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -519,8 +519,8 @@ ganv_edge_class_init(GanvEdgeClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_DASH_OFFSET, g_param_spec_double(
 			"dash-offset",
-			_("line dash offset"),
-			_("offset for dashes (useful for 'rubber band' animation)."),
+			_("Line dash offset"),
+			_("Start offset for line dashes, used for selected animation."),
 			0.0, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -528,8 +528,8 @@ ganv_edge_class_init(GanvEdgeClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_COLOR, g_param_spec_uint(
 			"color",
-			_("color"),
-			_("color as an RGBA integer"),
+			_("Color"),
+			_("Line color as an RGBA integer."),
 			0, G_MAXUINT,
 			0xA0A0A0FF,
 			G_PARAM_READWRITE));
@@ -537,40 +537,43 @@ ganv_edge_class_init(GanvEdgeClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_CURVED, g_param_spec_boolean(
 			"curved",
-			_("curved"),
-			_("whether line should be curved, not straight"),
+			_("Curved"),
+			_("Whether line should be curved rather than straight."),
 			0,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_ARROWHEAD, g_param_spec_boolean(
 			"arrowhead",
-			_("arrowhead"),
-			_("whether to show an arrowhead at the end point"),
+			_("Arrowhead"),
+			_("Whether to show an arrowhead at the head of this edge."),
 			0,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_SELECTED, g_param_spec_boolean(
 			"selected",
-			_("selected"),
-			_("whether this edge is selected"),
+			_("Selected"),
+			_("Whether this edge is selected."),
 			0,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_HIGHLIGHTED, g_param_spec_boolean(
 			"highlighted",
-			_("highlighted"),
-			_("whether to highlight the edge"),
+			_("Highlighted"),
+			_("Whether to highlight the edge."),
 			0,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_GHOST, g_param_spec_boolean(
 			"ghost",
-			_("ghost"),
-			_("whether to highlight the edge"),
+			_("Ghost"),
+			_("Whether this edge is a `ghost', which is an edge that is not "
+			  "added to the canvas data structures.  Ghost edges are used for "
+			  "temporary edges that are not considered `real', e.g. the edge "
+			  "made while dragging to make a connection."),
 			0,
 			G_PARAM_READWRITE));
 

@@ -1824,8 +1824,8 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	g_object_class_install_property(
 		gobject_class, PROP_WIDTH, g_param_spec_double(
 			"width",
-			_("width"),
-			_("width of the canvas"),
+			_("Width"),
+			_("The width of the canvas."),
 			0.0, G_MAXDOUBLE,
 			800.0,
 			(GParamFlags)G_PARAM_READWRITE));
@@ -1833,8 +1833,8 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	g_object_class_install_property(
 		gobject_class, PROP_HEIGHT, g_param_spec_double(
 			"height",
-			_("height"),
-			_("height of the canvas"),
+			_("Height"),
+			_("The height of the canvas"),
 			0.0, G_MAXDOUBLE,
 			600.0,
 			(GParamFlags)G_PARAM_READWRITE));
@@ -1851,8 +1851,8 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	g_object_class_install_property(
 		gobject_class, PROP_DIRECTION, g_param_spec_enum(
 			"direction",
-			_("direction"),
-			_("direction of the signal flow on the canvas"),
+			_("Direction"),
+			_("The direction of the signal flow on the canvas."),
 			dir_type,
 			GANV_DIRECTION_RIGHT,
 			(GParamFlags)G_PARAM_READWRITE));
@@ -1860,8 +1860,8 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	g_object_class_install_property(
 		gobject_class, PROP_LOCKED, g_param_spec_boolean(
 			"locked",
-			_("locked"),
-			_("whether canvas items are movable"),
+			_("Locked"),
+			_("If true, nodes on the canvas can not be moved by the user."),
 			FALSE,
 			(GParamFlags)G_PARAM_READWRITE));
 

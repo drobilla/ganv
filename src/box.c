@@ -409,7 +409,7 @@ ganv_box_class_init(GanvBoxClass* class)
 		gobject_class, PROP_X1, g_param_spec_double(
 			"x1",
 			_("x1"),
-			_("top left x coordinate"),
+			_("Top left x coordinate."),
 			-G_MAXDOUBLE, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -418,7 +418,7 @@ ganv_box_class_init(GanvBoxClass* class)
 		gobject_class, PROP_Y1, g_param_spec_double(
 			"y1",
 			_("y1"),
-			_("top left y coordinate"),
+			_("Top left y coordinate."),
 			-G_MAXDOUBLE, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -427,7 +427,7 @@ ganv_box_class_init(GanvBoxClass* class)
 		gobject_class, PROP_X2, g_param_spec_double(
 			"x2",
 			_("x2"),
-			_("bottom right x coordinate"),
+			_("Bottom right x coordinate."),
 			-G_MAXDOUBLE, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -436,7 +436,7 @@ ganv_box_class_init(GanvBoxClass* class)
 		gobject_class, PROP_Y2, g_param_spec_double(
 			"y2",
 			_("y2"),
-			_("bottom right y coordinate"),
+			_("Bottom right y coordinate."),
 			-G_MAXDOUBLE, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -444,8 +444,8 @@ ganv_box_class_init(GanvBoxClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_RADIUS_TL, g_param_spec_double(
 			"radius-tl",
-			_("top left corner radius"),
-			_("top left corner radius"),
+			_("Top left radius"),
+			_("The radius of the top left corner."),
 			0.0, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -453,8 +453,8 @@ ganv_box_class_init(GanvBoxClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_RADIUS_TR, g_param_spec_double(
 			"radius-tr",
-			_("top right corner radius"),
-			_("top right corner radius"),
+			_("Top right radius"),
+			_("The radius of the top right corner."),
 			0.0, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -462,8 +462,8 @@ ganv_box_class_init(GanvBoxClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_RADIUS_BR, g_param_spec_double(
 			"radius-br",
-			_("bottom right corner radius"),
-			_("bottom right corner radius"),
+			_("Bottom right radius"),
+			_("The radius of the bottom right corner."),
 			0.0, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -471,8 +471,8 @@ ganv_box_class_init(GanvBoxClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_RADIUS_BL, g_param_spec_double(
 			"radius-bl",
-			_("bottom left corner radius"),
-			_("bottom left corner radius"),
+			_("Bottom left radius"),
+			_("The radius of the bottom left corner."),
 			0.0, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -480,8 +480,8 @@ ganv_box_class_init(GanvBoxClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_STACKED, g_param_spec_boolean(
 			"stacked",
-			_("stacked"),
-			_("Show the box with a stacked appearance."),
+			_("Stacked"),
+			_("Whether to show the box with a stacked appearance."),
 			FALSE,
 			G_PARAM_READWRITE));
 

@@ -457,37 +457,37 @@ ganv_node_class_init(GanvNodeClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_CANVAS, g_param_spec_object(
 			"canvas",
-			_("canvas"),
-			_("the canvas this node is on."),
+			_("Canvas"),
+			_("The canvas this node is on."),
 			GANV_TYPE_CANVAS,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_PARTNER, g_param_spec_object(
 			"partner",
-			_("partner"),
-			_("\
-Partners are nodes that should be visually aligned to correspond to each \
-other, even if they are not necessarily connected (e.g. for separate modules \
-representing the inputs and outputs of a single thing).  When the canvas is \
-arranged, the partner will be aligned as if there was an edge from this node \
-to its partner."),
+			_("Partner"),
+			_("Partners are nodes that should be visually aligned to correspond"
+			  " to each other, even if they are not necessarily connected (e.g."
+			  " for separate modules representing the inputs and outputs of a"
+			  " single thing).  When the canvas is arranged, the partner will"
+			  " be aligned as if there was an edge from this node to its"
+			  " partner."),
 			GANV_TYPE_NODE,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_LABEL, g_param_spec_string(
 			"label",
-			_("label"),
-			_("the text to display"),
+			_("Label"),
+			_("The text to display as a label on this node."),
 			NULL,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_DASH_LENGTH, g_param_spec_double(
 			"dash-length",
-			_("border dash length"),
-			_("length of dashes, or zero for no dashing"),
+			_("Border dash length"),
+			_("Length of border dashes, or zero for no dashing."),
 			0.0, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -495,8 +495,8 @@ to its partner."),
 	g_object_class_install_property(
 		gobject_class, PROP_DASH_OFFSET, g_param_spec_double(
 			"dash-offset",
-			_("border dash offset"),
-			_("offset for dashes (useful for 'rubber band' animation)."),
+			_("Border dash offset"),
+			_("Start offset for border dashes, used for selected animation."),
 			0.0, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -504,8 +504,8 @@ to its partner."),
 	g_object_class_install_property(
 		gobject_class, PROP_BORDER_WIDTH, g_param_spec_double(
 			"border-width",
-			_("border width"),
-			_("width of the border around this node."),
+			_("Border width"),
+			_("Width of the border line."),
 			0.0, G_MAXDOUBLE,
 			2.0,
 			G_PARAM_READWRITE));
@@ -513,8 +513,8 @@ to its partner."),
 	g_object_class_install_property(
 		gobject_class, PROP_FILL_COLOR, g_param_spec_uint(
 			"fill-color",
-			_("fill color"),
-			_("color of internal area"),
+			_("Fill color"),
+			_("Color of internal area."),
 			0, G_MAXUINT,
 			DEFAULT_FILL_COLOR,
 			G_PARAM_READWRITE));
@@ -522,8 +522,8 @@ to its partner."),
 	g_object_class_install_property(
 		gobject_class, PROP_BORDER_COLOR, g_param_spec_uint(
 			"border-color",
-			_("border color"),
-			_("color of border area"),
+			_("Border color"),
+			_("Color of border line."),
 			0, G_MAXUINT,
 			DEFAULT_BORDER_COLOR,
 			G_PARAM_READWRITE));
@@ -531,40 +531,40 @@ to its partner."),
 	g_object_class_install_property(
 		gobject_class, PROP_CAN_TAIL, g_param_spec_boolean(
 			"can-tail",
-			_("can tail"),
-			_("whether this object can be the tail of an edge"),
+			_("Can tail"),
+			_("Whether this node can be the tail of an edge."),
 			0,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_CAN_HEAD, g_param_spec_boolean(
 			"can-head",
-			_("can head"),
-			_("whether this object can be the head of an edge"),
+			_("Can head"),
+			_("Whether this object can be the head of an edge."),
 			0,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_SELECTED, g_param_spec_boolean(
 			"selected",
-			_("selected"),
-			_("whether this object is selected"),
+			_("Selected"),
+			_("Whether this object is selected."),
 			0,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_HIGHLIGHTED, g_param_spec_boolean(
 			"highlighted",
-			_("highlighted"),
-			_("whether this object is highlighted"),
+			_("Highlighted"),
+			_("Whether this object is highlighted."),
 			0,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_DRAGGABLE, g_param_spec_boolean(
 			"draggable",
-			_("draggable"),
-			_("whether this object is draggable"),
+			_("Draggable"),
+			_("Whether this object is draggable."),
 			0,
 			G_PARAM_READWRITE));
 

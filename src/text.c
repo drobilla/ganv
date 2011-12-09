@@ -334,8 +334,8 @@ ganv_text_class_init(GanvTextClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_TEXT, g_param_spec_string(
 			"text",
-			_("text"),
-			_("the text to display"),
+			_("Text"),
+			_("The string to display."),
 			NULL,
 			G_PARAM_READWRITE));
 
@@ -343,7 +343,7 @@ ganv_text_class_init(GanvTextClass* class)
 		gobject_class, PROP_X, g_param_spec_double(
 			"x",
 			_("x"),
-			_("x coordinate"),
+			_("Top left x coordinate."),
 			-G_MAXDOUBLE, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -352,7 +352,7 @@ ganv_text_class_init(GanvTextClass* class)
 		gobject_class, PROP_Y, g_param_spec_double(
 			"y",
 			_("y"),
-			_("y coordinate"),
+			_("Top left y coordinate."),
 			-G_MAXDOUBLE, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
@@ -360,8 +360,8 @@ ganv_text_class_init(GanvTextClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_WIDTH, g_param_spec_double(
 			"width",
-			_("width"),
-			_("width"),
+			_("Width"),
+			_("The current width of the text."),
 			-G_MAXDOUBLE, G_MAXDOUBLE,
 			1.0,
 			G_PARAM_READWRITE));
@@ -369,8 +369,8 @@ ganv_text_class_init(GanvTextClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_HEIGHT, g_param_spec_double(
 			"height",
-			_("height"),
-			_("height"),
+			_("Height"),
+			_("The current height of the text."),
 			-G_MAXDOUBLE, G_MAXDOUBLE,
 			1.0,
 			G_PARAM_READWRITE));
@@ -378,8 +378,8 @@ ganv_text_class_init(GanvTextClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_COLOR, g_param_spec_uint(
 			"color",
-			_("color"),
-			_("the color of the text"),
+			_("Color"),
+			_("The color of the text."),
 			0, G_MAXUINT,
 			DEFAULT_TEXT_COLOR,
 			G_PARAM_READWRITE));

@@ -337,8 +337,8 @@ ganv_circle_class_init(GanvCircleClass* class)
 	g_object_class_install_property(
 		gobject_class, PROP_RADIUS, g_param_spec_double(
 			"radius",
-			_("radius"),
-			_("radius of circle"),
+			_("Radius"),
+			_("The radius of the circle."),
 			0, G_MAXDOUBLE,
 			0.0,
 			G_PARAM_READWRITE));
