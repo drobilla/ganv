@@ -36,9 +36,9 @@
 	} \
 	void set_##name(type value) { \
 		if (!_gobj) return; \
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(_gobj), \
-		                      #name, value->gobj(), \
-		                      NULL); \
+		ganv_item_set(GANV_ITEM(_gobj), \
+		              #name, value->gobj(), \
+		              NULL); \
 	}
 
 #define METHOD0(prefix, name) \

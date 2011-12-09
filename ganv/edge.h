@@ -16,10 +16,9 @@
 #ifndef GANV_EDGE_H
 #define GANV_EDGE_H
 
-#include <libgnomecanvas/libgnomecanvas.h>
-
-#include "ganv/types.h"
+#include "ganv/canvas-base.h"
 #include "ganv/node.h"
+#include "ganv/types.h"
 
 G_BEGIN_DECLS
 
@@ -33,14 +32,13 @@ G_BEGIN_DECLS
 typedef struct _GanvEdgeClass GanvEdgeClass;
 typedef struct _GanvEdgeImpl GanvEdgeImpl;
 
-struct _GanvEdge
-{
-	GnomeCanvasItem item;
-	GanvEdgeImpl*   impl;
+struct _GanvEdge {
+	GanvItem      item;
+	GanvEdgeImpl* impl;
 };
 
 struct _GanvEdgeClass {
-	GnomeCanvasItemClass parent_class;
+	GanvItemClass parent_class;
 };
 
 GType ganv_edge_get_type(void);

@@ -54,8 +54,8 @@ public:
 	       bool               show_title)
 		: Node(&canvas,
 		       GANV_NODE(
-			       gnome_canvas_item_new(
-				       GNOME_CANVAS_GROUP(canvas.root()),
+			       ganv_item_new(
+				       GANV_GROUP(canvas.root()),
 				       ganv_circle_get_type(),
 				       "x", x,
 				       "y", y,

@@ -13,9 +13,8 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libgnomecanvas/libgnomecanvas.h>
-
 #include "ganv/canvas.h"
+#include "ganv/canvas-base.h"
 #include "ganv/node.h"
 
 #include "./boilerplate.h"
@@ -25,9 +24,9 @@
 
 guint signal_moved;
 
-G_DEFINE_TYPE(GanvNode, ganv_node, GNOME_TYPE_CANVAS_GROUP)
+G_DEFINE_TYPE(GanvNode, ganv_node, GANV_TYPE_GROUP)
 
-static GnomeCanvasGroupClass* parent_class;
+static GanvGroupClass* parent_class;
 
 enum {
 	PROP_0,
@@ -78,9 +77,9 @@ ganv_node_init(GanvNode* node)
 }
 
 static void
-ganv_node_realize(GnomeCanvasItem* item)
+ganv_node_realize(GanvItem* item)
 {
-	GNOME_CANVAS_ITEM_CLASS(parent_class)->realize(item);
+	GANV_ITEM_CLASS(parent_class)->realize(item);
 	ganv_canvas_add_node(GANV_CANVAS(item->canvas),
 	                     GANV_NODE(item));
 }
@@ -98,7 +97,7 @@ ganv_node_destroy(GtkObject* object)
 		impl->label = NULL;
 	}
 
-	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(object);
+	GanvItem* item = GANV_ITEM(object);
 	ganv_node_disconnect(node);
 	if (item->canvas) {
 		ganv_canvas_remove_node(GANV_CANVAS(item->canvas), node);
@@ -123,7 +122,7 @@ ganv_node_set_property(GObject*      object,
 
 	GanvNode*        node = GANV_NODE(object);
 	GanvNodeImpl*    impl = node->impl;
-	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(object);
+	GanvItem* item = GANV_ITEM(object);
 
 	switch (prop_id) {
 		SET_CASE(PARTNER, object, impl->partner);
@@ -139,8 +138,8 @@ ganv_node_set_property(GObject*      object,
 		SET_CASE(DRAGGABLE, boolean, impl->draggable);
 	case PROP_CANVAS:
 		if (!item->parent) {
-			GnomeCanvas* canvas = GNOME_CANVAS(g_value_get_object(value));
-			g_object_set(object, "parent", gnome_canvas_root(canvas), NULL);
+			GanvCanvasBase* canvas = GANV_CANVAS_BASE(g_value_get_object(value));
+			g_object_set(object, "parent", ganv_canvas_base_root(canvas), NULL);
 			ganv_canvas_add_node(GANV_CANVAS(canvas), node);
 		} else {
 			g_warning("Cannot change `canvas' property after construction");
@@ -148,7 +147,7 @@ ganv_node_set_property(GObject*      object,
 		break;
 	case PROP_LABEL:
 		ganv_node_set_label(node, g_value_get_string(value));
-		gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(object));
+		ganv_item_request_update(GANV_ITEM(object));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -167,7 +166,7 @@ ganv_node_get_property(GObject*    object,
 
 	GanvNode*        node = GANV_NODE(object);
 	GanvNodeImpl*    impl = node->impl;
-	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(object);
+	GanvItem* item = GANV_ITEM(object);
 
 	typedef char* gstring;
 
@@ -208,7 +207,7 @@ ganv_node_default_tail_vector(const GanvNode* self,
 
 	*dx = 1.0;
 	*dy = 0.0;
-	gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(self)->parent, x, y);
+	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
 }
 
 static void
@@ -226,7 +225,7 @@ ganv_node_default_head_vector(const GanvNode* self,
 
 	*dx = -1.0;
 	*dy = 0.0;
-	gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(self)->parent, x, y);
+	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
 }
 
 void
@@ -262,12 +261,12 @@ ganv_node_set_label(GanvNode* node, const char* str)
 			impl->label = NULL;
 		}
 	} else if (impl->label) {
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(impl->label),
-		                      "text", str,
-		                      NULL);
+		ganv_item_set(GANV_ITEM(impl->label),
+		              "text", str,
+		              NULL);
 	} else {
-		impl->label = GANV_TEXT(gnome_canvas_item_new(
-			                        GNOME_CANVAS_GROUP(node),
+		impl->label = GANV_TEXT(ganv_item_new(
+			                        GANV_GROUP(node),
 			                        ganv_text_get_type(),
 			                        "text", str,
 			                        "color", 0xFFFFFFFF,
@@ -286,13 +285,13 @@ ganv_node_default_tick(GanvNode* self,
 {
 	GanvNode* node = GANV_NODE(self);
 	node->impl->dash_offset = seconds * 8.0;
-	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(self));
+	ganv_item_request_update(GANV_ITEM(self));
 }
 
 static void
 ganv_node_default_disconnect(GanvNode* node)
 {
-	GanvCanvas* canvas = GANV_CANVAS(GNOME_CANVAS_ITEM(node)->canvas);
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
 	if (canvas) {
 		ganv_canvas_for_each_edge_on(canvas, node, ganv_edge_remove);
 	}
@@ -303,8 +302,8 @@ ganv_node_default_move(GanvNode* node,
                        double    dx,
                        double    dy)
 {
-	GanvCanvas* canvas = GANV_CANVAS(GNOME_CANVAS_ITEM(node)->canvas);
-	gnome_canvas_item_move(GNOME_CANVAS_ITEM(node), dx, dy);
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
+	ganv_item_move(GANV_ITEM(node), dx, dy);
 	ganv_canvas_for_each_edge_on(canvas, node,
 	                             ganv_edge_update_location);
 
@@ -315,11 +314,11 @@ ganv_node_default_move_to(GanvNode* node,
                           double    x,
                           double    y)
 {
-	GanvCanvas* canvas = GANV_CANVAS(GNOME_CANVAS_ITEM(node)->canvas);
-	gnome_canvas_item_set(GNOME_CANVAS_ITEM(node),
-	                      "x", x,
-	                      "y", y,
-	                      NULL);
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
+	ganv_item_set(GANV_ITEM(node),
+	              "x", x,
+	              "y", y,
+	              NULL);
 	if (node->impl->can_tail) {
 		ganv_canvas_for_each_edge_from(
 			canvas, node, ganv_edge_update_location);
@@ -333,7 +332,7 @@ static gboolean
 ganv_node_default_on_event(GanvNode* node,
                            GdkEvent* event)
 {
-	GanvCanvas* canvas = GANV_CANVAS(GNOME_CANVAS_ITEM(node)->canvas);
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
 
 	// FIXME: put these somewhere better
 	static double last_x, last_y;
@@ -342,19 +341,19 @@ ganv_node_default_on_event(GanvNode* node,
 
 	/*
 	  double click_x,
-	  gnome_canvas_item_w2i(GNOME_CANVAS_ITEM(GNOME_CANVAS_ITEM(node)->parent),
+	  ganv_item_w2i(GANV_ITEM(GANV_ITEM(node)->parent),
 	  &click_x, &click_y);
 	*/
 
 	switch (event->type) {
 	case GDK_ENTER_NOTIFY:
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(node),
-		                      "highlighted", TRUE, NULL);
+		ganv_item_set(GANV_ITEM(node),
+		              "highlighted", TRUE, NULL);
 		return TRUE;
 
 	case GDK_LEAVE_NOTIFY:
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(node),
-		                      "highlighted", FALSE, NULL);
+		ganv_item_set(GANV_ITEM(node),
+		              "highlighted", FALSE, NULL);
 		return TRUE;
 
 	case GDK_BUTTON_PRESS:
@@ -363,8 +362,8 @@ ganv_node_default_on_event(GanvNode* node,
 		last_x       = event->button.x;
 		last_y       = event->button.y;
 		if (!canvas->locked && node->impl->draggable && event->button.button == 1) {
-			gnome_canvas_item_grab(
-				GNOME_CANVAS_ITEM(node),
+			ganv_item_grab(
+				GANV_ITEM(node),
 				GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK|GDK_BUTTON_PRESS_MASK,
 				ganv_canvas_get_move_cursor(canvas),
 				event->button.time);
@@ -377,7 +376,7 @@ ganv_node_default_on_event(GanvNode* node,
 		if (dragging) {
 			gboolean selected;
 			g_object_get(G_OBJECT(node), "selected", &selected, NULL);
-			gnome_canvas_item_ungrab(GNOME_CANVAS_ITEM(node), event->button.time);
+			ganv_item_ungrab(GANV_ITEM(node), event->button.time);
 			dragging = FALSE;
 			if (event->button.x != drag_start_x || event->button.y != drag_start_y) {
 				if (selected) {
@@ -443,11 +442,11 @@ ganv_node_default_on_event(GanvNode* node,
 static void
 ganv_node_class_init(GanvNodeClass* class)
 {
-	GObjectClass*         gobject_class = (GObjectClass*)class;
-	GtkObjectClass*       object_class  = (GtkObjectClass*)class;
-	GnomeCanvasItemClass* item_class    = (GnomeCanvasItemClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)class;
+	GtkObjectClass* object_class  = (GtkObjectClass*)class;
+	GanvItemClass*  item_class    = (GanvItemClass*)class;
 
-	parent_class = GNOME_CANVAS_GROUP_CLASS(g_type_class_peek_parent(class));
+	parent_class = GANV_GROUP_CLASS(g_type_class_peek_parent(class));
 
 	g_type_class_add_private(class, sizeof(GanvNodeImpl));
 

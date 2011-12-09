@@ -17,8 +17,8 @@
 #include <string.h>
 
 #include <cairo.h>
-#include <libgnomecanvas/libgnomecanvas.h>
 
+#include "ganv/canvas-base.h"
 #include "ganv/canvas.h"
 #include "ganv/edge.h"
 #include "ganv/node.h"
@@ -52,9 +52,9 @@ enum {
 	PROP_GHOST
 };
 
-G_DEFINE_TYPE(GanvEdge, ganv_edge, GNOME_TYPE_CANVAS_ITEM)
+G_DEFINE_TYPE(GanvEdge, ganv_edge, GANV_TYPE_ITEM)
 
-static GnomeCanvasItemClass* parent_class;
+static GanvItemClass* parent_class;
 
 static void
 ganv_edge_init(GanvEdge* edge)
@@ -162,7 +162,7 @@ ganv_edge_get_property(GObject*    object,
 }
 
 static void
-request_redraw(GnomeCanvas*          canvas,
+request_redraw(GanvCanvasBase*       canvas,
                const GanvEdgeCoords* coords)
 {
 	const double w  = coords->width;
@@ -182,7 +182,7 @@ request_redraw(GnomeCanvas*          canvas,
 		const double r1y1 = MIN(MIN(src_y, join_y), src_y1);
 		const double r1x2 = MAX(MAX(src_x, join_x), src_x1);
 		const double r1y2 = MAX(MAX(src_y, join_y), src_y1);
-		gnome_canvas_request_redraw(canvas,
+		ganv_canvas_base_request_redraw(canvas,
 		                            r1x1 - w, r1y1 - w,
 		                            r1x2 + w, r1y2 + w);
 
@@ -190,7 +190,7 @@ request_redraw(GnomeCanvas*          canvas,
 		const double r2y1 = MIN(MIN(dst_y, join_y), dst_y1);
 		const double r2x2 = MAX(MAX(dst_x, join_x), dst_x1);
 		const double r2y2 = MAX(MAX(dst_y, join_y), dst_y1);
-		gnome_canvas_request_redraw(canvas,
+		ganv_canvas_base_request_redraw(canvas,
 		                            r2x1 - w, r2y1 - w,
 		                            r2x2 + w, r2y2 + w);
 
@@ -200,19 +200,19 @@ request_redraw(GnomeCanvas*          canvas,
 		const double x2 = MAX(coords->x1, coords->x2);
 		const double y2 = MAX(coords->y1, coords->y2);
 
-		gnome_canvas_request_redraw(canvas,
+		ganv_canvas_base_request_redraw(canvas,
 		                            x1 - w, y1 - w,
 		                            x2 + w, y2 + w);
 	}
 
-	gnome_canvas_request_redraw(canvas,
+	ganv_canvas_base_request_redraw(canvas,
 	                            coords->handle_x - coords->handle_radius,
 	                            coords->handle_y - coords->handle_radius,
 	                            coords->handle_x + coords->handle_radius,
 	                            coords->handle_y + coords->handle_radius);
 
 	if (coords->arrowhead) {
-		gnome_canvas_request_redraw(
+		ganv_canvas_base_request_redraw(
 			canvas,
 			coords->x2 - ARROW_DEPTH,
 			coords->y2 - ARROW_BREADTH,
@@ -222,7 +222,7 @@ request_redraw(GnomeCanvas*          canvas,
 }
 
 static void
-ganv_edge_bounds(GnomeCanvasItem* item,
+ganv_edge_bounds(GanvItem* item,
                  double* x1, double* y1,
                  double* x2, double* y2)
 {
@@ -237,10 +237,10 @@ ganv_edge_bounds(GnomeCanvasItem* item,
 }
 
 static void
-ganv_edge_update(GnomeCanvasItem* item,
-                 double*          affine,
-                 ArtSVP*          clip_path,
-                 int              flags)
+ganv_edge_update(GanvItem* item,
+                 double*   affine,
+                 ArtSVP*   clip_path,
+                 int       flags)
 {
 	GanvEdge*     edge = GANV_EDGE(item);
 	GanvEdgeImpl* impl = edge->impl;
@@ -287,22 +287,15 @@ ganv_edge_update(GnomeCanvasItem* item,
 	}
 
 	// Update item canvas coordinates
-	gnome_canvas_w2c_d(GNOME_CANVAS(item->canvas), x1, y1, &item->x1, &item->y1);
-	gnome_canvas_w2c_d(GNOME_CANVAS(item->canvas), x2, y2, &item->x2, &item->y2);
+	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x1, y1, &item->x1, &item->y1);
+	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
 	request_redraw(item->canvas, &impl->coords);
 }
 
 static void
-ganv_edge_render(GnomeCanvasItem* item,
-                 GnomeCanvasBuf*  buf)
-{
-	// Not implemented
-}
-
-static void
-ganv_edge_draw(GnomeCanvasItem* item,
+ganv_edge_draw(GanvItem* item,
                GdkDrawable* drawable,
                int x, int y,
                int width, int height)
@@ -420,10 +413,10 @@ ganv_edge_draw(GnomeCanvasItem* item,
 }
 
 static double
-ganv_edge_point(GnomeCanvasItem* item,
+ganv_edge_point(GanvItem* item,
                 double x, double y,
                 int cx, int cy,
-                GnomeCanvasItem** actual_item)
+                GanvItem** actual_item)
 {
 	const GanvEdge*       edge = GANV_EDGE(item);
 	const GanvEdgeCoords* coords = &edge->impl->coords;
@@ -462,11 +455,11 @@ ganv_edge_is_within(const GanvEdge* edge,
 static void
 ganv_edge_class_init(GanvEdgeClass* class)
 {
-	GObjectClass*         gobject_class = (GObjectClass*)class;
-	GtkObjectClass*       object_class  = (GtkObjectClass*)class;
-	GnomeCanvasItemClass* item_class    = (GnomeCanvasItemClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)class;
+	GtkObjectClass* object_class  = (GtkObjectClass*)class;
+	GanvItemClass*  item_class    = (GanvItemClass*)class;
 
-	parent_class = GNOME_CANVAS_ITEM_CLASS(g_type_class_peek_parent(class));
+	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(class));
 
 	g_type_class_add_private(class, sizeof(GanvEdgeImpl));
 
@@ -582,7 +575,6 @@ ganv_edge_class_init(GanvEdgeClass* class)
 	item_class->update = ganv_edge_update;
 	item_class->bounds = ganv_edge_bounds;
 	item_class->point  = ganv_edge_point;
-	item_class->render = ganv_edge_render;
 	item_class->draw   = ganv_edge_draw;
 }
 
@@ -597,7 +589,7 @@ ganv_edge_new(GanvCanvas* canvas,
 
 	va_list args;
 	va_start(args, first_prop_name);
-	gnome_canvas_item_construct(&edge->item,
+	ganv_item_construct(&edge->item,
 	                            ganv_canvas_get_root(canvas),
 	                            first_prop_name, args);
 	va_end(args);
@@ -614,7 +606,7 @@ ganv_edge_new(GanvCanvas* canvas,
 void
 ganv_edge_update_location(GanvEdge* edge)
 {
-	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(edge));
+	ganv_item_request_update(GANV_ITEM(edge));
 }
 
 void
@@ -635,24 +627,24 @@ void
 ganv_edge_highlight(GanvEdge* edge)
 {
 	edge->impl->highlighted = TRUE;
-	gnome_canvas_item_raise_to_top(GNOME_CANVAS_ITEM(edge));
-	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(edge));
+	ganv_item_raise_to_top(GANV_ITEM(edge));
+	ganv_item_request_update(GANV_ITEM(edge));
 }
 
 void
 ganv_edge_unhighlight(GanvEdge* edge)
 {
 	edge->impl->highlighted = FALSE;
-	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(edge));
+	ganv_item_request_update(GANV_ITEM(edge));
 }
 
 void
 ganv_edge_tick(GanvEdge* edge,
                double    seconds)
 {
-	gnome_canvas_item_set(GNOME_CANVAS_ITEM(edge),
-	                      "dash-offset", seconds * 8.0,
-	                      NULL);
+	ganv_item_set(GANV_ITEM(edge),
+	              "dash-offset", seconds * 8.0,
+	              NULL);
 }
 
 void

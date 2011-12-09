@@ -19,11 +19,11 @@
 #include <assert.h>
 
 #include <glib.h>
-#include <libgnomecanvas/gnome-canvas.h>
 
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
+#include "ganv/canvas-base.h"
 #include "ganv/wrap.hpp"
 #include "ganv/Canvas.hpp"
 
@@ -35,7 +35,7 @@ class Canvas;
  */
 class Item : public sigc::trackable {
 public:
-	Item(GnomeCanvasItem* gobj)
+	Item(GanvItem* gobj)
 		: _gobj(gobj)
 	{
 		GQuark wrapper_key = g_quark_from_string("ganvmm");
@@ -50,13 +50,13 @@ public:
 	RW_PROPERTY(double, x)
 	RW_PROPERTY(double, y)
 
-	METHOD0(gnome_canvas_item, show);
-	METHOD0(gnome_canvas_item, hide);
-	METHOD0(gnome_canvas_item, raise_to_top);
-	METHOD2(gnome_canvas_item, move, double, dx, double, dy);
+	METHOD0(ganv_item, show);
+	METHOD0(ganv_item, hide);
+	METHOD0(ganv_item, raise_to_top);
+	METHOD2(ganv_item, move, double, dx, double, dy);
 
-	GnomeCanvasItem* property_parent() const {
-		GnomeCanvasItem* parent;
+	GanvItem* property_parent() const {
+		GanvItem* parent;
 		g_object_get(G_OBJECT(_gobj), "parent", &parent, NULL);
 		return parent;
 	}
@@ -65,19 +65,19 @@ public:
 		return Glib::wrap(GANV_CANVAS(_gobj->canvas));
 	}
 
-	GnomeCanvasItem* gobj() const { return _gobj; }
+	GanvItem* gobj() const { return _gobj; }
 
 	SIGNAL(event, GdkEvent*)
 	SIGNAL(click, GdkEventButton*)
 
 protected:
-	GnomeCanvasItem* const _gobj;
+	GanvItem* const _gobj;
 
 private:
 	static gboolean
-	on_item_event(GnomeCanvasItem* canvasitem,
-	              GdkEvent*        ev,
-	              void*            item)
+	on_item_event(GanvItem* canvasitem,
+	              GdkEvent* ev,
+	              void*     item)
 	{
 		return ((Item*)item)->on_event(ev);
 	}

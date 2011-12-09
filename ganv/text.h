@@ -16,7 +16,7 @@
 #ifndef GANV_TEXT_H
 #define GANV_TEXT_H
 
-#include <libgnomecanvas/libgnomecanvas.h>
+#include "ganv/canvas-base.h"
 
 G_BEGIN_DECLS
 
@@ -31,14 +31,13 @@ typedef struct _GanvText      GanvText;
 typedef struct _GanvTextClass GanvTextClass;
 typedef struct _GanvTextImpl  GanvTextImpl;
 
-struct _GanvText
-{
-	GnomeCanvasItem item;
+struct _GanvText {
+	GanvItem item;
 	GanvTextImpl*   impl;
 };
 
 struct _GanvTextClass {
-	GnomeCanvasItemClass parent_class;
+	GanvItemClass parent_class;
 };
 
 GType ganv_text_get_type(void);

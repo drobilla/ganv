@@ -18,6 +18,7 @@
 #include "ganv/canvas.h"
 #include "ganv/module.h"
 #include "ganv/port.h"
+#include "ganv/widget.h"
 
 #include "./color.h"
 #include "./boilerplate.h"
@@ -112,7 +113,7 @@ ganv_module_set_property(GObject*      object,
 			   FOREACH_PORT_CONST(gobj()->ports, p) {
 			   (*p)->show_label(b);
 			   }*/
-			gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(object));
+			ganv_item_request_update(GANV_ITEM(object));
 		}
 		break;
 	}
@@ -172,7 +173,7 @@ measure(GanvModule* module, Metrics* m)
 	double title_w, title_h;
 	title_size(module, &title_w, &title_h);
 
-	GanvCanvas*     canvas       = GANV_CANVAS(GNOME_CANVAS_ITEM(module)->canvas);
+	GanvCanvas*     canvas       = GANV_CANVAS(GANV_ITEM(module)->canvas);
 	GanvText*       canvas_title = GANV_NODE(module)->impl->label;
 	GanvModuleImpl* impl         = module->impl;
 
@@ -268,28 +269,28 @@ place_title(GanvModule* module, GanvDirection dir)
 		return;
 	} else if (dir == GANV_DIRECTION_RIGHT) {
 		if (impl->icon_box) {
-			gnome_canvas_item_set(GNOME_CANVAS_ITEM(canvas_title),
-			                      "x", MODULE_ICON_SIZE + 1.0,
-			                      NULL);
+			ganv_item_set(GANV_ITEM(canvas_title),
+			              "x", MODULE_ICON_SIZE + 1.0,
+			              NULL);
 		} else {
-			gnome_canvas_item_set(GNOME_CANVAS_ITEM(canvas_title),
-			                      "x", ((ganv_box_get_width(box) / 2.0)
-			                            - (title_w / 2.0)),
-			                      NULL);
+			ganv_item_set(GANV_ITEM(canvas_title),
+			              "x", ((ganv_box_get_width(box) / 2.0)
+			                    - (title_w / 2.0)),
+			              NULL);
 		}
 	} else {
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(canvas_title),
-		                      "x", ((ganv_box_get_width(box) / 2.0)
-		                            - (title_w / 2.0)),
-		                      "y", ganv_module_get_empty_port_depth(module) + 2.0,
-		                      NULL);
+		ganv_item_set(GANV_ITEM(canvas_title),
+		              "x", ((ganv_box_get_width(box) / 2.0)
+		                    - (title_w / 2.0)),
+		              "y", ganv_module_get_empty_port_depth(module) + 2.0,
+		              NULL);
 	}
 }
 
 static void
 resize_horiz(GanvModule* module)
 {
-	GanvCanvas*     canvas = GANV_CANVAS(GNOME_CANVAS_ITEM(module)->canvas);
+	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
 	GanvModuleImpl* impl   = module->impl;
 
 	Metrics m;
@@ -304,9 +305,9 @@ resize_horiz(GanvModule* module)
 	double height = header_height;
 
 	if (impl->embed_item) {
-		gnome_canvas_item_set(impl->embed_item,
-		                      "x", (double)m.embed_x,
-		                      NULL);
+		ganv_item_set(impl->embed_item,
+		              "x", (double)m.embed_x,
+		              NULL);
 	}
 
 	// Actually set width and height
@@ -369,7 +370,7 @@ resize_horiz(GanvModule* module)
 static void
 resize_vert(GanvModule* module)
 {
-	GanvCanvas*     canvas = GANV_CANVAS(GNOME_CANVAS_ITEM(module)->canvas);
+	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
 	GanvModuleImpl* impl   = module->impl;
 
 	Metrics m;
@@ -384,10 +385,10 @@ resize_vert(GanvModule* module)
 	const double port_breadth = ganv_module_get_empty_port_breadth(module);
 
 	if (impl->embed_item) {
-		gnome_canvas_item_set(impl->embed_item,
-		                      "x", (double)m.embed_x,
-		                      "y", port_depth + title_h,
-		                      NULL);
+		ganv_item_set(impl->embed_item,
+		              "x", (double)m.embed_x,
+		              "y", port_depth + title_h,
+		              NULL);
 	}
 
 	const double height = PAD + title_h
@@ -460,7 +461,7 @@ layout(GanvNode* self)
 	GanvModule*     module = GANV_MODULE(self);
 	GanvModuleImpl* impl   = module->impl;
 	GanvNode*       node   = GANV_NODE(self);
-	GanvCanvas*     canvas = GANV_CANVAS(GNOME_CANVAS_ITEM(module)->canvas);
+	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
 
 	double label_w = 0.0;
 	double label_h = 0.0;
@@ -506,10 +507,10 @@ ganv_module_resize(GanvNode* self)
 }
 
 static void
-ganv_module_update(GnomeCanvasItem* item,
-                   double*          affine,
-                   ArtSVP*          clip_path,
-                   int              flags)
+ganv_module_update(GanvItem* item,
+                   double*   affine,
+                   ArtSVP*   clip_path,
+                   int       flags)
 {
 	GanvNode*   node   = GANV_NODE(item);
 	GanvModule* module = GANV_MODULE(item);
@@ -517,7 +518,7 @@ ganv_module_update(GnomeCanvasItem* item,
 		layout(node);
 	}
 
-	GnomeCanvasItemClass* item_class = GNOME_CANVAS_ITEM_CLASS(parent_class);
+	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	item_class->update(item, affine, clip_path, flags);
 }
 
@@ -548,10 +549,10 @@ ganv_module_move(GanvNode* node,
 static void
 ganv_module_class_init(GanvModuleClass* class)
 {
-	GObjectClass*         gobject_class = (GObjectClass*)class;
-	GtkObjectClass*       object_class  = (GtkObjectClass*)class;
-	GnomeCanvasItemClass* item_class    = (GnomeCanvasItemClass*)class;
-	GanvNodeClass*        node_class    = (GanvNodeClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)class;
+	GtkObjectClass* object_class  = (GtkObjectClass*)class;
+	GanvItemClass*  item_class    = (GanvItemClass*)class;
+	GanvNodeClass*  node_class    = (GanvNodeClass*)class;
 
 	parent_class = GANV_BOX_CLASS(g_type_class_peek_parent(class));
 
@@ -662,10 +663,10 @@ ganv_module_add_port(GanvModule* module,
 	//}
 
 	GanvCanvas* canvas = GANV_CANVAS(
-		GNOME_CANVAS_ITEM(module)->canvas);
+		GANV_ITEM(module)->canvas);
 
 	place_title(module, canvas->direction);
-	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(module));
+	ganv_item_request_update(GANV_ITEM(module));
 }
 
 void
@@ -696,7 +697,7 @@ ganv_module_remove_port(GanvModule* module,
 		}
 
 		_must_resize = true;
-		gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(_gobj));
+		ganv_item_request_update(GANV_ITEM(_gobj));
 	} else {
 		std::cerr << "Failed to find port to remove" << std::endl;
 	}
@@ -713,7 +714,7 @@ double
 ganv_module_get_empty_port_depth(const GanvModule* module)
 {
 	GanvCanvas* canvas = GANV_CANVAS(
-		GNOME_CANVAS_ITEM(module)->canvas);
+		GANV_ITEM(module)->canvas);
 
 	return ganv_canvas_get_font_size(canvas);
 }
@@ -722,6 +723,9 @@ void
 ganv_module_set_icon(GanvModule* module,
                      GdkPixbuf*  icon)
 {
+	fprintf(stderr, "FIXME: icon\n");
+	return;
+#if 0
 	GanvModuleImpl* impl = module->impl;
 
 	if (impl->icon_box) {
@@ -730,9 +734,9 @@ ganv_module_set_icon(GanvModule* module,
 	}
 
 	if (icon) {
-		impl->icon_box = gnome_canvas_item_new(
-			GNOME_CANVAS_GROUP(module),
-			gnome_canvas_pixbuf_get_type(),
+		impl->icon_box = ganv_item_new(
+			GANV_GROUP(module),
+			ganv_canvas_base_pixbuf_get_type(),
 			"x", 8.0,
 			"y", 10.0,
 			"pixbuf", icon,
@@ -747,11 +751,12 @@ ganv_module_set_icon(GanvModule* module,
 			scale, 0.0, 0.0
 		};
 
-		gnome_canvas_item_affine_relative(impl->icon_box, scale_trans);
-		gnome_canvas_item_raise_to_top(impl->icon_box);
-		gnome_canvas_item_show(impl->icon_box);
+		ganv_item_affine_relative(impl->icon_box, scale_trans);
+		ganv_item_raise_to_top(impl->icon_box);
+		ganv_item_show(impl->icon_box);
 	}
 	impl->must_resize = TRUE;
+#endif
 }
 
 static void
@@ -775,10 +780,10 @@ on_embed_size_request(GtkWidget*      widget,
 	allocation.height = r->width;
 
 	gtk_widget_size_allocate(widget, &allocation);
-	gnome_canvas_item_set(impl->embed_item,
-	                      "width", (double)r->width,
-	                      "height", (double)r->height,
-	                      NULL);
+	ganv_item_set(impl->embed_item,
+	              "width", (double)r->width,
+	              "height", (double)r->height,
+	              NULL);
 }
 
 void
@@ -803,9 +808,9 @@ ganv_module_embed(GanvModule* module,
 	title_size(module, &title_w, &title_h);
 
 	const double y = 4.0 + title_h;
-	impl->embed_item = gnome_canvas_item_new(
-		GNOME_CANVAS_GROUP(module),
-		gnome_canvas_widget_get_type(),
+	impl->embed_item = ganv_item_new(
+		GANV_GROUP(module),
+		ganv_widget_get_type(),
 		"x", 2.0,
 		"y", y,
 		"widget", widget,
@@ -817,14 +822,14 @@ ganv_module_embed(GanvModule* module,
 	gtk_widget_size_request(widget, &r);
 	on_embed_size_request(widget, &r, module);
 
-	gnome_canvas_item_show(impl->embed_item);
-	gnome_canvas_item_raise_to_top(impl->embed_item);
+	ganv_item_show(impl->embed_item);
+	ganv_item_raise_to_top(impl->embed_item);
 
 	g_signal_connect(widget, "size-request",
 	                 G_CALLBACK(on_embed_size_request), module);
 
 	layout(GANV_NODE(module));
-	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(module));
+	ganv_item_request_update(GANV_ITEM(module));
 }
 
 void

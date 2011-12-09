@@ -30,8 +30,7 @@ G_BEGIN_DECLS
 typedef struct _GanvBoxClass GanvBoxClass;
 typedef struct _GanvBoxImpl  GanvBoxImpl;
 
-struct _GanvBox
-{
+struct _GanvBox {
 	GanvNode     node;
 	GanvBoxImpl* impl;
 };

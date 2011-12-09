@@ -31,8 +31,6 @@
 
 #include <gtkmm/widget.h>
 
-#include <libgnomecanvas/gnome-canvas-pixbuf.h>
-
 #include "ganv-config.h"
 #include "ganv/Canvas.hpp"
 #include "ganv/Edge.hpp"
@@ -133,14 +131,14 @@ struct GanvCanvasImpl {
 		, _layout(GTK_LAYOUT(_gcanvas))
 		, _connect_port(NULL)
 		, _last_selected_port(NULL)
-		, _base_rect(gnome_canvas_item_new(
-			             gnome_canvas_root(GNOME_CANVAS(_gcanvas)),
-			             gnome_canvas_rect_get_type(),
+		, _base_rect(ganv_item_new(
+			             ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas)),
+			             ganv_box_get_type(),
 			             "x1", 0.0,
 			             "y1", 0.0,
 			             "x2", 1.0,
 			             "y2", 1.0,
-			             "fill-color-rgba", 0x000000FF,
+			             "fill-color", 0x000000FF,
 			             NULL))
 		, _select_rect(NULL)
 		, _zoom(1.0)
@@ -150,7 +148,7 @@ struct GanvCanvasImpl {
 		_wrapper_key = g_quark_from_string("ganvmm");
 		_move_cursor = gdk_cursor_new(GDK_FLEUR);
 
-		g_signal_connect(G_OBJECT(gnome_canvas_root(GNOME_CANVAS(_gcanvas))),
+		g_signal_connect(G_OBJECT(ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas))),
 		                 "event", G_CALLBACK(on_canvas_event), this);
 
 	}
@@ -161,15 +159,15 @@ struct GanvCanvasImpl {
 	}
 
 	static gboolean
-	on_canvas_event(GnomeCanvasItem* canvasitem,
-	                GdkEvent*        ev,
-	                void*            impl)
+	on_canvas_event(GanvItem* canvasitem,
+	                GdkEvent* ev,
+	                void*     impl)
 	{
 		return ((GanvCanvasImpl*)impl)->on_event(ev);
 	}
 
-	GnomeCanvasGroup* root() {
-		return gnome_canvas_root(GNOME_CANVAS(_gcanvas));
+	GanvGroup* root() {
+		return ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas));
 	}
 
 	void resize(double width, double height);
@@ -248,8 +246,8 @@ struct GanvCanvasImpl {
 	GanvPort* _connect_port; ///< Port for which a edge is being made
 	GanvPort* _last_selected_port;
 
-	GnomeCanvasItem* _base_rect;    ///< Background
-	GanvBox*   _select_rect;  ///< Rectangle for drag selection
+	GanvItem* _base_rect;       ///< Background
+	GanvBox*  _select_rect;     ///< Rectangle for drag selection
 
 	double _zoom;       ///< Current zoom level
 	double _font_size;  ///< Current font size in points
@@ -262,9 +260,9 @@ struct GanvCanvasImpl {
 };
 
 typedef struct {
-	GnomeCanvasItem item;
-	GanvEdgeImpl*   impl;
-	GanvEdgeImpl    impl_data;
+	GanvItem      item;
+	GanvEdgeImpl* impl;
+	GanvEdgeImpl  impl_data;
 } GanvEdgeKey;
 
 static void
@@ -297,14 +295,14 @@ GanvCanvasImpl::first_edge_to(const GanvNode* head)
 void
 GanvCanvasImpl::select_edge(GanvEdge* edge)
 {
-	gnome_canvas_item_set(GNOME_CANVAS_ITEM(edge), "selected", TRUE, NULL);
+	ganv_item_set(GANV_ITEM(edge), "selected", TRUE, NULL);
 	_selected_edges.insert(edge);
 }
 
 void
 GanvCanvasImpl::unselect_edge(GanvEdge* edge)
 {
-	gnome_canvas_item_set(GNOME_CANVAS_ITEM(edge), "selected", FALSE, NULL);
+	ganv_item_set(GANV_ITEM(edge), "selected", FALSE, NULL);
 	_selected_edges.erase(edge);
 }
 
@@ -374,7 +372,8 @@ select_edges(GanvPort* port, void* data)
 void
 GanvCanvasImpl::add_item(GanvNode* n)
 {
-	if (GNOME_CANVAS_ITEM(n)->parent == GNOME_CANVAS_ITEM(root())) {
+	GanvItem* item = GANV_ITEM(n);
+	if (item != _base_rect && item->parent == GANV_ITEM(root())) {
 		_items.insert(n);
 	}
 }
@@ -656,7 +655,7 @@ GanvCanvasImpl::select_port_toggle(GanvPort* port, int mod_state)
 			// Pivot around _last_selected_port in a single pass over module ports each click
 			GanvPort* old_last_selected = _last_selected_port;
 			GanvPort* first             = NULL;
-			bool            done              = false;
+			bool      done              = false;
 			for (size_t i = 0; i < ganv_module_num_ports(m); ++i) {
 				GanvPort* const p = ganv_module_get_port(m, i);
 				if (!first && !done && (p == _last_selected_port || p == port)) {
@@ -739,7 +738,7 @@ GanvCanvasImpl::join_selection()
 GanvNode*
 GanvCanvasImpl::get_node_at(double x, double y)
 {
-	GnomeCanvasItem* item = gnome_canvas_get_item_at(GNOME_CANVAS(_gcanvas), x, y);
+	GanvItem* item = ganv_canvas_base_get_item_at(GANV_CANVAS_BASE(_gcanvas), x, y);
 	while (item) {
 		if (GANV_IS_NODE(item)) {
 			return GANV_NODE(item);
@@ -761,7 +760,7 @@ GanvCanvasImpl::on_event(GdkEvent* event)
 	switch (event->type) {
 	case GDK_KEY_PRESS:
 		handled = true;
-		gnome_canvas_get_scroll_offsets(GNOME_CANVAS(_gcanvas), &scroll_x, &scroll_y);
+		ganv_canvas_base_get_scroll_offsets(GANV_CANVAS_BASE(_gcanvas), &scroll_x, &scroll_y);
 		switch (event->key.keyval) {
 		case GDK_Up:
 			scroll_y -= scroll_increment;
@@ -785,7 +784,7 @@ GanvCanvasImpl::on_event(GdkEvent* event)
 			handled = false;
 		}
 		if (handled) {
-			gnome_canvas_scroll_to(GNOME_CANVAS(_gcanvas), scroll_x, scroll_y);
+			ganv_canvas_base_scroll_to(GANV_CANVAS_BASE(_gcanvas), scroll_x, scroll_y);
 			return true;
 		}
 		break;
@@ -827,11 +826,11 @@ GanvCanvasImpl::scroll_drag_handler(GdkEvent* event)
 	static double last_y            = 0;
 
 	if (event->type == GDK_BUTTON_PRESS && event->button.button == 2) {
-		gnome_canvas_item_grab(
-			GNOME_CANVAS_ITEM(_base_rect),
+		ganv_item_grab(
+			GANV_ITEM(_base_rect),
 			GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 			NULL, event->button.time);
-		gnome_canvas_get_scroll_offsets(GNOME_CANVAS(_gcanvas), &original_scroll_x, &original_scroll_y);
+		ganv_canvas_base_get_scroll_offsets(GANV_CANVAS_BASE(_gcanvas), &original_scroll_x, &original_scroll_y);
 		scroll_offset_x = 0;
 		scroll_offset_y = 0;
 		origin_x = event->button.x_root;
@@ -852,13 +851,13 @@ GanvCanvasImpl::scroll_drag_handler(GdkEvent* event)
 
 		scroll_offset_x += x_offset;
 		scroll_offset_y += y_offset;
-		gnome_canvas_scroll_to(GNOME_CANVAS(_gcanvas),
+		ganv_canvas_base_scroll_to(GANV_CANVAS_BASE(_gcanvas),
 		                       lrint(original_scroll_x + scroll_offset_x),
 		                       lrint(original_scroll_y + scroll_offset_y));
 		last_x = x;
 		last_y = y;
 	} else if (event->type == GDK_BUTTON_RELEASE && _drag_state == SCROLL) {
-		gnome_canvas_item_ungrab(GNOME_CANVAS_ITEM(_base_rect), event->button.time);
+		ganv_item_ungrab(GANV_ITEM(_base_rect), event->button.time);
 		_drag_state = NOT_DRAGGING;
 	} else {
 		handled = false;
@@ -892,7 +891,7 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 		if ( !(event->button.state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK)) )
 			clear_selection();
 		_select_rect = GANV_BOX(
-			gnome_canvas_item_new(
+			ganv_item_new(
 				root(),
 				ganv_box_get_type(),
 				"x1", event->button.x,
@@ -902,20 +901,20 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 				"fill-color", SELECT_RECT_FILL_COLOUR,
 				"border-color", SELECT_RECT_BORDER_COLOUR,
 				NULL));
-		gnome_canvas_item_lower_to_bottom(GNOME_CANVAS_ITEM(_select_rect));
-		gnome_canvas_item_lower_to_bottom(GNOME_CANVAS_ITEM(_base_rect));
-		gnome_canvas_item_grab(
-			GNOME_CANVAS_ITEM(_base_rect), GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
+		ganv_item_lower_to_bottom(GANV_ITEM(_select_rect));
+		ganv_item_lower_to_bottom(GANV_ITEM(_base_rect));
+		ganv_item_grab(
+			GANV_ITEM(_base_rect), GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 			NULL, event->button.time);
 		return true;
 	} else if (event->type == GDK_MOTION_NOTIFY && _drag_state == SELECT) {
 		assert(_select_rect);
 		double x, y;
 		get_motion_coords(&event->motion, &x, &y);
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(_select_rect),
-		                      "x2", x,
-		                      "y2", y,
-		                      NULL);
+		ganv_item_set(GANV_ITEM(_select_rect),
+		              "x2", x,
+		              "y2", y,
+		              NULL);
 		return true;
 	} else if (event->type == GDK_BUTTON_RELEASE && _drag_state == SELECT) {
 		// Normalize select rect
@@ -952,7 +951,7 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 			}
 		}
 
-		gnome_canvas_item_ungrab(GNOME_CANVAS_ITEM(_base_rect), event->button.time);
+		ganv_item_ungrab(GANV_ITEM(_base_rect), event->button.time);
 
 		gtk_object_destroy(GTK_OBJECT(_select_rect));
 		_select_rect = NULL;
@@ -976,7 +975,7 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 	if (event->type == GDK_MOTION_NOTIFY) {
 		double x, y;
 		get_motion_coords(&event->motion, &x, &y);
-		gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(_base_rect), &x, &y);
+		ganv_item_i2w(GANV_ITEM(_base_rect), &x, &y);
 
 		if (!drag_edge) {
 			// Create drag edge
@@ -984,7 +983,7 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 			assert(_connect_port);
 
 			drag_node = GANV_NODE(
-				gnome_canvas_item_new(gnome_canvas_root(GNOME_CANVAS(_gcanvas)),
+				ganv_item_new(ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas)),
 				                      ganv_node_get_type(),
 				                      "x", x,
 				                      "y", y,
@@ -1004,30 +1003,30 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 		if (joinee && ganv_node_can_head(joinee) && joinee != drag_node) {
 			// Snap to item
 			snapped = true;
-			gnome_canvas_item_set(&drag_edge->item,
-			                      "head", joinee,
-			                      NULL);
+			ganv_item_set(&drag_edge->item,
+			              "head", joinee,
+			              NULL);
 		} else if (snapped) {
 			// Unsnap from item
 			snapped = false;
-			gnome_canvas_item_set(&drag_edge->item,
-			                      "head", drag_node,
-			                      NULL);
+			ganv_item_set(&drag_edge->item,
+			              "head", drag_node,
+			              NULL);
 		}
 
 		// Update drag edge for pointer position
 		ganv_node_move_to(drag_node, x, y);
-		gnome_canvas_item_request_update(&drag_node->group.item);
-		gnome_canvas_item_request_update(&drag_edge->item);
+		ganv_item_request_update(&drag_node->group.item);
+		ganv_item_request_update(&drag_edge->item);
 
 		return true;
 
 	} else if (event->type == GDK_BUTTON_RELEASE) {
-		gnome_canvas_item_ungrab(GNOME_CANVAS_ITEM(_base_rect), event->button.time);
+		ganv_item_ungrab(GANV_ITEM(_base_rect), event->button.time);
 
 		double x = event->button.x;
 		double y = event->button.y;
-		gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(_base_rect), &x, &y);
+		ganv_item_i2w(GANV_ITEM(_base_rect), &x, &y);
 
 		GanvNode* joinee = get_node_at(x, y);
 
@@ -1174,8 +1173,8 @@ switch (event->type) {
 			_drag_state = GanvCanvasImpl::EDGE;
 			_connect_port = port;
 			port_dragging = false;
-			gnome_canvas_item_grab(
-				GNOME_CANVAS_ITEM(_base_rect),
+			ganv_item_grab(
+				GANV_ITEM(_base_rect),
 				GDK_BUTTON_PRESS_MASK|GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 				NULL, event->crossing.time);
 			return true;
@@ -1314,11 +1313,11 @@ GanvCanvasImpl::clear_selection()
 	unselect_ports();
 
 	FOREACH_ITEM(_selected_items, i) {
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(*i), "selected", FALSE, NULL);
+		ganv_item_set(GANV_ITEM(*i), "selected", FALSE, NULL);
 	}
 
 	FOREACH_SELECTED_EDGE(_selected_edges, c) {
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(*c), "selected", FALSE, NULL);
+		ganv_item_set(GANV_ITEM(*c), "selected", FALSE, NULL);
 	}
 
 	_selected_items.clear();
@@ -1329,14 +1328,11 @@ void
 GanvCanvasImpl::resize(double width, double height)
 {
 	if (width != _gcanvas->width || height != _gcanvas->height) {
-		gnome_canvas_item_set(
-			GNOME_CANVAS_ITEM(_base_rect),
-			"x2", width,
-			"y2", height,
-			NULL);
+		ganv_box_set_width(GANV_BOX(_base_rect), width);
+		ganv_box_set_height(GANV_BOX(_base_rect), height);
 		_gcanvas->width  = width;
 		_gcanvas->height = height;
-		gnome_canvas_set_scroll_region(GNOME_CANVAS(_gcanvas),
+		ganv_canvas_base_set_scroll_region(GANV_CANVAS_BASE(_gcanvas),
 		                               0.0, 0.0, width, height);
 	}
 }
@@ -1344,9 +1340,9 @@ GanvCanvasImpl::resize(double width, double height)
 namespace Ganv {
 
 static gboolean
-on_event_after(GnomeCanvasItem* canvasitem,
-               GdkEvent*        ev,
-               void*            canvas)
+on_event_after(GanvItem* canvasitem,
+               GdkEvent* ev,
+               void*     canvas)
 {
 	return ((Canvas*)canvas)->signal_event.emit(ev);
 }
@@ -1410,7 +1406,7 @@ Canvas::set_zoom_and_font_size(double zoom, double points)
 
 	if (zoom != impl()->_zoom) {
 		impl()->_zoom = zoom;
-		gnome_canvas_set_pixels_per_unit(GNOME_CANVAS(impl()->_gcanvas), zoom);
+		ganv_canvas_base_set_pixels_per_unit(GANV_CANVAS_BASE(impl()->_gcanvas), zoom);
 	}
 
 	impl()->_font_size = points;
@@ -1430,7 +1426,7 @@ Canvas::zoom_full()
 		return;
 
 	int win_width, win_height;
-	Glib::RefPtr<Gdk::Window> win = GNOME_CANVAS(impl()->_gcanvas)->get_window();
+	Glib::RefPtr<Gdk::Window> win = GANV_CANVAS_BASE(impl()->_gcanvas)->get_window();
 	win->get_size(win_width, win_height);
 
 	// Box containing all canvas items
@@ -1459,9 +1455,9 @@ Canvas::zoom_full()
 	set_zoom(new_zoom);
 
 	int scroll_x, scroll_y;
-	GNOME_CANVAS(impl()->_gcanvas)->w2c(lrintf(left - pad), lrintf(bottom - pad), scroll_x, scroll_y);
+	GANV_CANVAS_BASE(impl()->_gcanvas)->w2c(lrintf(left - pad), lrintf(bottom - pad), scroll_x, scroll_y);
 
-	GNOME_CANVAS(impl()->_gcanvas)->scroll_to(scroll_x, scroll_y);
+	GANV_CANVAS_BASE(impl()->_gcanvas)->scroll_to(scroll_x, scroll_y);
 #endif
 }
 
@@ -1567,7 +1563,7 @@ Canvas::arrange(bool use_length_hints)
 
 	// Arrange to graphviz coordinates
 	for (GVNodes::iterator i = nodes.begin(); i != nodes.end(); ++i) {
-		if (GNOME_CANVAS_ITEM(i->first)->parent != GNOME_CANVAS_ITEM(root())) {
+		if (GANV_ITEM(i->first)->parent != GANV_ITEM(root())) {
 			continue;
 		}
 		const string pos   = agget(i->second, (char*)"pos");
@@ -1612,7 +1608,7 @@ Canvas::arrange(bool use_length_hints)
 
 	static const double border_width = impl()->_font_size;
 	impl()->move_contents_to_internal(border_width, border_width, least_x, least_y);
-	gnome_canvas_scroll_to(GNOME_CANVAS(impl()->_gcanvas), 0, 0);
+	ganv_canvas_base_scroll_to(GANV_CANVAS_BASE(impl()->_gcanvas), 0, 0);
 
 	FOREACH_ITEM(impl()->_items, i) {
 		double x, y;
@@ -1673,10 +1669,10 @@ Canvas::for_each_selected_edge(EdgePtrFunction f, void* data)
 	}
 }
 
-GnomeCanvasGroup*
+GanvGroup*
 Canvas::root()
 {
-	return gnome_canvas_root(GNOME_CANVAS(impl()->_gcanvas));
+	return ganv_canvas_base_root(GANV_CANVAS_BASE(impl()->_gcanvas));
 }
 
 Gtk::Layout&
@@ -1688,13 +1684,13 @@ Canvas::widget()
 void
 Canvas::get_scroll_offsets(int& cx, int& cy) const
 {
-	gnome_canvas_get_scroll_offsets(GNOME_CANVAS(impl()->_gcanvas), &cx, &cy);
+	ganv_canvas_base_get_scroll_offsets(GANV_CANVAS_BASE(impl()->_gcanvas), &cx, &cy);
 }
 
 void
 Canvas::scroll_to(int x, int y)
 {
-	gnome_canvas_scroll_to(GNOME_CANVAS(impl()->_gcanvas), x, y);
+	ganv_canvas_base_scroll_to(GANV_CANVAS_BASE(impl()->_gcanvas), x, y);
 }
 
 GQuark
@@ -1726,17 +1722,16 @@ Canvas::gobj() const
 
 extern "C" {
 
-#include <libgnomecanvas/libgnomecanvas.h>
-
+#include "ganv/canvas-base.h"
 #include "ganv/canvas.h"
 
 #include "./boilerplate.h"
 #include "./color.h"
 #include "./gettext.h"
 
-G_DEFINE_TYPE(GanvCanvas, ganv_canvas, GNOME_TYPE_CANVAS)
+G_DEFINE_TYPE(GanvCanvas, ganv_canvas, GANV_TYPE_CANVAS_BASE)
 
-static GnomeCanvasClass* parent_class;
+static GanvCanvasBaseClass* parent_class;
 
 enum {
 	PROP_0,
@@ -1775,12 +1770,12 @@ ganv_canvas_set_property(GObject*      object,
 	case PROP_LOCKED: {
 		const gboolean tmp = g_value_get_boolean(value);
 		if (canvas->locked != tmp) {
-			GnomeCanvasItem* base = GNOME_CANVAS_ITEM(canvas->impl->_base_rect);
-			gnome_canvas_item_set(base,
-			                      "fill-color", tmp ? 0x131415FF : 0x000000FF,
-			                      NULL);
+			GanvItem* base = GANV_ITEM(canvas->impl->_base_rect);
+			ganv_item_set(base,
+			              "fill-color", tmp ? 0x131415FF : 0x000000FF,
+			              NULL);
 			canvas->locked = tmp;
-			gnome_canvas_item_request_update(base);
+			ganv_item_request_update(base);
 		}
 		break;
 	}
@@ -1816,7 +1811,7 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 {
 	GObjectClass* gobject_class = (GObjectClass*)klass;
 
-	parent_class = GNOME_CANVAS_CLASS(g_type_class_peek_parent(klass));
+	parent_class = GANV_CANVAS_BASE_CLASS(g_type_class_peek_parent(klass));
 
 	gobject_class->set_property = ganv_canvas_set_property;
 	gobject_class->get_property = ganv_canvas_get_property;
@@ -1893,7 +1888,7 @@ ganv_canvas_new(double width, double height)
 	                                              "width", width,
 	                                              "height", height,
 	                                              NULL));
-	gnome_canvas_set_scroll_region(GNOME_CANVAS(canvas),
+	ganv_canvas_base_set_scroll_region(GANV_CANVAS_BASE(canvas),
 	                               0.0, 0.0, width, height);
 	return canvas;
 }
@@ -1904,10 +1899,10 @@ ganv_canvas_resize(GanvCanvas* canvas, double width, double height)
 	canvas->impl->resize(width, height);
 }
 
-GnomeCanvasGroup*
+GanvGroup*
 ganv_canvas_get_root(const GanvCanvas* canvas)
 {
-	return gnome_canvas_root(GNOME_CANVAS(canvas->impl->_gcanvas));
+	return ganv_canvas_base_root(GANV_CANVAS_BASE(canvas->impl->_gcanvas));
 }
 
 double

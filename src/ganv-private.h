@@ -84,16 +84,16 @@ struct _GanvEdgeImpl
 
 struct _GanvModuleImpl
 {
-	GPtrArray*       ports;
-	GnomeCanvasItem* icon_box;
-	GnomeCanvasItem* embed_item;
-	int              embed_width;
-	int              embed_height;
-	double           widest_input;
-	double           widest_output;
-	gboolean         show_port_labels;
-	gboolean         must_resize;
-	gboolean         port_size_changed;
+	GPtrArray* ports;
+	GanvItem*  icon_box;
+	GanvItem*  embed_item;
+	int        embed_width;
+	int        embed_height;
+	double     widest_input;
+	double     widest_output;
+	gboolean   show_port_labels;
+	gboolean   must_resize;
+	gboolean   port_size_changed;
 };
 
 /* Node */

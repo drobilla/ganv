@@ -50,9 +50,9 @@ ganv_port_destroy(GtkObject* object)
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_PORT(object));
 
-	GnomeCanvasItem* item   = GNOME_CANVAS_ITEM(object);
-	GanvPort*        port   = GANV_PORT(object);
-	GanvCanvas*      canvas = GANV_CANVAS(item->canvas);
+	GanvItem*   item   = GANV_ITEM(object);
+	GanvPort*   port   = GANV_PORT(object);
+	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
 	if (canvas) {
 		if (port->impl->is_input) {
 			ganv_canvas_for_each_edge_to(canvas,
@@ -127,7 +127,7 @@ ganv_port_tail_vector(const GanvNode* self,
 	*dx = 1.0;
 	*dy = 0.0;
 
-	gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(self)->parent, x, y);
+	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
 }
 
 static void
@@ -148,7 +148,7 @@ ganv_port_head_vector(const GanvNode* self,
 	*dx = -1.0;
 	*dy = 0.0;
 
-	gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(self)->parent, x, y);
+	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
 }
 
 static void
@@ -166,10 +166,10 @@ ganv_port_resize(GanvNode* self)
 	ganv_box_set_width(&port->box, label_w + (PORT_LABEL_HPAD * 2.0));
 	ganv_box_set_height(&port->box, label_h + (PORT_LABEL_VPAD * 2.0));
 
-	gnome_canvas_item_set(GNOME_CANVAS_ITEM(node->impl->label),
-	                      "x", PORT_LABEL_HPAD,
-	                      "y", PORT_LABEL_VPAD,
-	                      NULL);
+	ganv_item_set(GANV_ITEM(node->impl->label),
+	              "x", PORT_LABEL_HPAD,
+	              "y", PORT_LABEL_VPAD,
+	              NULL);
 
 	if (parent_class->parent_class.resize) {
 		parent_class->parent_class.resize(self);
@@ -196,17 +196,17 @@ ganv_port_set_height(GanvBox* box,
 	if (port->impl->control) {
 		double control_y1;
 		g_object_get(port->impl->control->rect, "y1", &control_y1, NULL);
-		gnome_canvas_item_set(GNOME_CANVAS_ITEM(port->impl->control->rect),
-		                      "y2", control_y1 + height,
-		                      NULL);
+		ganv_item_set(GANV_ITEM(port->impl->control->rect),
+		              "y2", control_y1 + height,
+		              NULL);
 	}
 }
 
 static gboolean
 on_event(GanvNode* node, GdkEvent* event)
 {
-	GnomeCanvasItem* item   = GNOME_CANVAS_ITEM(node);
-	GanvCanvas*      canvas = GANV_CANVAS(item->canvas);
+	GanvItem*   item   = GANV_ITEM(node);
+	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
 
 	return ganv_canvas_port_event(canvas, GANV_PORT(node), event);
 }
@@ -253,11 +253,11 @@ ganv_port_new(GanvModule* module,
 	GanvPort* port = GANV_PORT(
 		g_object_new(ganv_port_get_type(), NULL));
 
-	GnomeCanvasItem* item = GNOME_CANVAS_ITEM(port);
+	GanvItem* item = GANV_ITEM(port);
 	va_list args;
 	va_start(args, first_prop_name);
-	gnome_canvas_item_construct(item,
-	                            GNOME_CANVAS_GROUP(module),
+	ganv_item_construct(item,
+	                            GANV_GROUP(module),
 	                            first_prop_name, args);
 	va_end(args);
 
@@ -301,8 +301,8 @@ ganv_port_show_control(GanvPort* port)
 	control->min       = 0.0f;
 	control->max       = 0.0f;
 	control->is_toggle = FALSE;
-	control->rect      = GANV_BOX(gnome_canvas_item_new(
-		                               GNOME_CANVAS_GROUP(port),
+	control->rect      = GANV_BOX(ganv_item_new(
+		                               GANV_GROUP(port),
 		                               ganv_box_get_type(),
 		                               "x1", 0.0,
 		                               "y1", 0.0,
@@ -311,7 +311,7 @@ ganv_port_show_control(GanvPort* port)
 		                               "fill-color", 0xFFFFFF80,
 		                               "border-width", 0.0,
 		                               NULL));
-	gnome_canvas_item_show(GNOME_CANVAS_ITEM(control->rect));
+	ganv_item_show(GANV_ITEM(control->rect));
 }
 
 void
@@ -425,7 +425,7 @@ ganv_port_get_natural_width(const GanvPort* port)
 GanvModule*
 ganv_port_get_module(const GanvPort* port)
 {
-	return GANV_MODULE(GNOME_CANVAS_ITEM(port)->parent);
+	return GANV_MODULE(GANV_ITEM(port)->parent);
 }
 
 float

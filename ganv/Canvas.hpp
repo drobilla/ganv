@@ -39,7 +39,7 @@ class Port;
 
 /** @defgroup Ganv Ganv
  *
- * A generic dataflow widget using libgnomecanvas.
+ * A canvas widget for graph-like UIs.
  */
 
 /** The 'master' canvas widget which contains all other objects.
@@ -135,7 +135,7 @@ public:
 
 	GQuark wrapper_key();
 
-	GnomeCanvasGroup* root();
+	GanvGroup* root();
 
 	GdkCursor* move_cursor();
 

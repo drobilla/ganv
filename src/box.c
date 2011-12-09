@@ -147,7 +147,7 @@ ganv_box_bounds_item(const GanvBoxCoords* coords,
 
 
 static void
-request_redraw(GnomeCanvasItem*     item,
+request_redraw(GanvItem*            item,
                const GanvBoxCoords* coords,
                gboolean             world)
 {
@@ -156,37 +156,37 @@ request_redraw(GnomeCanvasItem*     item,
 
 	if (!world) {
 		// Convert from parent-relative coordinates to world coordinates
-		gnome_canvas_item_i2w(item, &x1, &y1);
-		gnome_canvas_item_i2w(item, &x2, &y2);
+		ganv_item_i2w(item, &x1, &y1);
+		ganv_item_i2w(item, &x2, &y2);
 	}
 
-	gnome_canvas_request_redraw(item->canvas, x1, y1, x2, y2);
+	ganv_canvas_base_request_redraw(item->canvas, x1, y1, x2, y2);
 }
 
 static void
-coords_i2w(GnomeCanvasItem* item, GanvBoxCoords* coords)
+coords_i2w(GanvItem* item, GanvBoxCoords* coords)
 {
-	gnome_canvas_item_i2w(item, &coords->x1, &coords->y1);
-	gnome_canvas_item_i2w(item, &coords->x2, &coords->y2);
+	ganv_item_i2w(item, &coords->x1, &coords->y1);
+	ganv_item_i2w(item, &coords->x2, &coords->y2);
 }
 
 static void
-ganv_box_bounds(GnomeCanvasItem* item,
+ganv_box_bounds(GanvItem* item,
                 double* x1, double* y1,
                 double* x2, double* y2)
 {
 	// Note this will not be correct if children are outside the box bounds
 	GanvBox* box = GANV_BOX(item);
 	ganv_box_bounds_item(&box->impl->coords, x1, y1, x2, y2);
-	gnome_canvas_item_i2w(item, x1, y1);
-	gnome_canvas_item_i2w(item, x2, y2);
+	ganv_item_i2w(item, x1, y1);
+	ganv_item_i2w(item, x2, y2);
 }
 
 static void
-ganv_box_update(GnomeCanvasItem* item,
-                double*          affine,
-                ArtSVP*          clip_path,
-                int              flags)
+ganv_box_update(GanvItem* item,
+                double*   affine,
+                ArtSVP*   clip_path,
+                int       flags)
 {
 	GanvBox*     box  = GANV_BOX(item);
 	GanvBoxImpl* impl = box->impl;
@@ -195,7 +195,7 @@ ganv_box_update(GnomeCanvasItem* item,
 	// Request redraw of old location
 	request_redraw(item, &impl->old_coords, TRUE);
 
-	GnomeCanvasItemClass* item_class = GNOME_CANVAS_ITEM_CLASS(parent_class);
+	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	item_class->update(item, affine, clip_path, flags);
 
 	// Store old coordinates in world relative coordinates in case the
@@ -208,8 +208,8 @@ ganv_box_update(GnomeCanvasItem* item,
 	ganv_box_bounds(item, &x1, &y1, &x2, &y2);
 
 	// Update item canvas coordinates
-	gnome_canvas_w2c_d(GNOME_CANVAS(item->canvas), x1, y1, &item->x1, &item->y1);
-	gnome_canvas_w2c_d(GNOME_CANVAS(item->canvas), x2, y2, &item->x2, &item->y2);
+	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x1, y1, &item->x1, &item->y1);
+	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
 	request_redraw(item, &impl->coords, FALSE);
@@ -217,14 +217,7 @@ ganv_box_update(GnomeCanvasItem* item,
 }
 
 static void
-ganv_box_render(GnomeCanvasItem* item,
-                GnomeCanvasBuf*  buf)
-{
-	// Not implemented
-}
-
-static void
-ganv_box_draw(GnomeCanvasItem* item,
+ganv_box_draw(GanvItem* item,
               GdkDrawable* drawable,
               int cx, int cy,
               int width, int height)
@@ -237,8 +230,8 @@ ganv_box_draw(GnomeCanvasItem* item,
 	double y1 = impl->coords.y1;
 	double x2 = impl->coords.x2;
 	double y2 = impl->coords.y2;
-	gnome_canvas_item_i2w(item, &x1, &y1);
-	gnome_canvas_item_i2w(item, &x2, &y2);
+	ganv_item_i2w(item, &x1, &y1);
+	ganv_item_i2w(item, &x2, &y2);
 
 	double dash_length, border_color, fill_color;
 	ganv_node_get_draw_properties(
@@ -292,17 +285,17 @@ ganv_box_draw(GnomeCanvasItem* item,
 		cairo_stroke(cr);
 	}
 
-	GnomeCanvasItemClass* item_class = GNOME_CANVAS_ITEM_CLASS(parent_class);
+	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	item_class->draw(item, drawable, cx, cy, width, height);
 
 	cairo_destroy(cr);
 }
 
 static double
-ganv_box_point(GnomeCanvasItem* item,
+ganv_box_point(GanvItem* item,
                double x, double y,
                int cx, int cy,
-               GnomeCanvasItem** actual_item)
+               GanvItem** actual_item)
 {
 	GanvBox*     box  = GANV_BOX(item);
 	GanvBoxImpl* impl = box->impl;
@@ -314,7 +307,7 @@ ganv_box_point(GnomeCanvasItem* item,
 
 	// Point is inside the box (distance 0)
 	if ((x >= x1) && (y >= y1) && (x <= x2) && (y <= y2)) {
-		GnomeCanvasItemClass* item_class = GNOME_CANVAS_ITEM_CLASS(parent_class);
+		GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 		double d = item_class->point(item, x, y, cx, cy, actual_item);
 		if (*actual_item) {
 			return d;
@@ -363,40 +356,40 @@ ganv_box_is_within(const GanvNode* self,
 	             "y2", &by2,
 	             NULL);
 
-	gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(self), &bx1, &by1);
-	gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(self), &bx2, &by2);
+	ganv_item_i2w(GANV_ITEM(self), &bx1, &by1);
+	ganv_item_i2w(GANV_ITEM(self), &bx2, &by2);
 
 	return (   bx1 >= x1
-	           && by2 >= y1
-	           && bx2 <= x2
-	           && by2 <= y2);
+	        && by2 >= y1
+	        && bx2 <= x2
+	        && by2 <= y2);
 }
 
 static void
 ganv_box_default_set_width(GanvBox* box,
                            double   width)
 {
-	gnome_canvas_item_set(GNOME_CANVAS_ITEM(box),
-	                      "x2", ganv_box_get_x1(box) + width,
-	                      NULL);
+	ganv_item_set(GANV_ITEM(box),
+	              "x2", ganv_box_get_x1(box) + width,
+	              NULL);
 }
 
 static void
 ganv_box_default_set_height(GanvBox* box,
-                            double         height)
+                            double   height)
 {
-	gnome_canvas_item_set(GNOME_CANVAS_ITEM(box),
-	                      "y2", ganv_box_get_y1(box) + height,
-	                      NULL);
+	ganv_item_set(GANV_ITEM(box),
+	              "y2", ganv_box_get_y1(box) + height,
+	              NULL);
 }
 
 static void
 ganv_box_class_init(GanvBoxClass* class)
 {
-	GObjectClass*         gobject_class = (GObjectClass*)class;
-	GtkObjectClass*       object_class  = (GtkObjectClass*)class;
-	GnomeCanvasItemClass* item_class    = (GnomeCanvasItemClass*)class;
-	GanvNodeClass*        node_class    = (GanvNodeClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)class;
+	GtkObjectClass* object_class  = (GtkObjectClass*)class;
+	GanvItemClass*  item_class    = (GanvItemClass*)class;
+	GanvNodeClass*  node_class    = (GanvNodeClass*)class;
 
 	parent_class = GANV_NODE_CLASS(g_type_class_peek_parent(class));
 
@@ -490,7 +483,6 @@ ganv_box_class_init(GanvBoxClass* class)
 	item_class->update = ganv_box_update;
 	item_class->bounds = ganv_box_bounds;
 	item_class->point  = ganv_box_point;
-	item_class->render = ganv_box_render;
 	item_class->draw   = ganv_box_draw;
 
 	node_class->is_within = ganv_box_is_within;

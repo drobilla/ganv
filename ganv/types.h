@@ -18,7 +18,6 @@
 
 typedef struct _GanvCanvas GanvCanvas;
 typedef struct _GanvEdge   GanvEdge;
-typedef struct _GanvItem   GanvItem;
 typedef struct _GanvModule GanvModule;
 typedef struct _GanvNode   GanvNode;
 typedef struct _GanvPort   GanvPort;

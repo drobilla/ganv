@@ -32,8 +32,7 @@ G_BEGIN_DECLS
 typedef struct _GanvPortClass GanvPortClass;
 typedef struct _GanvPortImpl  GanvPortImpl;
 
-struct _GanvPort
-{
+struct _GanvPort {
 	GanvBox       box;
 	GanvPortImpl* impl;
 };

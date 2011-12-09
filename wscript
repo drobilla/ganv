@@ -50,7 +50,7 @@ def configure(conf):
                       atleast_version='2.0.0', mandatory=True)
     autowaf.check_pkg(conf, 'gtkmm-2.4', uselib_store='GTKMM',
                       atleast_version='2.10.0', mandatory=True)
-    autowaf.check_pkg(conf, 'libgnomecanvas-2.0', uselib_store='GNOMECANVAS',
+    autowaf.check_pkg(conf, 'libart-2.0', uselib_store='ART',
                       atleast_version='2.0.0', mandatory=True)
 
     if Options.options.gir:
@@ -78,12 +78,15 @@ ganv_source = [
     'src/Canvas.cpp',
     'src/Port.cpp',
     'src/box.c',
+    'src/canvas-base.c',
     'src/circle.c',
     'src/edge.c',
+    'src/ganv-marshal.c',
     'src/module.c',
     'src/node.c',
     'src/port.c',
-    'src/text.c'
+    'src/text.c',
+    'src/widget.c'
 ]
 
 def build(bld):
@@ -93,8 +96,16 @@ def build(bld):
 
     # Pkgconfig file
     autowaf.build_pc(bld, 'GANV', GANV_VERSION, GANV_MAJOR_VERSION,
-                     'AGRAPH GLIBMM GNOMECANVAS',
+                     'AGRAPH GLIBMM ART',
                      {'GANV_MAJOR_VERSION' : GANV_MAJOR_VERSION})
+
+    bld(rule = 'glib-genmarshal --prefix=ganv_marshal --header ${SRC} > ${TGT}',
+        source = 'src/ganv-marshal.list',
+        target = 'src/ganv-marshal.h')
+
+    bld(rule = 'glib-genmarshal --prefix=ganv_marshal --body ${SRC} > ${TGT}',
+        source = 'src/ganv-marshal.list',
+        target = 'src/ganv-marshal.c')
 
     # Library
     obj = bld(features = 'c cshlib cxx cxxshlib')
@@ -103,7 +114,7 @@ def build(bld):
     obj.includes        = ['.', './src']
     obj.name            = 'libganv'
     obj.target          = 'ganv-%s' % GANV_MAJOR_VERSION
-    obj.uselib          = 'GTKMM GNOMECANVAS AGRAPH'
+    obj.uselib          = 'GTKMM AGRAPH ART'
     obj.vnum            = GANV_LIB_VERSION
     obj.install_path    = '${LIBDIR}'
 
@@ -122,7 +133,7 @@ def build(bld):
                   includes     = ['.', './src'],
                   name         = 'libganv_profiled',
                   target       = 'ganv_profiled',
-                  uselib       = 'GTKMM GNOMECANVAS AGRAPH',
+                  uselib       = 'GTKMM AGRAPH ART',
                   install_path = '',
                   cflags       = [ '-fprofile-arcs', '-ftest-coverage' ])
 

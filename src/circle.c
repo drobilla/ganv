@@ -16,6 +16,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "ganv/canvas-base.h"
 #include "ganv/circle.h"
 
 #include "./color.h"
@@ -118,7 +119,7 @@ ganv_circle_tail_vector(const GanvNode* self,
                         double*         dy)
 {
 	g_object_get(G_OBJECT(self), "x", x, "y", y, NULL);
-	gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(self)->parent, x, y);
+	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
 	*dx = 0.0;
 	*dy = 0.0;
 }
@@ -157,11 +158,11 @@ ganv_circle_head_vector(const GanvNode* self,
 	*dx = 0.0;
 	*dy = 0.0;
 
-	gnome_canvas_item_i2w(GNOME_CANVAS_ITEM(self)->parent, x, y);
+	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
 }
 
 static void
-request_redraw(GnomeCanvasItem*        item,
+request_redraw(GanvItem*               item,
                const GanvCircleCoords* coords,
                gboolean                world)
 {
@@ -174,22 +175,22 @@ request_redraw(GnomeCanvasItem*        item,
 
 	if (!world) {
 		// Convert from parent-relative coordinates to world coordinates
-		gnome_canvas_item_i2w(item, &x1, &y1);
-		gnome_canvas_item_i2w(item, &x2, &y2);
+		ganv_item_i2w(item, &x1, &y1);
+		ganv_item_i2w(item, &x2, &y2);
 	}
 
-	gnome_canvas_request_redraw(item->canvas, x1, y1, x2, y2);
-	gnome_canvas_request_redraw(item->canvas, 0, 0, 10000, 10000);
+	ganv_canvas_base_request_redraw(item->canvas, x1, y1, x2, y2);
+	ganv_canvas_base_request_redraw(item->canvas, 0, 0, 10000, 10000);
 }
 
 static void
-coords_i2w(GnomeCanvasItem* item, GanvCircleCoords* coords)
+coords_i2w(GanvItem* item, GanvCircleCoords* coords)
 {
-	gnome_canvas_item_i2w(item, &coords->x, &coords->y);
+	ganv_item_i2w(item, &coords->x, &coords->y);
 }
 
 static void
-ganv_circle_bounds_item(GnomeCanvasItem* item,
+ganv_circle_bounds_item(GanvItem* item,
                         double* x1, double* y1,
                         double* x2, double* y2)
 {
@@ -202,25 +203,25 @@ ganv_circle_bounds_item(GnomeCanvasItem* item,
 }
 
 static void
-ganv_circle_bounds(GnomeCanvasItem* item,
+ganv_circle_bounds(GanvItem* item,
                    double* x1, double* y1,
                    double* x2, double* y2)
 {
 	ganv_circle_bounds_item(item, x1, y1, x2, y2);
-	gnome_canvas_item_i2w(item, x1, y1);
-	gnome_canvas_item_i2w(item, x2, y2);
+	ganv_item_i2w(item, x1, y1);
+	ganv_item_i2w(item, x2, y2);
 }
 
 static void
-ganv_circle_update(GnomeCanvasItem* item,
-                   double*          affine,
-                   ArtSVP*          clip_path,
-                   int              flags)
+ganv_circle_update(GanvItem* item,
+                   double*   affine,
+                   ArtSVP*   clip_path,
+                   int       flags)
 {
 	GanvCircle*     circle = GANV_CIRCLE(item);
 	GanvCircleImpl* impl   = circle->impl;
 
-	GnomeCanvasItemClass* item_class = GNOME_CANVAS_ITEM_CLASS(parent_class);
+	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	if (item_class->update) {
 		(*item_class->update)(item, affine, clip_path, flags);
 	}
@@ -238,22 +239,15 @@ ganv_circle_update(GnomeCanvasItem* item,
 	ganv_circle_bounds(item, &x1, &y1, &x2, &y2);
 
 	// Update item canvas coordinates
-	gnome_canvas_w2c_d(GNOME_CANVAS(item->canvas), x1, y1, &item->x1, &item->y1);
-	gnome_canvas_w2c_d(GNOME_CANVAS(item->canvas), x2, y2, &item->x2, &item->y2);
+	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x1, y1, &item->x1, &item->y1);
+	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
 	request_redraw(item, &impl->coords, FALSE);
 }
 
 static void
-ganv_circle_render(GnomeCanvasItem* item,
-                   GnomeCanvasBuf*  buf)
-{
-	// Not implemented
-}
-
-static void
-ganv_circle_draw(GnomeCanvasItem* item,
+ganv_circle_draw(GanvItem* item,
                  GdkDrawable* drawable,
                  int x, int y,
                  int width, int height)
@@ -266,7 +260,7 @@ ganv_circle_draw(GnomeCanvasItem* item,
 
 	double cx = impl->coords.x;
 	double cy = impl->coords.y;
-	gnome_canvas_item_i2w(item, &cx, &cy);
+	ganv_item_i2w(item, &cx, &cy);
 
 	double dash_length, border_color, fill_color;
 	ganv_node_get_draw_properties(
@@ -296,10 +290,10 @@ ganv_circle_draw(GnomeCanvasItem* item,
 }
 
 static double
-ganv_circle_point(GnomeCanvasItem* item,
+ganv_circle_point(GanvItem* item,
                   double x, double y,
                   int cx, int cy,
-                  GnomeCanvasItem** actual_item)
+                  GanvItem** actual_item)
 {
 	const GanvCircle*       circle = GANV_CIRCLE(item);
 	const GanvCircleCoords* coords = &circle->impl->coords;
@@ -322,10 +316,10 @@ ganv_circle_point(GnomeCanvasItem* item,
 static void
 ganv_circle_class_init(GanvCircleClass* class)
 {
-	GObjectClass*         gobject_class = (GObjectClass*)class;
-	GtkObjectClass*       object_class  = (GtkObjectClass*)class;
-	GnomeCanvasItemClass* item_class    = (GnomeCanvasItemClass*)class;
-	GanvNodeClass*        node_class    = (GanvNodeClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)class;
+	GtkObjectClass* object_class  = (GtkObjectClass*)class;
+	GanvItemClass*  item_class    = (GanvItemClass*)class;
+	GanvNodeClass*  node_class    = (GanvNodeClass*)class;
 
 	parent_class = GANV_NODE_CLASS(g_type_class_peek_parent(class));
 
@@ -352,6 +346,5 @@ ganv_circle_class_init(GanvCircleClass* class)
 	item_class->update = ganv_circle_update;
 	item_class->bounds = ganv_circle_bounds;
 	item_class->point  = ganv_circle_point;
-	item_class->render = ganv_circle_render;
 	item_class->draw   = ganv_circle_draw;
 }

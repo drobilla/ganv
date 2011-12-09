@@ -18,8 +18,8 @@
 #include <math.h>
 
 #include <gtk/gtkstyle.h>
-#include <libgnomecanvas/libgnomecanvas.h>
 
+#include "ganv/canvas-base.h"
 #include "ganv/canvas.h"
 #include "ganv/text.h"
 
@@ -28,9 +28,9 @@
 #include "./gettext.h"
 #include "./ganv-private.h"
 
-G_DEFINE_TYPE(GanvText, ganv_text, GNOME_TYPE_CANVAS_ITEM)
+G_DEFINE_TYPE(GanvText, ganv_text, GANV_TYPE_ITEM)
 
-static GnomeCanvasItemClass* parent_class;
+static GanvItemClass* parent_class;
 
 enum {
 	PROP_0,
@@ -88,12 +88,12 @@ ganv_text_destroy(GtkObject* object)
 static void
 ganv_text_layout(GanvText* text)
 {
-	GanvTextImpl*    impl      = text->impl;
-	GnomeCanvasItem* item      = GNOME_CANVAS_ITEM(text);
-	GanvCanvas*      canvas    = GANV_CANVAS(item->canvas);
-	GtkWidget*       widget    = GTK_WIDGET(canvas);
-	double           font_size = ganv_canvas_get_font_size(canvas);
-	guint            color     = 0xFFFFFFFF;
+	GanvTextImpl* impl      = text->impl;
+	GanvItem*     item      = GANV_ITEM(text);
+	GanvCanvas*   canvas    = GANV_CANVAS(item->canvas);
+	GtkWidget*    widget    = GTK_WIDGET(canvas);
+	double        font_size = ganv_canvas_get_font_size(canvas);
+	guint         color     = 0xFFFFFFFF;
 
 	GtkStyle*             style   = gtk_rc_get_style(widget);
 	PangoFontDescription* font    = pango_font_description_copy(style->font_desc);
@@ -139,7 +139,7 @@ ganv_text_layout(GanvText* text)
 	pango_font_description_free(font);
 
 	impl->needs_layout = FALSE;
-	gnome_canvas_item_request_update(GNOME_CANVAS_ITEM(text));
+	ganv_item_request_update(GANV_ITEM(text));
 }
 
 static void
@@ -202,7 +202,7 @@ ganv_text_get_property(GObject*    object,
 }
 
 static void
-ganv_text_bounds_item(GnomeCanvasItem* item,
+ganv_text_bounds_item(GanvItem* item,
                       double* x1, double* y1,
                       double* x2, double* y2)
 {
@@ -220,24 +220,24 @@ ganv_text_bounds_item(GnomeCanvasItem* item,
 }
 
 static void
-ganv_text_bounds(GnomeCanvasItem* item,
+ganv_text_bounds(GanvItem* item,
                  double* x1, double* y1,
                  double* x2, double* y2)
 {
 	ganv_text_bounds_item(item, x1, y1, x2, y2);
-	gnome_canvas_item_i2w(item->parent, x1, y1);
-	gnome_canvas_item_i2w(item->parent, x2, y2);
+	ganv_item_i2w(item->parent, x1, y1);
+	ganv_item_i2w(item->parent, x2, y2);
 }
 
 static void
-ganv_text_update(GnomeCanvasItem* item,
-                 double*          affine,
-                 ArtSVP*          clip_path,
-                 int              flags)
+ganv_text_update(GanvItem* item,
+                 double*   affine,
+                 ArtSVP*   clip_path,
+                 int       flags)
 {
 	double x1, y1, x2, y2;
 	ganv_text_bounds(item, &x1, &y1, &x2, &y2);
-	gnome_canvas_request_redraw(item->canvas, x1, y1, x2, y2);
+	ganv_canvas_base_request_redraw(item->canvas, x1, y1, x2, y2);
 
 	// I have no idea why this is necessary
 	item->x1 = x1;
@@ -249,10 +249,10 @@ ganv_text_update(GnomeCanvasItem* item,
 }
 
 static double
-ganv_text_point(GnomeCanvasItem* item,
+ganv_text_point(GanvItem* item,
                 double x, double y,
                 int cx, int cy,
-                GnomeCanvasItem** actual_item)
+                GanvItem** actual_item)
 {
 	*actual_item = NULL;
 
@@ -287,14 +287,7 @@ ganv_text_point(GnomeCanvasItem* item,
 }
 
 static void
-ganv_text_render(GnomeCanvasItem* item,
-                 GnomeCanvasBuf*  buf)
-{
-	// Not implemented
-}
-
-static void
-ganv_text_draw(GnomeCanvasItem* item,
+ganv_text_draw(GanvItem* item,
                GdkDrawable* drawable,
                int x, int y,
                int width, int height)
@@ -305,7 +298,7 @@ ganv_text_draw(GnomeCanvasItem* item,
 
 	double wx = impl->coords.x;
 	double wy = impl->coords.y;
-	gnome_canvas_item_i2w(item, &wx, &wy);
+	ganv_item_i2w(item, &wx, &wy);
 
 	// Round to the nearest pixel so text isn't blurry
 	wx = lrint(wx - x);
@@ -320,11 +313,11 @@ ganv_text_draw(GnomeCanvasItem* item,
 static void
 ganv_text_class_init(GanvTextClass* class)
 {
-	GObjectClass*         gobject_class = (GObjectClass*)class;
-	GtkObjectClass*       object_class  = (GtkObjectClass*)class;
-	GnomeCanvasItemClass* item_class    = (GnomeCanvasItemClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)class;
+	GtkObjectClass* object_class  = (GtkObjectClass*)class;
+	GanvItemClass*  item_class    = (GanvItemClass*)class;
 
-	parent_class = GNOME_CANVAS_ITEM_CLASS(g_type_class_peek_parent(class));
+	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(class));
 
 	g_type_class_add_private(class, sizeof(GanvTextImpl));
 
@@ -389,6 +382,5 @@ ganv_text_class_init(GanvTextClass* class)
 	item_class->update = ganv_text_update;
 	item_class->bounds = ganv_text_bounds;
 	item_class->point  = ganv_text_point;
-	item_class->render = ganv_text_render;
 	item_class->draw   = ganv_text_draw;
 }

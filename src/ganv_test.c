@@ -49,14 +49,17 @@ main(int argc, char** argv)
 	                                NULL);
 	ganv_port_show_control(cport);
 
+	//GtkWidget* entry = gtk_entry_new();
+	//ganv_module_embed(module, entry);
+
 	GanvPort* tport = ganv_port_new(module, TRUE,
 	                                "label", "Toggle",
 	                                NULL);
 	ganv_port_show_control(tport);
 	ganv_port_set_control_is_toggle(tport, TRUE);
 
-	gnome_canvas_item_show(GNOME_CANVAS_ITEM(module));
-	gnome_canvas_item_raise_to_top(GNOME_CANVAS_ITEM(module));
+	ganv_item_show(GANV_ITEM(module));
+	ganv_item_raise_to_top(GANV_ITEM(module));
 
 	gtk_widget_show_all(GTK_WIDGET(win));
 	gtk_window_present(win);

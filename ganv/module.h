@@ -35,8 +35,7 @@ typedef struct _GanvModuleImpl GanvModuleImpl;
 
 typedef void (*GanvPortFunction)(GanvPort* port, void* data);
 
-struct _GanvModule
-{
+struct _GanvModule {
 	GanvBox         box;
 	GanvModuleImpl* impl;
 };

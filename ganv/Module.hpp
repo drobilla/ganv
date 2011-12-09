@@ -46,8 +46,8 @@ public:
 	       bool               show_title       = true,
 	       bool               show_port_labels = true)
 		: Box(&canvas, GANV_BOX(
-			      gnome_canvas_item_new(
-				      GNOME_CANVAS_GROUP(canvas.root()),
+			      ganv_item_new(
+				      GANV_GROUP(canvas.root()),
 				      ganv_module_get_type(),
 				      "x", x,
 				      "y", y,

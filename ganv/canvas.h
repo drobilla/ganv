@@ -16,16 +16,7 @@
 #ifndef GANV_CANVAS_H
 #define GANV_CANVAS_H
 
-/**
- * SECTION:ganv
- * 
- * @version: 1.0.0
- * @Version: 1.0.0
- *
- * #GanvCanvas is possibly the greatest thing, ever.
- */
-#include <libgnomecanvas/libgnomecanvas.h>
-
+#include "ganv/canvas-base.h"
 #include "ganv/types.h"
 #include "ganv/edge.h"
 
@@ -55,9 +46,8 @@ typedef enum {
 	GANV_DIRECTION_RIGHT
 } GanvDirection;
 
-struct _GanvCanvas
-{
-	GnomeCanvas            canvas;
+struct _GanvCanvas {
+	GanvCanvasBase         canvas;
 	struct GanvCanvasImpl* impl;
 	GanvDirection          direction;
 	double                 width;
@@ -66,7 +56,7 @@ struct _GanvCanvas
 };
 
 struct _GanvCanvasClass {
-	GnomeCanvasClass parent_class;
+	GanvCanvasBaseClass parent_class;
 };
 
 GType ganv_canvas_get_type(void);
@@ -80,7 +70,7 @@ ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
  * ganv_canvas_get_root:
  * Return value: (transfer none): The root group of @canvas.
  */
-GnomeCanvasGroup*
+GanvGroup*
 ganv_canvas_get_root(const GanvCanvas* canvas);
 
 void

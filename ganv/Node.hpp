@@ -17,9 +17,9 @@
 #define GANV_NODE_HPP
 
 #include <glib.h>
-#include <libgnomecanvas/gnome-canvas.h>
 #include <assert.h>
 
+#include "ganv/canvas-base.h"
 #include "ganv/node.h"
 #include "ganv/Item.hpp"
 
@@ -35,7 +35,7 @@ class Node;
 class Node : public Item {
 public:
 	Node(Canvas* canvas, GanvNode* gobj)
-		: Item(GNOME_CANVAS_ITEM(g_object_ref(gobj)))
+		: Item(GANV_ITEM(g_object_ref(gobj)))
 	{
 		g_signal_connect(gobj, "moved", G_CALLBACK(on_moved), this);
 	}

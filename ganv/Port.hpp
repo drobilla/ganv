@@ -20,9 +20,9 @@
 
 #include <string>
 
-#include <libgnomecanvas/gnome-canvas.h>
 #include <gdkmm/types.h>
 
+#include "ganv/canvas-base.h"
 #include "ganv/Box.hpp"
 #include "ganv/port.h"
 

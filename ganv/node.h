@@ -16,8 +16,7 @@
 #ifndef GANV_NODE_H
 #define GANV_NODE_H
 
-#include <libgnomecanvas/libgnomecanvas.h>
-
+#include "ganv/canvas-base.h"
 #include "ganv/types.h"
 #include "ganv/text.h"
 
@@ -34,12 +33,12 @@ typedef struct _GanvNodeClass GanvNodeClass;
 typedef struct _GanvNodeImpl GanvNodeImpl;
 
 struct _GanvNode {
-	GnomeCanvasGroup group;
-	GanvNodeImpl*    impl;
+	GanvGroup     group;
+	GanvNodeImpl* impl;
 };
 
 struct _GanvNodeClass {
-	GnomeCanvasGroupClass parent_class;
+	GanvGroupClass parent_class;
 
 	void (*tick)(GanvNode* self,
 	             double    seconds);
