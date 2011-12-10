@@ -183,16 +183,16 @@ request_redraw(GanvCanvasBase*       canvas,
 		const double r1x2 = MAX(MAX(src_x, join_x), src_x1);
 		const double r1y2 = MAX(MAX(src_y, join_y), src_y1);
 		ganv_canvas_base_request_redraw(canvas,
-		                            r1x1 - w, r1y1 - w,
-		                            r1x2 + w, r1y2 + w);
+		                                r1x1 - w, r1y1 - w,
+		                                r1x2 + w, r1y2 + w);
 
 		const double r2x1 = MIN(MIN(dst_x, join_x), dst_x1);
 		const double r2y1 = MIN(MIN(dst_y, join_y), dst_y1);
 		const double r2x2 = MAX(MAX(dst_x, join_x), dst_x1);
 		const double r2y2 = MAX(MAX(dst_y, join_y), dst_y1);
 		ganv_canvas_base_request_redraw(canvas,
-		                            r2x1 - w, r2y1 - w,
-		                            r2x2 + w, r2y2 + w);
+		                                r2x1 - w, r2y1 - w,
+		                                r2x2 + w, r2y2 + w);
 
 	} else {
 		const double x1 = MIN(coords->x1, coords->x2);
@@ -201,15 +201,15 @@ request_redraw(GanvCanvasBase*       canvas,
 		const double y2 = MAX(coords->y1, coords->y2);
 
 		ganv_canvas_base_request_redraw(canvas,
-		                            x1 - w, y1 - w,
-		                            x2 + w, y2 + w);
+		                                x1 - w, y1 - w,
+		                                x2 + w, y2 + w);
 	}
 
 	ganv_canvas_base_request_redraw(canvas,
-	                            coords->handle_x - coords->handle_radius,
-	                            coords->handle_y - coords->handle_radius,
-	                            coords->handle_x + coords->handle_radius,
-	                            coords->handle_y + coords->handle_radius);
+	                                coords->handle_x - coords->handle_radius,
+	                                coords->handle_y - coords->handle_radius,
+	                                coords->handle_x + coords->handle_radius,
+	                                coords->handle_y + coords->handle_radius);
 
 	if (coords->arrowhead) {
 		ganv_canvas_base_request_redraw(
@@ -296,13 +296,12 @@ ganv_edge_update(GanvItem* item,
 
 static void
 ganv_edge_draw(GanvItem* item,
-               GdkDrawable* drawable,
+               cairo_t* cr,
                int x, int y,
                int width, int height)
 {
 	GanvEdge*     edge = GANV_EDGE(item);
 	GanvEdgeImpl* impl = edge->impl;
-	cairo_t*      cr   = gdk_cairo_create(drawable);
 
 	double src_x = impl->coords.x1 - x;
 	double src_y = impl->coords.y1 - y;
@@ -408,8 +407,6 @@ ganv_edge_draw(GanvItem* item,
 	cairo_move_to(cr, join_x, join_y);
 	cairo_arc(cr, join_x, join_y, impl->coords.handle_radius, 0, 2 * M_PI);
 	cairo_fill(cr);
-
-	cairo_destroy(cr);
 }
 
 static double
@@ -590,8 +587,8 @@ ganv_edge_new(GanvCanvas* canvas,
 	va_list args;
 	va_start(args, first_prop_name);
 	ganv_item_construct(&edge->item,
-	                            ganv_canvas_get_root(canvas),
-	                            first_prop_name, args);
+	                    ganv_canvas_get_root(canvas),
+	                    first_prop_name, args);
 	va_end(args);
 
 	edge->impl->tail = tail;

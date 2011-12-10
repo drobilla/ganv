@@ -317,7 +317,7 @@ ganv_widget_update(GanvItem* item, double* affine, ArtSVP* clip_path, int flags)
 
 static void
 ganv_widget_draw(GanvItem* item,
-                 GdkDrawable* drawable,
+                 cairo_t* cr,
                  int x, int y,
                  int width, int height)
 {

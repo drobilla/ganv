@@ -288,13 +288,12 @@ ganv_text_point(GanvItem* item,
 
 static void
 ganv_text_draw(GanvItem* item,
-               GdkDrawable* drawable,
+               cairo_t* cr,
                int x, int y,
                int width, int height)
 {
 	GanvText*     text = GANV_TEXT(item);
 	GanvTextImpl* impl = text->impl;
-	cairo_t*      cr   = gdk_cairo_create(drawable);
 
 	double wx = impl->coords.x;
 	double wy = impl->coords.y;
@@ -306,8 +305,6 @@ ganv_text_draw(GanvItem* item,
 
 	cairo_set_source_surface(cr, impl->surface, wx, wy);
 	cairo_paint(cr);
-
-	cairo_destroy(cr);
 }
 
 static void

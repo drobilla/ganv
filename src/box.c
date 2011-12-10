@@ -218,13 +218,12 @@ ganv_box_update(GanvItem* item,
 
 static void
 ganv_box_draw(GanvItem* item,
-              GdkDrawable* drawable,
+              cairo_t* cr,
               int cx, int cy,
               int width, int height)
 {
 	GanvBox*     box  = GANV_BOX(item);
 	GanvBoxImpl* impl = box->impl;
-	cairo_t*     cr   = gdk_cairo_create(drawable);
 
 	double x1 = impl->coords.x1;
 	double y1 = impl->coords.y1;
@@ -286,9 +285,7 @@ ganv_box_draw(GanvItem* item,
 	}
 
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-	item_class->draw(item, drawable, cx, cy, width, height);
-
-	cairo_destroy(cr);
+	item_class->draw(item, cr, cx, cy, width, height);
 }
 
 static double

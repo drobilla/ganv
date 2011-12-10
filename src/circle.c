@@ -248,13 +248,12 @@ ganv_circle_update(GanvItem* item,
 
 static void
 ganv_circle_draw(GanvItem* item,
-                 GdkDrawable* drawable,
+                 cairo_t* cr,
                  int x, int y,
                  int width, int height)
 {
 	GanvCircle*     circle = GANV_CIRCLE(item);
 	GanvCircleImpl* impl   = circle->impl;
-	cairo_t*        cr     = gdk_cairo_create(drawable);
 
 	double r, g, b, a;
 
@@ -285,8 +284,6 @@ ganv_circle_draw(GanvItem* item,
 		cairo_set_dash(cr, &dash_length, 1, circle->node.impl->dash_offset);
 	}
 	cairo_stroke(cr);
-
-	cairo_destroy(cr);
 }
 
 static double

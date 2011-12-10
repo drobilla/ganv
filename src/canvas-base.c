@@ -1264,7 +1264,7 @@ static void ganv_group_realize(GanvItem* item);
 static void ganv_group_unrealize(GanvItem* item);
 static void ganv_group_map(GanvItem* item);
 static void ganv_group_unmap(GanvItem* item);
-static void ganv_group_draw(GanvItem* item, GdkDrawable* drawable,
+static void ganv_group_draw(GanvItem* item, cairo_t* cr,
                             int x, int y, int width, int height);
 static double ganv_group_point(GanvItem* item, double x, double y,
                                int cx, int cy,
@@ -1555,7 +1555,7 @@ ganv_group_unmap(GanvItem* item)
 
 /* Draw handler for canvas groups */
 static void
-ganv_group_draw(GanvItem* item, GdkDrawable* drawable,
+ganv_group_draw(GanvItem* item, cairo_t* cr,
                 int x, int y, int width, int height)
 {
 	GanvGroup* group;
@@ -1579,7 +1579,7 @@ ganv_group_draw(GanvItem* item, GdkDrawable* drawable,
 		        && (child->y2 > child->canvas->redraw_y2))) {
 			if (GANV_ITEM_GET_CLASS(child)->draw) {
 				(*GANV_ITEM_GET_CLASS(child)->draw)(
-				    child, drawable, x, y, width, height);
+				    child, cr, x, y, width, height);
 			}
 		}
 	}
@@ -2816,12 +2816,16 @@ ganv_canvas_base_paint_rect(GanvCanvasBase* canvas, gint x0, gint y0, gint x1, g
 	g_signal_emit(G_OBJECT(canvas), canvas_signals[DRAW_BACKGROUND], 0, pixmap,
 	              draw_x1, draw_y1, draw_width, draw_height);
 
+	cairo_t* cr = gdk_cairo_create(pixmap);
+
 	if (canvas->root->object.flags & GANV_ITEM_VISIBLE) {
 		(*GANV_ITEM_GET_CLASS(canvas->root)->draw)(
-		    canvas->root, pixmap,
+		    canvas->root, cr,
 		    draw_x1, draw_y1,
 		    draw_width, draw_height);
 	}
+
+	cairo_destroy(cr);
 
 	/* Copy the pixmap to the window and clean up */
 

@@ -136,7 +136,7 @@ struct _GanvItemClass {
 	 * coordinates of the drawable, a temporary pixmap, where things get
 	 * drawn.  (width, height) are the dimensions of the drawable.
 	 */
-	void (* draw)(GanvItem* item, GdkDrawable* drawable,
+	void (* draw)(GanvItem* item, cairo_t* cr,
 	              int x, int y, int width, int height);
 
 	/* Calculate the distance from an item to the specified point.  It also
