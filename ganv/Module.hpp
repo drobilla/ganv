@@ -47,7 +47,7 @@ public:
 	       bool               show_port_labels = true)
 		: Box(&canvas, GANV_BOX(
 			      ganv_item_new(
-				      GANV_GROUP(canvas.root()),
+				      GANV_ITEM(canvas.root()),
 				      ganv_module_get_type(),
 				      "x", x,
 				      "y", y,

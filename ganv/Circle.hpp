@@ -55,7 +55,7 @@ public:
 		: Node(&canvas,
 		       GANV_NODE(
 			       ganv_item_new(
-				       GANV_GROUP(canvas.root()),
+				       GANV_ITEM(canvas.root()),
 				       ganv_circle_get_type(),
 				       "x", x,
 				       "y", y,

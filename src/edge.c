@@ -587,7 +587,7 @@ ganv_edge_new(GanvCanvas* canvas,
 	va_list args;
 	va_start(args, first_prop_name);
 	ganv_item_construct(&edge->item,
-	                    ganv_canvas_get_root(canvas),
+	                    GANV_ITEM(ganv_canvas_get_root(canvas)),
 	                    first_prop_name, args);
 	va_end(args);
 

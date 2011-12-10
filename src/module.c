@@ -734,13 +734,12 @@ ganv_module_set_icon(GanvModule* module,
 	}
 
 	if (icon) {
-		impl->icon_box = ganv_item_new(
-			GANV_GROUP(module),
-			ganv_canvas_base_pixbuf_get_type(),
-			"x", 8.0,
-			"y", 10.0,
-			"pixbuf", icon,
-			NULL);
+		impl->icon_box = ganv_item_new(module,
+		                               ganv_canvas_base_pixbuf_get_type(),
+		                               "x", 8.0,
+		                               "y", 10.0,
+		                               "pixbuf", icon,
+		                               NULL);
 
 		const double icon_w = gdk_pixbuf_get_width(icon);
 		const double icon_h = gdk_pixbuf_get_height(icon);
@@ -809,7 +808,7 @@ ganv_module_embed(GanvModule* module,
 
 	const double y = 4.0 + title_h;
 	impl->embed_item = ganv_item_new(
-		GANV_GROUP(module),
+		GANV_ITEM(module),
 		ganv_widget_get_type(),
 		"x", 2.0,
 		"y", y,

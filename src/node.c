@@ -256,12 +256,11 @@ ganv_node_set_label(GanvNode* node, const char* str)
 		              "text", str,
 		              NULL);
 	} else {
-		impl->label = GANV_TEXT(ganv_item_new(
-			                        GANV_GROUP(node),
-			                        ganv_text_get_type(),
-			                        "text", str,
-			                        "color", 0xFFFFFFFF,
-			                        NULL));
+		impl->label = GANV_TEXT(ganv_item_new(node,
+		                                      ganv_text_get_type(),
+		                                      "text", str,
+		                                      "color", 0xFFFFFFFF,
+		                                      NULL));
 	}
 
 	GanvNodeClass* klass = GANV_NODE_GET_CLASS(node);

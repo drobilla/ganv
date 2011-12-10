@@ -169,11 +169,11 @@ GType ganv_item_get_type(void) G_GNUC_CONST;
  * automatically inserted at the top of the specified canvas group.  The last
  * argument must be a NULL pointer.
  */
-GanvItem* ganv_item_new(GanvGroup* parent, GType type,
+GanvItem* ganv_item_new(GanvItem* parent, GType type,
                         const gchar* first_arg_name, ...);
 
 /* Constructors for use in derived classes and language wrappers */
-void ganv_item_construct(GanvItem* item, GanvGroup* parent,
+void ganv_item_construct(GanvItem* item, GanvItem* parent,
                          const gchar* first_arg_name, va_list args);
 
 /* Configure an item using the standard Gtk argument mechanism.  The last

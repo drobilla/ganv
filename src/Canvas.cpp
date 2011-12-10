@@ -132,7 +132,7 @@ struct GanvCanvasImpl {
 		, _connect_port(NULL)
 		, _last_selected_port(NULL)
 		, _base_rect(ganv_item_new(
-			             ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas)),
+			             GANV_ITEM(ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas))),
 			             ganv_box_get_type(),
 			             "x1", 0.0,
 			             "y1", 0.0,
@@ -892,7 +892,7 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 			clear_selection();
 		_select_rect = GANV_BOX(
 			ganv_item_new(
-				root(),
+				GANV_ITEM(root()),
 				ganv_box_get_type(),
 				"x1", event->button.x,
 				"y1", event->button.y,
@@ -983,12 +983,13 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 			assert(_connect_port);
 
 			drag_node = GANV_NODE(
-				ganv_item_new(ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas)),
-				                      ganv_node_get_type(),
-				                      "x", x,
-				                      "y", y,
-				                      NULL));
-
+				ganv_item_new(
+					GANV_ITEM(ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas))),
+					ganv_node_get_type(),
+					"x", x,
+					"y", y,
+					NULL));
+			
 			drag_edge = ganv_edge_new(
 				_gcanvas,
 				GANV_NODE(_connect_port),

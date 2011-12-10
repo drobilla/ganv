@@ -258,8 +258,8 @@ ganv_port_new(GanvModule* module,
 	va_list args;
 	va_start(args, first_prop_name);
 	ganv_item_construct(item,
-	                            GANV_GROUP(module),
-	                            first_prop_name, args);
+	                    GANV_ITEM(module),
+	                    first_prop_name, args);
 	va_end(args);
 
 	port->impl->is_input = is_input;
@@ -303,15 +303,15 @@ ganv_port_show_control(GanvPort* port)
 	control->max       = 0.0f;
 	control->is_toggle = FALSE;
 	control->rect      = GANV_BOX(ganv_item_new(
-		                               GANV_GROUP(port),
-		                               ganv_box_get_type(),
-		                               "x1", 0.0,
-		                               "y1", 0.0,
-		                               "x2", 0.0,
-		                               "y2", ganv_box_get_height(&port->box),
-		                               "fill-color", 0xFFFFFF80,
-		                               "border-width", 0.0,
-		                               NULL));
+		                              GANV_ITEM(port),
+		                              ganv_box_get_type(),
+		                              "x1", 0.0,
+		                              "y1", 0.0,
+		                              "x2", 0.0,
+		                              "y2", ganv_box_get_height(&port->box),
+		                              "fill-color", 0xFFFFFF80,
+		                              "border-width", 0.0,
+		                              NULL));
 	ganv_item_show(GANV_ITEM(control->rect));
 }
 

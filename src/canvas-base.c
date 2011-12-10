@@ -103,12 +103,11 @@ ganv_item_init(GanvItem* item)
  * Return value: The newly-created item.
  **/
 GanvItem*
-ganv_item_new(GanvGroup* parent, GType type, const gchar* first_arg_name, ...)
+ganv_item_new(GanvItem* parent, GType type, const gchar* first_arg_name, ...)
 {
 	GanvItem* item;
 	va_list   args;
 
-	g_return_val_if_fail(GANV_IS_GROUP(parent), NULL);
 	g_return_val_if_fail(g_type_is_a(type, ganv_item_get_type()), NULL);
 
 	item = GANV_ITEM(g_object_new(type, NULL));
@@ -192,13 +191,12 @@ ganv_item_get_property(GObject* gobject, guint param_id,
  * Constructs a canvas item; meant for use only by item implementations.
  **/
 void
-ganv_item_construct(GanvItem* item, GanvGroup* parent,
+ganv_item_construct(GanvItem* item, GanvItem* parent,
                     const gchar* first_arg_name, va_list args)
 {
-	g_return_if_fail(GANV_IS_GROUP(parent));
 	g_return_if_fail(GANV_IS_ITEM(item));
 
-	item->parent = GANV_ITEM(parent);
+	item->parent = parent;
 	item->canvas = item->parent->canvas;
 
 	g_object_set_valist(G_OBJECT(item), first_arg_name, args);
