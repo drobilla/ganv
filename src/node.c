@@ -45,12 +45,6 @@ enum {
 	PROP_DRAGGABLE
 };
 
-static gboolean
-on_event(GanvNode* node, GdkEvent* event)
-{
-	return GANV_NODE_GET_CLASS(node)->on_event(node, event);
-}
-
 static void
 ganv_node_init(GanvNode* node)
 {
@@ -71,9 +65,6 @@ ganv_node_init(GanvNode* node)
 	impl->selected     = FALSE;
 	impl->highlighted  = FALSE;
 	impl->draggable    = FALSE;
-
-	g_signal_connect(G_OBJECT(node),
-	                 "event", G_CALLBACK(on_event), node);
 }
 
 static void
@@ -120,9 +111,9 @@ ganv_node_set_property(GObject*      object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_NODE(object));
 
-	GanvNode*        node = GANV_NODE(object);
-	GanvNodeImpl*    impl = node->impl;
-	GanvItem* item = GANV_ITEM(object);
+	GanvNode*     node = GANV_NODE(object);
+	GanvNodeImpl* impl = node->impl;
+	GanvItem*     item = GANV_ITEM(object);
 
 	switch (prop_id) {
 		SET_CASE(PARTNER, object, impl->partner);
@@ -164,9 +155,9 @@ ganv_node_get_property(GObject*    object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_NODE(object));
 
-	GanvNode*        node = GANV_NODE(object);
-	GanvNodeImpl*    impl = node->impl;
-	GanvItem* item = GANV_ITEM(object);
+	GanvNode*     node = GANV_NODE(object);
+	GanvNodeImpl* impl = node->impl;
+	GanvItem*     item = GANV_ITEM(object);
 
 	typedef char* gstring;
 
@@ -329,9 +320,10 @@ ganv_node_default_move_to(GanvNode* node,
 }
 
 static gboolean
-ganv_node_default_on_event(GanvNode* node,
-                           GdkEvent* event)
+ganv_node_default_event(GanvItem* item,
+                        GdkEvent* event)
 {
+	GanvNode*   node   = GANV_NODE(item);
 	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
 
 	// FIXME: put these somewhere better
@@ -580,15 +572,16 @@ ganv_node_class_init(GanvNodeClass* class)
 	object_class->destroy = ganv_node_destroy;
 
 	item_class->realize = ganv_node_realize;
+	item_class->event   = ganv_node_default_event;
 
-	class->disconnect        = ganv_node_default_disconnect;
-	class->move              = ganv_node_default_move;
-	class->move_to           = ganv_node_default_move_to;
-	class->tick              = ganv_node_default_tick;
-	class->tail_vector       = ganv_node_default_tail_vector;
-	class->head_vector       = ganv_node_default_head_vector;
-	class->on_event          = ganv_node_default_on_event;
+	class->disconnect  = ganv_node_default_disconnect;
+	class->move        = ganv_node_default_move;
+	class->move_to     = ganv_node_default_move_to;
+	class->tick        = ganv_node_default_tick;
+	class->tail_vector = ganv_node_default_tail_vector;
+	class->head_vector = ganv_node_default_head_vector;
 }
+
 gboolean
 ganv_node_can_tail(const GanvNode* self)
 {

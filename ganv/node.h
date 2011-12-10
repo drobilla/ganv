@@ -75,9 +75,6 @@ struct _GanvNodeClass {
 	                    double*         y,
 	                    double*         dx,
 	                    double*         dy);
-
-	gboolean (*on_event)(GanvNode* node,
-	                     GdkEvent* event);
 };
 
 GType ganv_node_get_type(void);

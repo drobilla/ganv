@@ -203,12 +203,11 @@ ganv_port_set_height(GanvBox* box,
 }
 
 static gboolean
-on_event(GanvNode* node, GdkEvent* event)
+event(GanvItem* item, GdkEvent* event)
 {
-	GanvItem*   item   = GANV_ITEM(node);
 	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
 
-	return ganv_canvas_port_event(canvas, GANV_PORT(node), event);
+	return ganv_canvas_port_event(canvas, GANV_PORT(item), event);
 }
 
 static void
@@ -216,6 +215,7 @@ ganv_port_class_init(GanvPortClass* class)
 {
 	GObjectClass*   gobject_class = (GObjectClass*)class;
 	GtkObjectClass* object_class  = (GtkObjectClass*)class;
+	GanvItemClass*  item_class    = (GanvItemClass*)class;
 	GanvNodeClass*  node_class    = (GanvNodeClass*)class;
 	GanvBoxClass*   box_class     = (GanvBoxClass*)class;
 
@@ -236,7 +236,8 @@ ganv_port_class_init(GanvPortClass* class)
 
 	object_class->destroy = ganv_port_destroy;
 
-	node_class->on_event    = on_event;
+	item_class->event = event;
+
 	node_class->tail_vector = ganv_port_tail_vector;
 	node_class->head_vector = ganv_port_head_vector;
 	node_class->resize      = ganv_port_resize;

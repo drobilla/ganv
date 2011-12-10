@@ -73,10 +73,15 @@ public:
 
 	METHOD0(ganv_node, disconnect);
 
-	sigc::signal<void, double, double> signal_moved;
+	sigc::signal<void, double, double>& signal_moved() {
+		return _signal_moved;
+	}
+
+private:
+	sigc::signal<void, double, double> _signal_moved;
 
 	static void on_moved(GanvNode* node, double x, double y) {
-		Glib::wrap(node)->signal_moved.emit(x, y);
+		Glib::wrap(node)->_signal_moved.emit(x, y);
 	}
 };
 

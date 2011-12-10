@@ -1366,7 +1366,7 @@ Canvas::Canvas(double width, double height)
 {
 	g_object_set_qdata(G_OBJECT(impl()->_gcanvas), wrapper_key(), this);
 
-	g_signal_connect_after(gobj(), "event",
+	g_signal_connect_after(impl()->root(), "event",
 	                       G_CALLBACK(on_event_after), this);
 	g_signal_connect(gobj(), "connect",
 	                 G_CALLBACK(on_connect), this);
