@@ -1196,7 +1196,7 @@ switch (event->type) {
 void
 GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 {
-	if (port1 == port2 || !port1 || !port2) {
+	if (port1 == port2 || !port1 || !port2 || !port1->impl || !port2->impl) {
 		return;
 	}
 
