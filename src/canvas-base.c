@@ -312,8 +312,6 @@ ganv_item_update(GanvItem* item, double* affine, int flags)
 	GTK_OBJECT_UNSET_FLAGS(item, GANV_ITEM_NEED_VIS);
 }
 
-#define noHACKISH_AFFINE
-
 /*
  * This routine invokes the update method of the item
  * Please notice, that we take parent to canvas pixel matrix as argument
@@ -332,10 +330,6 @@ ganv_item_invoke_update(GanvItem* item, double* p2cpx, int flags)
 {
 	int     child_flags;
 	gdouble i2cpx[6];
-
-#ifdef HACKISH_AFFINE
-	double i2w[6], w2c[6], i2c[6];
-#endif
 
 	child_flags = flags;
 	if (!(item->object.flags & GANV_ITEM_VISIBLE)) {
@@ -358,14 +352,6 @@ ganv_item_invoke_update(GanvItem* item, double* p2cpx, int flags)
 		/* Item has no matrix (i.e. identity) */
 		memcpy(i2cpx, p2cpx, 6 * sizeof(gdouble));
 	}
-
-#ifdef HACKISH_AFFINE
-	ganv_item_i2w_affine(item, i2w);
-	ganv_canvas_base_w2c_affine(item->canvas, w2c);
-	art_affine_multiply(i2c, i2w, w2c);
-	/* invariant (doesn't hold now): child_affine == i2c */
-	child_affine = i2c;
-#endif
 
 	/* apply object flags to child flags */
 
@@ -421,23 +407,6 @@ ganv_item_invoke_point(GanvItem* item, double x, double y, int cx, int cy,
 			y -= item->xform[1];
 		}
 	}
-
-#ifdef HACKISH_AFFINE
-	double   i2w[6], w2c[6], i2c[6], c2i[6];
-	ArtPoint c, i;
-#endif
-
-#ifdef HACKISH_AFFINE
-	ganv_item_i2w_affine(item, i2w);
-	ganv_canvas_base_w2c_affine(item->canvas, w2c);
-	art_affine_multiply(i2c, i2w, w2c);
-	art_affine_invert(c2i, i2c);
-	c.x = cx;
-	c.y = cy;
-	art_affine_point(&i, &c, c2i);
-	x = i.x;
-	y = i.y;
-#endif
 
 	if (GANV_ITEM_GET_CLASS(item)->point) {
 		return GANV_ITEM_GET_CLASS(item)->point(item, x, y, cx, cy, actual_item);
