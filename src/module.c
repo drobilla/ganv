@@ -509,7 +509,6 @@ ganv_module_resize(GanvNode* self)
 static void
 ganv_module_update(GanvItem* item,
                    double*   affine,
-                   ArtSVP*   clip_path,
                    int       flags)
 {
 	GanvNode*   node   = GANV_NODE(item);
@@ -519,7 +518,7 @@ ganv_module_update(GanvItem* item,
 	}
 
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-	item_class->update(item, affine, clip_path, flags);
+	item_class->update(item, affine, flags);
 }
 
 static void

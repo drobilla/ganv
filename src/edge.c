@@ -239,14 +239,13 @@ ganv_edge_bounds(GanvItem* item,
 static void
 ganv_edge_update(GanvItem* item,
                  double*   affine,
-                 ArtSVP*   clip_path,
                  int       flags)
 {
 	GanvEdge*     edge = GANV_EDGE(item);
 	GanvEdgeImpl* impl = edge->impl;
 
 	if (parent_class->update) {
-		(*parent_class->update)(item, affine, clip_path, flags);
+		(*parent_class->update)(item, affine, flags);
 	}
 
 	// Request redraw of old location

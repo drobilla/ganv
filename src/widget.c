@@ -230,7 +230,7 @@ ganv_widget_set_property(GObject*      object,
 	}
 
 	if (update) {
-		(*GANV_ITEM_GET_CLASS(item)->update)(item, NULL, NULL, 0);
+		(*GANV_ITEM_GET_CLASS(item)->update)(item, NULL, 0);
 	}
 
 	if (calc_bounds) {
@@ -287,14 +287,14 @@ ganv_widget_get_property(GObject*    object,
 }
 
 static void
-ganv_widget_update(GanvItem* item, double* affine, ArtSVP* clip_path, int flags)
+ganv_widget_update(GanvItem* item, double* affine, int flags)
 {
 	GanvWidget* witem;
 
 	witem = GANV_WIDGET(item);
 
 	if (parent_class->update) {
-		(*parent_class->update)(item, affine, clip_path, flags);
+		(*parent_class->update)(item, affine, flags);
 	}
 
 	if (witem->widget) {

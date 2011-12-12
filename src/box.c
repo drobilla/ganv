@@ -185,7 +185,6 @@ ganv_box_bounds(GanvItem* item,
 static void
 ganv_box_update(GanvItem* item,
                 double*   affine,
-                ArtSVP*   clip_path,
                 int       flags)
 {
 	GanvBox*     box  = GANV_BOX(item);
@@ -196,7 +195,7 @@ ganv_box_update(GanvItem* item,
 	request_redraw(item, &impl->old_coords, TRUE);
 
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-	item_class->update(item, affine, clip_path, flags);
+	item_class->update(item, affine, flags);
 
 	// Store old coordinates in world relative coordinates in case the
 	// group we are in moves between now and the next update

@@ -304,7 +304,7 @@ ganv_item_unmap(GanvItem* item)
 
 /* Update handler for canvas items */
 static void
-ganv_item_update(GanvItem* item, double* affine, ArtSVP* clip_path, int flags)
+ganv_item_update(GanvItem* item, double* affine, int flags)
 {
 	GTK_OBJECT_UNSET_FLAGS(item, GANV_ITEM_NEED_UPDATE);
 	GTK_OBJECT_UNSET_FLAGS(item, GANV_ITEM_NEED_AFFINE);
@@ -328,7 +328,7 @@ ganv_item_update(GanvItem* item, double* affine, ArtSVP* clip_path, int flags)
  */
 
 static void
-ganv_item_invoke_update(GanvItem* item, double* p2cpx, ArtSVP* clip_path, int flags)
+ganv_item_invoke_update(GanvItem* item, double* p2cpx, int flags)
 {
 	int     child_flags;
 	gdouble i2cpx[6];
@@ -389,7 +389,7 @@ ganv_item_invoke_update(GanvItem* item, double* p2cpx, ArtSVP* clip_path, int fl
 
 	if (child_flags & GCI_UPDATE_MASK) {
 		if (GANV_ITEM_GET_CLASS(item)->update) {
-			GANV_ITEM_GET_CLASS(item)->update(item, i2cpx, clip_path, child_flags);
+			GANV_ITEM_GET_CLASS(item)->update(item, i2cpx, child_flags);
 		}
 	}
 }
@@ -1256,8 +1256,7 @@ static void ganv_group_get_property(GObject*    object,
 
 static void ganv_group_destroy(GtkObject* object);
 
-static void ganv_group_update(GanvItem* item, double* affine,
-                              ArtSVP* clip_path, int flags);
+static void ganv_group_update(GanvItem* item, double* affine, int flags);
 static void ganv_group_realize(GanvItem* item);
 static void ganv_group_unrealize(GanvItem* item);
 static void ganv_group_map(GanvItem* item);
@@ -1434,7 +1433,7 @@ ganv_group_destroy(GtkObject* object)
 
 /* Update handler for canvas groups */
 static void
-ganv_group_update(GanvItem* item, double* affine, ArtSVP* clip_path, int flags)
+ganv_group_update(GanvItem* item, double* affine, int flags)
 {
 	GanvGroup* group;
 	GList*     list;
@@ -1443,7 +1442,7 @@ ganv_group_update(GanvItem* item, double* affine, ArtSVP* clip_path, int flags)
 
 	group = GANV_GROUP(item);
 
-	(*group_parent_class->update)(item, affine, clip_path, flags);
+	(*group_parent_class->update)(item, affine, flags);
 
 	bbox.x0 = 0;
 	bbox.y0 = 0;
@@ -1453,7 +1452,7 @@ ganv_group_update(GanvItem* item, double* affine, ArtSVP* clip_path, int flags)
 	for (list = group->item_list; list; list = list->next) {
 		i = list->data;
 
-		ganv_item_invoke_update(i, affine, clip_path, flags);
+		ganv_item_invoke_update(i, affine, flags);
 
 		child_bbox.x0 = i->x1;
 		child_bbox.y0 = i->y1;
@@ -2975,7 +2974,7 @@ update_again:
 		w2cpx[4] = -canvas->scroll_x1 * canvas->pixels_per_unit;
 		w2cpx[5] = -canvas->scroll_y1 * canvas->pixels_per_unit;
 
-		ganv_item_invoke_update(canvas->root, w2cpx, NULL, 0);
+		ganv_item_invoke_update(canvas->root, w2cpx, 0);
 
 		canvas->need_update = FALSE;
 	}

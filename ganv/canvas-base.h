@@ -115,7 +115,7 @@ struct _GanvItemClass {
 	 * affine, if used, is a pointer to a 6-element array of doubles.  The
 	 * update method also recomputes the bounding box of the item.
 	 */
-	void (* update)(GanvItem* item, double* affine, ArtSVP* clip_path, int flags);
+	void (* update)(GanvItem* item, double* affine, int flags);
 
 	/* Realize an item -- create GCs, etc. */
 	void (* realize)(GanvItem* item);

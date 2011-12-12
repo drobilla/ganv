@@ -232,7 +232,6 @@ ganv_text_bounds(GanvItem* item,
 static void
 ganv_text_update(GanvItem* item,
                  double*   affine,
-                 ArtSVP*   clip_path,
                  int       flags)
 {
 	double x1, y1, x2, y2;
@@ -245,7 +244,7 @@ ganv_text_update(GanvItem* item,
 	item->x2 = x2;
 	item->y2 = y2;
 
-	parent_class->update(item, affine, clip_path, flags);
+	parent_class->update(item, affine, flags);
 }
 
 static double
