@@ -256,7 +256,7 @@ ganv_node_set_label(GanvNode* node, const char* str)
 		              "text", str,
 		              NULL);
 	} else {
-		impl->label = GANV_TEXT(ganv_item_new(node,
+		impl->label = GANV_TEXT(ganv_item_new(GANV_ITEM(node),
 		                                      ganv_text_get_type(),
 		                                      "text", str,
 		                                      "color", 0xFFFFFFFF,

@@ -129,9 +129,6 @@ struct _GanvItemClass {
 	/* Unmap an item */
 	void (* unmap)(GanvItem* item);
 
-	/* Return the microtile coverage of the item */
-	ArtUta* (*coverage)(GanvItem * item);
-
 	/* Draw an item of this type.  (x, y) are the upper-left canvas pixel
 	 * coordinates of the drawable, a temporary pixmap, where things get
 	 * drawn.  (width, height) are the dimensions of the drawable.
