@@ -166,7 +166,7 @@ struct GanvCanvasImpl {
 		return ((GanvCanvasImpl*)impl)->on_event(ev);
 	}
 
-	GanvGroup* root() {
+	GanvItem* root() {
 		return ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas));
 	}
 
@@ -1670,7 +1670,7 @@ Canvas::for_each_selected_edge(EdgePtrFunction f, void* data)
 	}
 }
 
-GanvGroup*
+GanvItem*
 Canvas::root()
 {
 	return ganv_canvas_base_root(GANV_CANVAS_BASE(impl()->_gcanvas));
@@ -1900,7 +1900,7 @@ ganv_canvas_resize(GanvCanvas* canvas, double width, double height)
 	canvas->impl->resize(width, height);
 }
 
-GanvGroup*
+GanvItem*
 ganv_canvas_get_root(const GanvCanvas* canvas)
 {
 	return ganv_canvas_base_root(GANV_CANVAS_BASE(canvas->impl->_gcanvas));

@@ -21,6 +21,7 @@
 #include "ganv/circle.h"
 #include "ganv/edge.h"
 #include "ganv/ganv.h"
+#include "ganv/group.h"
 #include "ganv/module.h"
 #include "ganv/node.h"
 #include "ganv/port.h"

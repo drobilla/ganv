@@ -36,8 +36,6 @@ typedef struct _GanvCanvasBase      GanvCanvasBase;
 typedef struct _GanvCanvasBaseClass GanvCanvasBaseClass;
 typedef struct _GanvItem            GanvItem;
 typedef struct _GanvItemClass       GanvItemClass;
-typedef struct _GanvGroup           GanvGroup;
-typedef struct _GanvGroupClass      GanvGroupClass;
 
 
 /* GanvItem - base item class for canvas items
@@ -61,17 +59,14 @@ enum {
 	GANV_ITEM_ALWAYS_REDRAW = 1 << 3,
 	GANV_ITEM_VISIBLE       = 1 << 4,
 	GANV_ITEM_NEED_UPDATE   = 1 << 5,
-	GANV_ITEM_NEED_CLIP     = 1 << 6,
-	GANV_ITEM_NEED_VIS      = 1 << 7,
+	GANV_ITEM_NEED_VIS      = 1 << 6,
 };
 
 /* Update flags for items */
 enum {
 	GANV_CANVAS_BASE_UPDATE_REQUESTED  = 1 << 0,
 	GANV_CANVAS_BASE_UPDATE_AFFINE     = 1 << 1,
-	GANV_CANVAS_BASE_UPDATE_CLIP       = 1 << 2,
-	GANV_CANVAS_BASE_UPDATE_VISIBILITY = 1 << 3,
-	GANV_CANVAS_BASE_UPDATE_IS_VISIBLE = 1 << 4         /* Deprecated.  FIXME: remove this */
+	GANV_CANVAS_BASE_UPDATE_VISIBILITY = 1 << 2,
 };
 
 #define GANV_TYPE_ITEM            (ganv_item_get_type())
@@ -87,7 +82,7 @@ struct _GanvItem {
 	/* Parent canvas for this item */
 	GanvCanvasBase* canvas;
 
-	/* Parent canvas group for this item (a GanvGroup) */
+	/* Parent for this item */
 	GanvItem* parent;
 
 	/* Position in parent-relative coordinates. */
@@ -99,6 +94,12 @@ struct _GanvItem {
 
 struct _GanvItemClass {
 	GtkObjectClass parent_class;
+
+	/* Add a child to this item (optional) */
+	void (* add)(GanvItem* item, GanvItem* child);
+
+	/* Remove a child from this item (optional) */
+	void (* remove)(GanvItem* item, GanvItem* child);
 
 	/* Tell the item to update itself.  The flags are from the update flags
 	 * defined above.  The item should update its internal state from its
@@ -127,10 +128,10 @@ struct _GanvItemClass {
 	              int x, int y, int width, int height);
 
 	/* Calculate the distance from an item to the specified point.  It also
-	 * returns a canvas item which is the item itself in the case of the
-	 * object being an actual leaf item, or a child in case of the object
-	 * being a canvas group.  (cx, cy) are the canvas pixel coordinates that
-	 * correspond to the item-relative coordinates (x, y).
+	 * returns a canvas item which is actual item the point is within, which
+	 * may not be equal to @item if @item has children.  (cx, cy) are the
+	 * canvas pixel coordinates that correspond to the item-relative
+	 * coordinates (x, y).
 	 */
 	double (* point)(GanvItem* item, double x, double y, int cx, int cy,
 	                 GanvItem** actual_item);
@@ -152,9 +153,8 @@ struct _GanvItemClass {
 
 GType ganv_item_get_type(void) G_GNUC_CONST;
 
-/* Create a canvas item using the standard Gtk argument mechanism.  The item is
- * automatically inserted at the top of the specified canvas group.  The last
- * argument must be a NULL pointer.
+/* Create a canvas item using the standard Gtk argument mechanism.  The item
+ * automatically added to @parent.  The last argument must be a NULL pointer.
  */
 GanvItem* ganv_item_new(GanvItem* parent, GType type,
                         const gchar* first_arg_name, ...);
@@ -175,10 +175,10 @@ void ganv_item_set_valist(GanvItem* item,
 /* Move an item by the specified amount */
 void ganv_item_move(GanvItem* item, double dx, double dy);
 
-/* Raise an item to the top of its parent group's z-order. */
+/* Raise an item to the top of its parent's z-order. */
 void ganv_item_raise_to_top(GanvItem* item);
 
-/* Lower an item to the bottom of its parent group's z-order */
+/* Lower an item to the bottom of its parent's z-order */
 void ganv_item_lower_to_bottom(GanvItem* item);
 
 /* Show an item (make it visible).  If the item is already shown, it has no
@@ -220,17 +220,6 @@ void ganv_item_i2w_affine(GanvItem* item, cairo_matrix_t* matrix);
  */
 void ganv_item_i2c_affine(GanvItem* item, cairo_matrix_t* matrix);
 
-/* Remove the item from its parent group and make the new group its parent.  The
- * item will be put on top of all the items in the new group.  The item's
- * coordinates relative to its new parent to *not* change -- this means that the
- * item could potentially move on the screen.
- *
- * The item and the group must be in the same canvas.  An item cannot be
- * reparented to a group that is the item itself or that is an inferior of the
- * item.
- */
-void ganv_item_reparent(GanvItem* item, GanvGroup* new_group);
-
 /* Used to send all of the keystroke events to a specific item as well as
  * GDK_FOCUS_CHANGE events.
  */
@@ -247,51 +236,6 @@ void ganv_item_get_bounds(GanvItem* item,
  * only by item implementations.
  */
 void ganv_item_request_update(GanvItem* item);
-
-
-/* GanvGroup - a group of canvas items
- *
- * A group is a node in the hierarchical tree of groups/items inside a canvas.
- * Groups serve to give a logical structure to the items.
- *
- * Consider a circuit editor application that uses the canvas for its schematic
- * display.  Hierarchically, there would be canvas groups that contain all the
- * components needed for an "adder", for example -- this includes some logic
- * gates as well as wires.  You can move stuff around in a convenient way by
- * doing a ganv_item_move() of the hierarchical groups -- to move an
- * adder, simply move the group that represents the adder.
- *
- * The following arguments are available:
- *
- * name		type		read/write	description
- * --------------------------------------------------------------------------------
- * x		double		RW		X coordinate of group's origin
- * y		double		RW		Y coordinate of group's origin
- */
-
-
-#define GANV_TYPE_GROUP            (ganv_group_get_type())
-#define GANV_GROUP(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GANV_TYPE_GROUP, GanvGroup))
-#define GANV_GROUP_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GANV_TYPE_GROUP, GanvGroupClass))
-#define GANV_IS_GROUP(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GANV_TYPE_GROUP))
-#define GANV_IS_GROUP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GANV_TYPE_GROUP))
-#define GANV_GROUP_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GANV_TYPE_GROUP, GanvGroupClass))
-
-
-struct _GanvGroup {
-	GanvItem item;
-
-	/* Children of the group */
-	GList* item_list;
-	GList* item_list_end;
-};
-
-struct _GanvGroupClass {
-	GanvItemClass parent_class;
-};
-
-
-GType ganv_group_get_type(void) G_GNUC_CONST;
 
 
 /*** GanvCanvasBase ***/
@@ -415,8 +359,8 @@ GType ganv_canvas_base_get_type(void) G_GNUC_CONST;
  */
 GtkWidget* ganv_canvas_base_new(void);
 
-/* Returns the root canvas item group of the canvas */
-GanvGroup* ganv_canvas_base_root(GanvCanvasBase* canvas);
+/* Returns the root item of the canvas */
+GanvItem* ganv_canvas_base_root(GanvCanvasBase* canvas);
 
 /* Sets the limits of the scrolling region, in world coordinates */
 void ganv_canvas_base_set_scroll_region(GanvCanvasBase* canvas,

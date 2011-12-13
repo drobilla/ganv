@@ -23,6 +23,7 @@ extern "C" {
 #include <cairo.h>
 
 #include "ganv/types.h"
+#include "ganv/text.h"
 
 extern guint signal_moved;
 
@@ -197,6 +198,12 @@ gboolean
 ganv_canvas_port_event(GanvCanvas* canvas,
                        GanvPort*   port,
                        GdkEvent*   event);
+
+void
+ganv_item_invoke_update(GanvItem* item, int flags);
+
+void
+ganv_canvas_base_request_update(GanvCanvasBase* canvas);
 
 #ifdef __cplusplus
 }  /* extern "C" */

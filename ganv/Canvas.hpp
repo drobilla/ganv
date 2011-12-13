@@ -135,7 +135,7 @@ public:
 
 	GQuark wrapper_key();
 
-	GanvGroup* root();
+	GanvItem* root();
 
 	GdkCursor* move_cursor();
 

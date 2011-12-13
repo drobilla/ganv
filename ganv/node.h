@@ -19,6 +19,7 @@
 #include "ganv/canvas-base.h"
 #include "ganv/types.h"
 #include "ganv/text.h"
+#include "ganv/group.h"
 
 G_BEGIN_DECLS
 

@@ -70,7 +70,7 @@ ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
  * ganv_canvas_get_root:
  * Return value: (transfer none): The root group of @canvas.
  */
-GanvGroup*
+GanvItem*
 ganv_canvas_get_root(const GanvCanvas* canvas);
 
 void

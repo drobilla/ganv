@@ -80,6 +80,7 @@ ganv_source = [
     'src/circle.c',
     'src/edge.c',
     'src/ganv-marshal.c',
+    'src/group.c',
     'src/module.c',
     'src/node.c',
     'src/port.c',
