@@ -404,7 +404,7 @@ ganv_edge_draw(GanvItem* item,
 	cairo_stroke(cr);
 
 	cairo_move_to(cr, join_x, join_y);
-	cairo_arc(cr, join_x, join_y, impl->coords.handle_radius, 0, 2 * M_PI);
+	cairo_arc(cr, join_x, join_y, impl->coords.handle_radius, 0, 2 * G_PI);
 	cairo_fill(cr);
 }
 

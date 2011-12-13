@@ -237,7 +237,7 @@ ganv_box_draw(GanvItem* item,
 
 	double r, g, b, a;
 
-	double degrees = M_PI / 180.0;
+	double degrees = G_PI / 180.0;
 
 	for (int i = (impl->coords.stacked ? 1 : 0); i >= 0; --i) {
 		const int x = cx - (STACKED_OFFSET * i);

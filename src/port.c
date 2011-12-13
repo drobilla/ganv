@@ -14,6 +14,7 @@
  */
 
 #include <math.h>
+#include <stdlib.h>
 
 #include "ganv/canvas.h"
 #include "ganv/port.h"

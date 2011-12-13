@@ -26,6 +26,7 @@
 #include <gtk/gtk.h>
 #include <cairo.h>
 
+#include "libart_lgpl/art_affine.h"
 #include "libart_lgpl/art_rect.h"
 #include "libart_lgpl/art_rect_uta.h"
 #include "libart_lgpl/art_uta_rect.h"
@@ -1897,7 +1898,7 @@ ganv_canvas_base_init(GanvCanvasBase* canvas)
 
 	canvas->need_update = FALSE;
 	canvas->need_redraw = FALSE;
-	canvas->redraw_area = NULL;
+	canvas->redraw_region = NULL;
 	canvas->idle_id     = 0;
 
 	canvas->scroll_x1 = 0.0;
@@ -1956,8 +1957,8 @@ shutdown_transients(GanvCanvasBase* canvas)
 	 */
 	if (canvas->need_redraw) {
 		canvas->need_redraw = FALSE;
-		art_uta_free(canvas->redraw_area);
-		canvas->redraw_area = NULL;
+		cairo_region_destroy(canvas->redraw_region);
+		canvas->redraw_region = NULL;
 		canvas->redraw_x1   = 0;
 		canvas->redraw_y1   = 0;
 		canvas->redraw_x2   = 0;
@@ -2859,49 +2860,24 @@ ganv_canvas_base_expose(GtkWidget* widget, GdkEventExpose* event)
 static void
 paint(GanvCanvasBase* canvas)
 {
-	ArtIRect*  rects;
-	gint       n_rects, i;
-	ArtIRect   visible_rect;
-	GdkRegion* region;
+	const int n_rects = cairo_region_num_rectangles(canvas->redraw_region);
+	for (int i = 0; i < n_rects; ++i) {
+		cairo_rectangle_int_t rect;
+		cairo_region_get_rectangle(canvas->redraw_region, i, &rect);
 
-	/* Extract big rectangles from the microtile array */
+		const GdkRectangle gdkrect = {
+			rect.x + canvas->zoom_xofs,
+			rect.y + canvas->zoom_yofs,
+			rect.width,
+			rect.height
+		};
 
-	rects = art_rect_list_from_uta(canvas->redraw_area,
-	                               REDRAW_QUANTUM_SIZE, REDRAW_QUANTUM_SIZE,
-	                               &n_rects);
-
-	art_uta_free(canvas->redraw_area);
-	canvas->redraw_area = NULL;
-	canvas->need_redraw = FALSE;
-
-	/* Turn those rectangles into a GdkRegion for exposing */
-
-	visible_rect.x0 = canvas->layout.hadjustment->value - canvas->zoom_xofs;
-	visible_rect.y0 = canvas->layout.vadjustment->value - canvas->zoom_yofs;
-	visible_rect.x1 = visible_rect.x0 + GTK_WIDGET(canvas)->allocation.width;
-	visible_rect.y1 = visible_rect.y0 + GTK_WIDGET(canvas)->allocation.height;
-
-	region = gdk_region_new();
-
-	for (i = 0; i < n_rects; i++) {
-		ArtIRect clipped;
-
-		art_irect_intersect(&clipped, &visible_rect, rects + i);
-		if (!art_irect_empty(&clipped)) {
-			GdkRectangle gdkrect;
-
-			gdkrect.x      = clipped.x0 + canvas->zoom_xofs;
-			gdkrect.y      = clipped.y0 + canvas->zoom_yofs;
-			gdkrect.width  = clipped.x1 - clipped.x0;
-			gdkrect.height = clipped.y1 - clipped.y0;
-
-			region = gdk_region_rectangle(&gdkrect);
-			gdk_window_invalidate_region(canvas->layout.bin_window, region, FALSE);
-			gdk_region_destroy(region);
-		}
+		gdk_window_invalidate_rect(canvas->layout.bin_window, &gdkrect, FALSE);
 	}
 
-	art_free(rects);
+	cairo_region_destroy(canvas->redraw_region);
+	canvas->redraw_region = NULL;
+	canvas->need_redraw = FALSE;
 
 	canvas->redraw_x1 = 0;
 	canvas->redraw_y1 = 0;
@@ -3266,7 +3242,7 @@ ganv_canvas_base_update_now(GanvCanvasBase* canvas)
 
 	if (!(canvas->need_update || canvas->need_redraw)) {
 		g_assert(canvas->idle_id == 0);
-		g_assert(canvas->redraw_area == NULL);
+		g_assert(canvas->redraw_region == NULL);
 		return;
 	}
 
@@ -3325,139 +3301,17 @@ ganv_canvas_base_request_update_real(GanvCanvasBase* canvas)
 	}
 }
 
-/* Computes the union of two microtile arrays while clipping the result to the
- * specified rectangle.  Any of the specified utas can be NULL, in which case it
- * is taken to be an empty region.
- */
-static ArtUta*
-uta_union_clip(ArtUta* uta1, ArtUta* uta2, ArtIRect* clip)
+static inline cairo_region_t*
+get_visible_region(GanvCanvasBase* canvas)
 {
-	ArtUta*     uta;
-	ArtUtaBbox* utiles;
-	int         clip_x1, clip_y1, clip_x2, clip_y2;
-	int         union_x1, union_y1, union_x2, union_y2;
-	int         new_x1, new_y1, new_x2, new_y2;
-	int         x, y;
-	int         ofs, ofs1, ofs2;
+	const cairo_rectangle_int_t rect = {
+		canvas->layout.hadjustment->value - canvas->zoom_xofs,
+		canvas->layout.vadjustment->value - canvas->zoom_yofs,
+		GTK_WIDGET(canvas)->allocation.width,
+		GTK_WIDGET(canvas)->allocation.height
+	};
 
-	g_assert(clip != NULL);
-
-	/* Compute the tile indices for the clipping rectangle */
-
-	clip_x1 = clip->x0 >> ART_UTILE_SHIFT;
-	clip_y1 = clip->y0 >> ART_UTILE_SHIFT;
-	clip_x2 = (clip->x1 >> ART_UTILE_SHIFT) + 1;
-	clip_y2 = (clip->y1 >> ART_UTILE_SHIFT) + 1;
-
-	/* Get the union of the bounds of both utas */
-
-	if (!uta1) {
-		if (!uta2) {
-			return art_uta_new(clip_x1, clip_y1, clip_x1 + 1, clip_y1 + 1);
-		}
-
-		union_x1 = uta2->x0;
-		union_y1 = uta2->y0;
-		union_x2 = uta2->x0 + uta2->width;
-		union_y2 = uta2->y0 + uta2->height;
-	} else {
-		if (!uta2) {
-			union_x1 = uta1->x0;
-			union_y1 = uta1->y0;
-			union_x2 = uta1->x0 + uta1->width;
-			union_y2 = uta1->y0 + uta1->height;
-		} else {
-			union_x1 = MIN(uta1->x0, uta2->x0);
-			union_y1 = MIN(uta1->y0, uta2->y0);
-			union_x2 = MAX(uta1->x0 + uta1->width, uta2->x0 + uta2->width);
-			union_y2 = MAX(uta1->y0 + uta1->height, uta2->y0 + uta2->height);
-		}
-	}
-
-	/* Clip the union of the bounds */
-
-	new_x1 = MAX(clip_x1, union_x1);
-	new_y1 = MAX(clip_y1, union_y1);
-	new_x2 = MIN(clip_x2, union_x2);
-	new_y2 = MIN(clip_y2, union_y2);
-
-	if (( new_x1 >= new_x2) || ( new_y1 >= new_y2) ) {
-		return art_uta_new(clip_x1, clip_y1, clip_x1 + 1, clip_y1 + 1);
-	}
-
-	/* Make the new clipped union */
-
-	uta         = art_new(ArtUta, 1);
-	uta->x0     = new_x1;
-	uta->y0     = new_y1;
-	uta->width  = new_x2 - new_x1;
-	uta->height = new_y2 - new_y1;
-	uta->utiles = utiles = art_new(ArtUtaBbox, uta->width * uta->height);
-
-	ofs  = 0;
-	ofs1 = ofs2 = 0;
-
-	for (y = new_y1; y < new_y2; y++) {
-		if (uta1) {
-			ofs1 = (y - uta1->y0) * uta1->width + new_x1 - uta1->x0;
-		}
-
-		if (uta2) {
-			ofs2 = (y - uta2->y0) * uta2->width + new_x1 - uta2->x0;
-		}
-
-		for (x = new_x1; x < new_x2; x++) {
-			ArtUtaBbox bb1, bb2, bb;
-
-			if (!uta1
-			    || ( x < uta1->x0) || ( y < uta1->y0)
-			    || ( x >= uta1->x0 + uta1->width) || ( y >= uta1->y0 + uta1->height) ) {
-				bb1 = 0;
-			} else {
-				bb1 = uta1->utiles[ofs1];
-			}
-
-			if (!uta2
-			    || ( x < uta2->x0) || ( y < uta2->y0)
-			    || ( x >= uta2->x0 + uta2->width) || ( y >= uta2->y0 + uta2->height) ) {
-				bb2 = 0;
-			} else {
-				bb2 = uta2->utiles[ofs2];
-			}
-
-			if (bb1 == 0) {
-				bb = bb2;
-			} else if (bb2 == 0) {
-				bb = bb1;
-			} else {
-				bb = ART_UTA_BBOX_CONS(MIN(ART_UTA_BBOX_X0(bb1),
-				                           ART_UTA_BBOX_X0(bb2)),
-				                       MIN(ART_UTA_BBOX_Y0(bb1),
-				                           ART_UTA_BBOX_Y0(bb2)),
-				                       MAX(ART_UTA_BBOX_X1(bb1),
-				                           ART_UTA_BBOX_X1(bb2)),
-				                       MAX(ART_UTA_BBOX_Y1(bb1),
-				                           ART_UTA_BBOX_Y1(bb2)));
-			}
-
-			utiles[ofs] = bb;
-
-			ofs++;
-			ofs1++;
-			ofs2++;
-		}
-	}
-
-	return uta;
-}
-
-static inline void
-get_visible_region(GanvCanvasBase* canvas, ArtIRect* visible)
-{
-	visible->x0 = canvas->layout.hadjustment->value - canvas->zoom_xofs;
-	visible->y0 = canvas->layout.vadjustment->value - canvas->zoom_yofs;
-	visible->x1 = visible->x0 + GTK_WIDGET(canvas)->allocation.width;
-	visible->y1 = visible->y0 + GTK_WIDGET(canvas)->allocation.height;
+	return cairo_region_create_rectangle(&rect);
 }
 
 /**
@@ -3474,58 +3328,33 @@ get_visible_region(GanvCanvasBase* canvas, ArtIRect* visible)
 void
 ganv_canvas_base_request_redraw(GanvCanvasBase* canvas, int x1, int y1, int x2, int y2)
 {
-	ArtUta*  uta;
-	ArtIRect bbox;
-	ArtIRect visible;
-	ArtIRect clip;
-
 	g_return_if_fail(GANV_IS_CANVAS_BASE(canvas));
 
 	if (!GTK_WIDGET_DRAWABLE(canvas) || (x1 >= x2) || (y1 >= y2)) {
 		return;
 	}
 
-	bbox.x0 = x1;
-	bbox.y0 = y1;
-	bbox.x1 = x2;
-	bbox.y1 = y2;
+	const cairo_rectangle_int_t rect = { x1, y1, x2 - x1, y2 - y1 };
 
-	get_visible_region(canvas, &visible);
+	cairo_region_t* region = get_visible_region(canvas);
+	cairo_region_intersect_rectangle(region, &rect);
 
-	art_irect_intersect(&clip, &bbox, &visible);
-
-	if (art_irect_empty(&clip)) {
+	if (cairo_region_is_empty(region)) {
 		return;
 	}
-
-	uta = art_uta_from_irect(&clip);
-
+	
 	if (canvas->need_redraw) {
-		ArtUta* new_uta;
+		g_assert(canvas->redraw_region != NULL);
 
-		g_assert(canvas->redraw_area != NULL);
-		/* ALEX: This can fail if e.g. redraw_uta is called by an item
-		   update function and we're called from update_now -> do_update
-		   because update_now sets idle_id == 0. There is also some way
-		   to get it from the expose handler (see bug #102811).
-		   g_assert (canvas->idle_id != 0);  */
-
-		new_uta = uta_union_clip(canvas->redraw_area, uta, &visible);
-		art_uta_free(canvas->redraw_area);
-		art_uta_free(uta);
-		canvas->redraw_area = new_uta;
+		cairo_region_union(canvas->redraw_region, region);
+		cairo_region_destroy(region);
 		if (canvas->idle_id == 0) {
 			add_idle(canvas);
 		}
 	} else {
-		ArtUta* new_uta;
+		g_assert(canvas->redraw_region == NULL);
 
-		g_assert(canvas->redraw_area == NULL);
-
-		new_uta = uta_union_clip(uta, NULL, &visible);
-		art_uta_free(uta);
-		canvas->redraw_area = new_uta;
-
+		canvas->redraw_region = region;
 		canvas->need_redraw = TRUE;
 		add_idle(canvas);
 	}

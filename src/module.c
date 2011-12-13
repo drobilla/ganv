@@ -13,6 +13,7 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
 #include <string.h>
 
 #include "ganv/canvas.h"

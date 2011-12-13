@@ -21,13 +21,10 @@
 #ifndef GANV_CANVAS_BASE_H
 #define GANV_CANVAS_BASE_H
 
-#include <gtk/gtk.h>
 #include <stdarg.h>
-#include <libart_lgpl/art_misc.h>
-#include <libart_lgpl/art_rect.h>
-#include <libart_lgpl/art_svp.h>
-#include <libart_lgpl/art_uta.h>
-#include <libart_lgpl/art_affine.h>
+
+#include <cairo.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -337,8 +334,8 @@ struct _GanvCanvasBase {
 	/* Root canvas group */
 	GanvItem* root;
 
-	/* Area that needs redrawing, stored as a microtile array */
-	ArtUta* redraw_area;
+	/* Region that needs redrawing, stored as a microtile array */
+	cairo_region_t* redraw_region;
 
 	/* The item containing the mouse pointer, or NULL if none */
 	GanvItem* current_item;

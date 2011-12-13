@@ -268,7 +268,7 @@ ganv_circle_draw(GanvItem* item,
 	          cx - x,
 	          cy - y,
 	          impl->coords.radius,
-	          0, 2 * M_PI);
+	          0, 2 * G_PI);
 
 	// Fill
 	color_to_rgba(fill_color, &r, &g, &b, &a);
