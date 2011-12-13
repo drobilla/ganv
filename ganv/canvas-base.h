@@ -40,13 +40,13 @@ typedef struct _GanvItemClass       GanvItemClass;
 
 /* GanvItem - base item class for canvas items
  *
- * All canvas items are derived from GanvItem.  The only information a
- * GanvItem contains is its parent canvas, its parent canvas item group,
- * its bounding box in world coordinates, and its current affine transformation.
+ * All canvas items are derived from GanvItem.  The only information a GanvItem
+ * contains is its parent canvas, its parent canvas item, its bounding box in
+ * world coordinates, and its current affine transformation.
  *
- * Items inside a canvas are organized in a tree of GanvItemGroup nodes
- * and GanvItem leaves.  Each canvas has a single root group, which can
- * be obtained with the ganv_canvas_base_get_root() function.
+ * Items inside a canvas are organized in a tree, where leaves are items
+ * without any children.  Each canvas has a single root item, which can be
+ * obtained with the ganv_canvas_base_get_root() function.
  *
  * The abstract GanvItem class does not have any configurable or
  * queryable attributes.
@@ -252,7 +252,7 @@ void ganv_item_request_update(GanvItem* item);
 struct _GanvCanvasBase {
 	GtkLayout layout;
 
-	/* Root canvas group */
+	/* Root canvas item */
 	GanvItem* root;
 
 	/* Region that needs redrawing, stored as a microtile array */
