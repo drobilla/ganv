@@ -2829,19 +2829,17 @@ ganv_canvas_base_expose(GtkWidget* widget, GdkEventExpose* event)
 	gdk_region_get_rectangles(event->region, &rects, &n_rects);
 
 	for (i = 0; i < n_rects; i++) {
-		ArtIRect rect;
-
-		rect.x0 = rects[i].x - canvas->zoom_xofs;
-		rect.y0 = rects[i].y - canvas->zoom_yofs;
-		rect.x1 = rects[i].x + rects[i].width - canvas->zoom_xofs;
-		rect.y1 = rects[i].y + rects[i].height - canvas->zoom_yofs;
+		const int x0 = rects[i].x - canvas->zoom_xofs;
+		const int y0 = rects[i].y - canvas->zoom_yofs;
+		const int x1 = rects[i].x + rects[i].width - canvas->zoom_xofs;
+		const int y1 = rects[i].y + rects[i].height - canvas->zoom_yofs;
 
 		if (canvas->need_update || canvas->need_redraw) {
 			/* Update or drawing is scheduled, so just mark exposed area as dirty */
-			ganv_canvas_base_request_redraw(canvas, rect.x0, rect.y0, rect.x1, rect.y1);
+			ganv_canvas_base_request_redraw(canvas, x0, y0, x1, y1);
 		} else {
 			/* No pending updates, draw exposed area immediately */
-			ganv_canvas_base_paint_rect(canvas, rect.x0, rect.y0, rect.x1, rect.y1);
+			ganv_canvas_base_paint_rect(canvas, x0, y0, x1, y1);
 
 			/* And call expose on parent container class */
 			if (GTK_WIDGET_CLASS(canvas_parent_class)->expose_event) {
