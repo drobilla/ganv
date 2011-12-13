@@ -175,16 +175,6 @@ void ganv_item_set_valist(GanvItem* item,
 /* Move an item by the specified amount */
 void ganv_item_move(GanvItem* item, double dx, double dy);
 
-/* Raise an item in the z-order of its parent group by the specified number of
- * positions.
- */
-void ganv_item_raise(GanvItem* item, int positions);
-
-/* Lower an item in the z-order of its parent group by the specified number of
- * positions.
- */
-void ganv_item_lower(GanvItem* item, int positions);
-
 /* Raise an item to the top of its parent group's z-order. */
 void ganv_item_raise_to_top(GanvItem* item);
 
