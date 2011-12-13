@@ -108,11 +108,9 @@ ganv_node_draw(GanvItem* item,
                int cx, int cy,
                int width, int height)
 {
-	if (GANV_ITEM_CLASS(parent_class)->draw) {
-		(*GANV_ITEM_CLASS(parent_class)->draw)(item, cr, cx, cy, width, height);
-	}
-
 	GanvNode* node = GANV_NODE(item);
+
+	// Draw label
 	if (node->impl->label) {
 		GanvItem* label_item = GANV_ITEM(node->impl->label);
 		GANV_ITEM_GET_CLASS(label_item)->draw(label_item, cr, cx, cy, width, height);

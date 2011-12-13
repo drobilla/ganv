@@ -526,6 +526,26 @@ ganv_module_update(GanvItem* item, int flags)
 }
 
 static void
+ganv_module_draw(GanvItem* item,
+                 cairo_t* cr,
+                 int cx, int cy,
+                 int width, int height)
+{
+	GanvModule* module = GANV_MODULE(item);
+
+	// Draw box and label
+	if (GANV_ITEM_CLASS(parent_class)->draw) {
+		(*GANV_ITEM_CLASS(parent_class)->draw)(item, cr, cx, cy, width, height);
+	}
+
+	// Draw ports
+	FOREACH_PORT(module->impl->ports, p) {
+		GANV_ITEM_GET_CLASS(GANV_ITEM(*p))->draw(
+			GANV_ITEM(*p), cr, cx, cy, width, height);
+	}
+}
+
+static void
 ganv_module_move_to(GanvNode* node,
                     double    x,
                     double    y)
@@ -567,6 +587,7 @@ ganv_module_class_init(GanvModuleClass* class)
 	object_class->destroy = ganv_module_destroy;
 
 	item_class->update = ganv_module_update;
+	item_class->draw   = ganv_module_draw;
 
 	node_class->move    = ganv_module_move;
 	node_class->move_to = ganv_module_move_to;
