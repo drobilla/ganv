@@ -50,8 +50,6 @@ def configure(conf):
                       atleast_version='2.0.0', mandatory=True)
     autowaf.check_pkg(conf, 'gtkmm-2.4', uselib_store='GTKMM',
                       atleast_version='2.10.0', mandatory=True)
-    autowaf.check_pkg(conf, 'libart-2.0', uselib_store='ART',
-                      atleast_version='2.0.0', mandatory=True)
 
     if Options.options.gir:
         autowaf.check_pkg(conf, 'gobject-introspection-1.0',

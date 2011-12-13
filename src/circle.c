@@ -213,16 +213,14 @@ ganv_circle_bounds(GanvItem* item,
 }
 
 static void
-ganv_circle_update(GanvItem* item,
-                   double*   affine,
-                   int       flags)
+ganv_circle_update(GanvItem* item, int flags)
 {
 	GanvCircle*     circle = GANV_CIRCLE(item);
 	GanvCircleImpl* impl   = circle->impl;
 
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	if (item_class->update) {
-		(*item_class->update)(item, affine, flags);
+		(*item_class->update)(item, flags);
 	}
 
 	// Request redraw of old location

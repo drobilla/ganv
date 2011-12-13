@@ -231,13 +231,10 @@ ganv_text_bounds(GanvItem* item,
 }
 
 static void
-ganv_text_update(GanvItem* item,
-                 double*   affine,
-                 int       flags)
+ganv_text_update(GanvItem* item, int flags)
 {
 	double x1, y1, x2, y2;
 	ganv_text_bounds(item, &x1, &y1, &x2, &y2);
-	ganv_canvas_base_request_redraw(item->canvas, x1, y1, x2, y2);
 
 	// I have no idea why this is necessary
 	item->x1 = x1;
@@ -245,7 +242,9 @@ ganv_text_update(GanvItem* item,
 	item->x2 = x2;
 	item->y2 = y2;
 
-	parent_class->update(item, affine, flags);
+	parent_class->update(item, flags);
+
+	ganv_canvas_base_request_redraw(item->canvas, x1, y1, x2, y2);
 }
 
 static double

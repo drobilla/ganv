@@ -103,6 +103,23 @@ ganv_node_destroy(GtkObject* object)
 }
 
 static void
+ganv_node_draw(GanvItem* item,
+               cairo_t* cr,
+               int cx, int cy,
+               int width, int height)
+{
+	if (GANV_ITEM_CLASS(parent_class)->draw) {
+		(*GANV_ITEM_CLASS(parent_class)->draw)(item, cr, cx, cy, width, height);
+	}
+
+	GanvNode* node = GANV_NODE(item);
+	if (node->impl->label) {
+		GanvItem* label_item = GANV_ITEM(node->impl->label);
+		GANV_ITEM_GET_CLASS(label_item)->draw(label_item, cr, cx, cy, width, height);
+	}
+}
+
+static void
 ganv_node_set_property(GObject*      object,
                        guint         prop_id,
                        const GValue* value,
@@ -572,6 +589,7 @@ ganv_node_class_init(GanvNodeClass* class)
 
 	item_class->realize = ganv_node_realize;
 	item_class->event   = ganv_node_default_event;
+	item_class->draw    = ganv_node_draw;
 
 	class->disconnect  = ganv_node_default_disconnect;
 	class->move        = ganv_node_default_move;

@@ -6,6 +6,6 @@ includedir=@INCLUDEDIR@
 Name: ganv
 Version: @GANV_VERSION@
 Description: A Gtkmm canvas widget for graph based interfaces
-Requires: gobject-2.0, libart-2.0
+Requires: gobject-2.0
 Libs: -L${libdir} -l@LIB_GANV@
 Cflags: -I${includedir}/ganv-@GANV_MAJOR_VERSION@

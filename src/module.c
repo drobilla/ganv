@@ -508,18 +508,21 @@ ganv_module_resize(GanvNode* self)
 }
 
 static void
-ganv_module_update(GanvItem* item,
-                   double*   affine,
-                   int       flags)
+ganv_module_update(GanvItem* item, int flags)
 {
 	GanvNode*   node   = GANV_NODE(item);
 	GanvModule* module = GANV_MODULE(item);
+
+	FOREACH_PORT(module->impl->ports, p) {
+		ganv_item_request_update(GANV_ITEM(*p));
+	}
+
 	if (module->impl->must_resize) {
 		layout(node);
 	}
 
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-	item_class->update(item, affine, flags);
+	item_class->update(item, flags);
 }
 
 static void

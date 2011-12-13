@@ -26,12 +26,6 @@
 #include <gtk/gtk.h>
 #include <cairo.h>
 
-#include "libart_lgpl/art_affine.h"
-#include "libart_lgpl/art_rect.h"
-#include "libart_lgpl/art_rect_uta.h"
-#include "libart_lgpl/art_uta_rect.h"
-#include "libart_lgpl/art_uta_ops.h"
-
 #include "ganv/canvas-base.h"
 
 #include "./gettext.h"
@@ -264,9 +258,6 @@ ganv_item_dispose(GObject* object)
 		group_remove(GANV_GROUP(item->parent), item);
 	}
 
-	g_free(item->xform);
-	item->xform = NULL;
-
 	G_OBJECT_CLASS(item_parent_class)->dispose(object);
 	/* items should remove any reference to item->canvas after the
 	   first ::destroy */
@@ -305,10 +296,9 @@ ganv_item_unmap(GanvItem* item)
 
 /* Update handler for canvas items */
 static void
-ganv_item_update(GanvItem* item, double* affine, int flags)
+ganv_item_update(GanvItem* item, int flags)
 {
 	GTK_OBJECT_UNSET_FLAGS(item, GANV_ITEM_NEED_UPDATE);
-	GTK_OBJECT_UNSET_FLAGS(item, GANV_ITEM_NEED_AFFINE);
 	GTK_OBJECT_UNSET_FLAGS(item, GANV_ITEM_NEED_CLIP);
 	GTK_OBJECT_UNSET_FLAGS(item, GANV_ITEM_NEED_VIS);
 }
@@ -327,31 +317,11 @@ ganv_item_update(GanvItem* item, double* affine, int flags)
  */
 
 static void
-ganv_item_invoke_update(GanvItem* item, double* p2cpx, int flags)
+ganv_item_invoke_update(GanvItem* item, int flags)
 {
-	int     child_flags;
-	gdouble i2cpx[6];
-
-	child_flags = flags;
+	int child_flags = flags;
 	if (!(item->object.flags & GANV_ITEM_VISIBLE)) {
 		child_flags &= ~GANV_CANVAS_BASE_UPDATE_IS_VISIBLE;
-	}
-
-	/* Calculate actual item transformation matrix */
-
-	if (item->xform) {
-		if (item->object.flags & GANV_ITEM_AFFINE_FULL) {
-			/* Item has full affine */
-			art_affine_multiply(i2cpx, item->xform, p2cpx);
-		} else {
-			/* Item has only translation */
-			memcpy(i2cpx, p2cpx, 4 * sizeof(gdouble));
-			i2cpx[4] = item->xform[0] * p2cpx[0] + item->xform[1] * p2cpx[2] + p2cpx[4];
-			i2cpx[5] = item->xform[0] * p2cpx[1] + item->xform[1] * p2cpx[3] + p2cpx[5];
-		}
-	} else {
-		/* Item has no matrix (i.e. identity) */
-		memcpy(i2cpx, p2cpx, 6 * sizeof(gdouble));
 	}
 
 	/* apply object flags to child flags */
@@ -360,10 +330,6 @@ ganv_item_invoke_update(GanvItem* item, double* p2cpx, int flags)
 
 	if (item->object.flags & GANV_ITEM_NEED_UPDATE) {
 		child_flags |= GANV_CANVAS_BASE_UPDATE_REQUESTED;
-	}
-
-	if (item->object.flags & GANV_ITEM_NEED_AFFINE) {
-		child_flags |= GANV_CANVAS_BASE_UPDATE_AFFINE;
 	}
 
 	if (item->object.flags & GANV_ITEM_NEED_CLIP) {
@@ -376,44 +342,28 @@ ganv_item_invoke_update(GanvItem* item, double* p2cpx, int flags)
 
 	if (child_flags & GCI_UPDATE_MASK) {
 		if (GANV_ITEM_GET_CLASS(item)->update) {
-			GANV_ITEM_GET_CLASS(item)->update(item, i2cpx, child_flags);
+			GANV_ITEM_GET_CLASS(item)->update(item, child_flags);
 		}
 	}
 }
 
-/*
- * This routine invokes the point method of the item.
+/**
+ * Invoke the point method of the item.
  * The arguments x, y should be in the parent item local coordinates.
- *
- * This is potentially evil, as we are relying on matrix inversion (Lauris)
  */
-
 static double
 ganv_item_invoke_point(GanvItem* item, double x, double y, int cx, int cy,
                        GanvItem** actual_item)
 {
-	/* Calculate x & y in item local coordinates */
-
-	if (item->xform) {
-		if (item->object.flags & GANV_ITEM_AFFINE_FULL) {
-			gdouble p2i[6], t;
-			/* Item has full affine */
-			art_affine_invert(p2i, item->xform);
-			t = x * p2i[0] + y * p2i[2] + p2i[4];
-			y = x * p2i[1] + y * p2i[3] + p2i[5];
-			x = t;
-		} else {
-			/* Item has only translation */
-			x -= item->xform[0];
-			y -= item->xform[1];
-		}
-	}
+	// Transform x and y to item local coordinates
+	x -= item->x;
+	y -= item->y;
 
 	if (GANV_ITEM_GET_CLASS(item)->point) {
 		return GANV_ITEM_GET_CLASS(item)->point(item, x, y, cx, cy, actual_item);
 	}
 
-	return 1e18;
+	return G_MAXDOUBLE;
 }
 
 /**
@@ -455,117 +405,22 @@ ganv_item_set_valist(GanvItem* item, const gchar* first_arg_name, va_list args)
 }
 
 /**
- * ganv_item_affine_relative:
- * @item: A canvas item.
- * @affine: An affine transformation matrix.
- *
- * Combines the specified affine transformation matrix with the item's current
- * transformation. NULL affine is not allowed.
- **/
-#define GCIAR_EPSILON 1e-6
-void
-ganv_item_affine_relative(GanvItem* item, const double affine[6])
-{
-	gdouble i2p[6];
-
-	g_return_if_fail(item != NULL);
-	g_return_if_fail(GANV_IS_ITEM(item));
-	g_return_if_fail(affine != NULL);
-
-	/* Calculate actual item transformation matrix */
-
-	if (item->xform) {
-		if (item->object.flags & GANV_ITEM_AFFINE_FULL) {
-			/* Item has full affine */
-			art_affine_multiply(i2p, affine, item->xform);
-		} else {
-			/* Item has only translation */
-			memcpy(i2p, affine, 6 * sizeof(gdouble));
-			i2p[4] += item->xform[0];
-			i2p[5] += item->xform[1];
-		}
-	} else {
-		/* Item has no matrix (i.e. identity) */
-		memcpy(i2p, affine, 6 * sizeof(gdouble));
-	}
-
-	ganv_item_affine_absolute(item, i2p);
-}
-
-/**
- * ganv_item_affine_absolute:
- * @item: A canvas item.
- * @affine: An affine transformation matrix.
- *
- * Makes the item's affine transformation matrix be equal to the specified
- * matrix. NULL affine is treated as identity.
- **/
-void
-ganv_item_affine_absolute(GanvItem* item, const double i2p[6])
-{
-	g_return_if_fail(item != NULL);
-	g_return_if_fail(GANV_IS_ITEM(item));
-
-	if (i2p
-	    && (fabs(i2p[0] - 1.0) < GCI_EPSILON)
-	    && (fabs(i2p[1] - 0.0) < GCI_EPSILON)
-	    && (fabs(i2p[2] - 0.0) < GCI_EPSILON)
-	    && (fabs(i2p[3] - 1.0) < GCI_EPSILON)
-	    && (fabs(i2p[4] - 0.0) < GCI_EPSILON)
-	    && (fabs(i2p[5] - 0.0) < GCI_EPSILON)) {
-		/* We are identity */
-		i2p = NULL;
-	}
-
-	if (i2p) {
-		if (item->xform && !(item->object.flags & GANV_ITEM_AFFINE_FULL)) {
-			/* We do not want to deal with translation-only affines */
-			g_free(item->xform);
-			item->xform = NULL;
-		}
-		if (!item->xform) {
-			item->xform = g_new(gdouble, 6);
-		}
-		memcpy(item->xform, i2p, 6 * sizeof(gdouble));
-		item->object.flags |= GANV_ITEM_AFFINE_FULL;
-	} else {
-		if (item->xform) {
-			g_free(item->xform);
-			item->xform = NULL;
-		}
-	}
-
-	if (!(item->object.flags & GANV_ITEM_NEED_AFFINE)) {
-		/* Request update */
-		item->object.flags |= GANV_ITEM_NEED_AFFINE;
-		ganv_item_request_update(item);
-	}
-
-	item->canvas->need_repick = TRUE;
-}
-
-/**
  * ganv_item_move:
  * @item: A canvas item.
  * @dx: Horizontal offset.
  * @dy: Vertical offset.
- *
- * Moves a canvas item by creating an affine transformation matrix for
- * translation by using the specified values. This happens in item
- * local coordinate system, so if you have nontrivial transform, it
- * most probably does not do, what you want.
  **/
 void
 ganv_item_move(GanvItem* item, double dx, double dy)
 {
-	double translate[6];
-
 	g_return_if_fail(item != NULL);
 	g_return_if_fail(GANV_IS_ITEM(item));
 
-	art_affine_translate(translate, dx, dy);
+	item->x += dx;
+	item->y += dy;
 
-	ganv_item_affine_relative(item, translate);
+	ganv_item_request_update(item);
+	item->canvas->need_repick = TRUE;
 }
 
 /* Convenience function to reorder items in a group's child list.  This puts the
@@ -884,23 +739,15 @@ ganv_item_ungrab(GanvItem* item, guint32 etime)
  * world coordinates.
  **/
 void
-ganv_item_i2w_affine(GanvItem* item, double affine[6])
+ganv_item_i2w_affine(GanvItem* item, cairo_matrix_t* matrix)
 {
 	g_return_if_fail(GANV_IS_ITEM(item));
-	g_return_if_fail(affine != NULL);
 
-	art_affine_identity(affine);
+	cairo_matrix_init_identity(matrix);
 
 	while (item) {
-		if (item->xform != NULL) {
-			if (item->object.flags & GANV_ITEM_AFFINE_FULL) {
-				art_affine_multiply(affine, affine, item->xform);
-			} else {
-				affine[4] += item->xform[0];
-				affine[5] += item->xform[1];
-			}
-		}
-
+		matrix->x0 += item->x;
+		matrix->y0 += item->y;
 		item = item->parent;
 	}
 }
@@ -917,20 +764,15 @@ ganv_item_i2w_affine(GanvItem* item, double affine[6])
 void
 ganv_item_w2i(GanvItem* item, double* x, double* y)
 {
-	double   affine[6], inv[6];
-	ArtPoint w, i;
-
 	g_return_if_fail(GANV_IS_ITEM(item));
 	g_return_if_fail(x != NULL);
 	g_return_if_fail(y != NULL);
 
-	ganv_item_i2w_affine(item, affine);
-	art_affine_invert(inv, affine);
-	w.x = *x;
-	w.y = *y;
-	art_affine_point(&i, &w, inv);
-	*x = i.x;
-	*y = i.y;
+	cairo_matrix_t matrix;
+	ganv_item_i2w_affine(item, &matrix);
+	cairo_matrix_invert(&matrix);
+
+	cairo_matrix_transform_point(&matrix, x, y);
 }
 
 /**
@@ -945,19 +787,14 @@ ganv_item_w2i(GanvItem* item, double* x, double* y)
 void
 ganv_item_i2w(GanvItem* item, double* x, double* y)
 {
-	double   affine[6];
-	ArtPoint w, i;
-
 	g_return_if_fail(GANV_IS_ITEM(item));
 	g_return_if_fail(x != NULL);
 	g_return_if_fail(y != NULL);
 
-	ganv_item_i2w_affine(item, affine);
-	i.x = *x;
-	i.y = *y;
-	art_affine_point(&w, &i, affine);
-	*x = w.x;
-	*y = w.y;
+	cairo_matrix_t matrix;
+	ganv_item_i2w_affine(item, &matrix);
+
+	cairo_matrix_transform_point(&matrix, x, y);
 }
 
 /**
@@ -969,13 +806,15 @@ ganv_item_i2w(GanvItem* item, double* x, double* y)
  * canvas pixel coordinates.
  **/
 void
-ganv_item_i2c_affine(GanvItem* item, double affine[6])
+ganv_item_i2c_affine(GanvItem* item, cairo_matrix_t* matrix)
 {
-	double i2w[6], w2c[6];
+	cairo_matrix_t i2w;
+	ganv_item_i2w_affine(item, &i2w);
 
-	ganv_item_i2w_affine(item, i2w);
-	ganv_canvas_base_w2c_affine(item->canvas, w2c);
-	art_affine_multiply(affine, i2w, w2c);
+	cairo_matrix_t w2c;
+	ganv_canvas_base_w2c_affine(item->canvas, &w2c);
+
+	cairo_matrix_multiply(matrix, &i2w, &w2c);
 }
 
 /* Returns whether the item is an inferior of or is equal to the parent. */
@@ -1087,94 +926,41 @@ ganv_item_grab_focus(GanvItem* item)
 void
 ganv_item_get_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2)
 {
-	double   tx1, ty1, tx2, ty2;
-	ArtPoint p1, p2, p3, p4;
-	ArtPoint q1, q2, q3, q4;
-	double   min_x1, min_y1, min_x2, min_y2;
-	double   max_x1, max_y1, max_x2, max_y2;
+	double ix1, iy1, ix2, iy2;
 
 	g_return_if_fail(GANV_IS_ITEM(item));
 
-	tx1 = ty1 = tx2 = ty2 = 0.0;
+	ix1 = iy1 = ix2 = iy2 = 0.0;
 
 	/* Get the item's bounds in its coordinate system */
 
 	if (GANV_ITEM_GET_CLASS(item)->bounds) {
-		(*GANV_ITEM_GET_CLASS(item)->bounds)(item, &tx1, &ty1, &tx2, &ty2);
+		(*GANV_ITEM_GET_CLASS(item)->bounds)(item, &ix1, &iy1, &ix2, &iy2);
 	}
 
 	/* Make the bounds relative to the item's parent coordinate system */
 
-	if (item->xform && (item->object.flags & GANV_ITEM_AFFINE_FULL)) {
-		p1.x = p2.x = tx1;
-		p1.y = p4.y = ty1;
-		p3.x = p4.x = tx2;
-		p2.y = p3.y = ty2;
-
-		art_affine_point(&q1, &p1, item->xform);
-		art_affine_point(&q2, &p2, item->xform);
-		art_affine_point(&q3, &p3, item->xform);
-		art_affine_point(&q4, &p4, item->xform);
-
-		if (q1.x < q2.x) {
-			min_x1 = q1.x;
-			max_x1 = q2.x;
-		} else {
-			min_x1 = q2.x;
-			max_x1 = q1.x;
-		}
-
-		if (q1.y < q2.y) {
-			min_y1 = q1.y;
-			max_y1 = q2.y;
-		} else {
-			min_y1 = q2.y;
-			max_y1 = q1.y;
-		}
-
-		if (q3.x < q4.x) {
-			min_x2 = q3.x;
-			max_x2 = q4.x;
-		} else {
-			min_x2 = q4.x;
-			max_x2 = q3.x;
-		}
-
-		if (q3.y < q4.y) {
-			min_y2 = q3.y;
-			max_y2 = q4.y;
-		} else {
-			min_y2 = q4.y;
-			max_y2 = q3.y;
-		}
-
-		tx1 = MIN(min_x1, min_x2);
-		ty1 = MIN(min_y1, min_y2);
-		tx2 = MAX(max_x1, max_x2);
-		ty2 = MAX(max_y1, max_y2);
-	} else if (item->xform) {
-		tx1 += item->xform[0];
-		ty1 += item->xform[1];
-		tx2 += item->xform[0];
-		ty2 += item->xform[1];
-	}
+	ix1 -= item->x;
+	iy1 -= item->y;
+	ix2 -= item->x;
+	iy2 -= item->y;
 
 	/* Return the values */
 
 	if (x1) {
-		*x1 = tx1;
+		*x1 = ix1;
 	}
 
 	if (y1) {
-		*y1 = ty1;
+		*y1 = iy1;
 	}
 
 	if (x2) {
-		*x2 = tx2;
+		*x2 = ix2;
 	}
 
 	if (y2) {
-		*y2 = ty2;
+		*y2 = iy2;
 	}
 }
 
@@ -1226,7 +1012,7 @@ static void ganv_group_get_property(GObject*    object,
 
 static void ganv_group_destroy(GtkObject* object);
 
-static void ganv_group_update(GanvItem* item, double* affine, int flags);
+static void ganv_group_update(GanvItem* item, int flags);
 static void ganv_group_realize(GanvItem* item);
 static void ganv_group_unrealize(GanvItem* item);
 static void ganv_group_map(GanvItem* item);
@@ -1298,44 +1084,24 @@ ganv_group_init(GanvGroup* group)
 #endif
 }
 
-/* Translate handler for canvas groups */
-static double*
-ganv_canvas_base_ensure_translate(GanvItem* item)
-{
-	if (item->xform == NULL) {
-		GTK_OBJECT_UNSET_FLAGS(item, GANV_ITEM_AFFINE_FULL);
-		item->xform    = g_new(double, 2);
-		item->xform[0] = 0.0;
-		item->xform[1] = 0.0;
-		return item->xform;
-	} else if (item->object.flags & GANV_ITEM_AFFINE_FULL) {
-		return item->xform + 4;
-	} else {
-		return item->xform;
-	}
-}
-
 /* Set_property handler for canvas groups */
 static void
 ganv_group_set_property(GObject* gobject, guint param_id,
                         const GValue* value, GParamSpec* pspec)
 {
-	GanvItem* item;
-	double*   xlat;
-
 	g_return_if_fail(GANV_IS_GROUP(gobject));
 
-	item = GANV_ITEM(gobject);
+	GanvItem* item = GANV_ITEM(gobject);
 
 	switch (param_id) {
 	case GROUP_PROP_X:
-		xlat    = ganv_canvas_base_ensure_translate(item);
-		xlat[0] = g_value_get_double(value);
+		item->x = g_value_get_double(value);
+		ganv_item_request_update(item);
 		break;
 
 	case GROUP_PROP_Y:
-		xlat    = ganv_canvas_base_ensure_translate(item);
-		xlat[1] = g_value_get_double(value);
+		item->y = g_value_get_double(value);
+		ganv_item_request_update(item);
 		break;
 
 	default:
@@ -1357,23 +1123,11 @@ ganv_group_get_property(GObject* gobject, guint param_id,
 
 	switch (param_id) {
 	case GROUP_PROP_X:
-		if (item->xform == NULL) {
-			g_value_set_double(value, 0);
-		} else if (GTK_OBJECT(gobject)->flags & GANV_ITEM_AFFINE_FULL) {
-			g_value_set_double(value, item->xform[4]);
-		} else {
-			g_value_set_double(value, item->xform[0]);
-		}
+		g_value_set_double(value, item->x);
 		break;
 
 	case GROUP_PROP_Y:
-		if (item->xform == NULL) {
-			g_value_set_double(value, 0);
-		} else if (GTK_OBJECT(gobject)->flags & GANV_ITEM_AFFINE_FULL) {
-			g_value_set_double(value, item->xform[5]);
-		} else {
-			g_value_set_double(value, item->xform[1]);
-		}
+		g_value_set_double(value, item->y);
 		break;
 
 	default:
@@ -1403,37 +1157,35 @@ ganv_group_destroy(GtkObject* object)
 
 /* Update handler for canvas groups */
 static void
-ganv_group_update(GanvItem* item, double* affine, int flags)
+ganv_group_update(GanvItem* item, int flags)
 {
 	GanvGroup* group;
 	GList*     list;
 	GanvItem*  i;
-	ArtDRect   bbox, child_bbox;
 
 	group = GANV_GROUP(item);
 
-	(*group_parent_class->update)(item, affine, flags);
+	(*group_parent_class->update)(item, flags);
 
-	bbox.x0 = 0;
-	bbox.y0 = 0;
-	bbox.x1 = 0;
-	bbox.y1 = 0;
+	double min_x = 0.0;
+	double min_y = 0.0;
+	double max_x = 0.0;
+	double max_y = 0.0;
 
 	for (list = group->item_list; list; list = list->next) {
 		i = list->data;
 
-		ganv_item_invoke_update(i, affine, flags);
+		ganv_item_invoke_update(i, flags);
 
-		child_bbox.x0 = i->x1;
-		child_bbox.y0 = i->y1;
-		child_bbox.x1 = i->x2;
-		child_bbox.y1 = i->y2;
-		art_drect_union(&bbox, &bbox, &child_bbox);
+		min_x = fmin(min_x, fmin(i->x1, i->x2));
+		min_y = fmin(min_y, fmin(i->y1, i->y2));
+		max_x = fmax(max_x, fmax(i->x1, i->x2));
+		max_y = fmax(max_y, fmax(i->y2, i->y2));
 	}
-	item->x1 = bbox.x0;
-	item->y1 = bbox.y0;
-	item->x2 = bbox.x1;
-	item->y2 = bbox.y1;
+	item->x1 = min_x;
+	item->y1 = min_y;
+	item->x2 = max_x;
+	item->y2 = max_y;
 }
 
 /* Realize handler for canvas groups */
@@ -2191,15 +1943,7 @@ scroll_to(GanvCanvasBase* canvas, int cx, int cy)
 	}
 
 	if ((canvas->zoom_xofs != old_zoom_xofs) || (canvas->zoom_yofs != old_zoom_yofs)) {
-		/* This can only occur, if either canvas size or widget size changes */
-		/* So I think we can request full redraw here */
-		/* The reason is, that coverage UTA will be invalidated by offset change */
-		/* fixme: Strictly this is not correct - we have to remove our own idle (Lauris) */
-		/* More stuff - we have to mark root as needing fresh affine (Lauris) */
-		if (!(canvas->root->object.flags & GANV_ITEM_NEED_AFFINE)) {
-			canvas->root->object.flags |= GANV_ITEM_NEED_AFFINE;
-			ganv_canvas_base_request_update(canvas);
-		}
+		ganv_canvas_base_request_update(canvas);
 		gtk_widget_queue_draw(GTK_WIDGET(canvas));
 	}
 
@@ -2904,17 +2648,7 @@ do_update(GanvCanvasBase* canvas)
 
 update_again:
 	if (canvas->need_update) {
-		gdouble w2cpx[6];
-
-		/* We start updating root with w2cpx affine */
-		w2cpx[0] = canvas->pixels_per_unit;
-		w2cpx[1] = 0.0;
-		w2cpx[2] = 0.0;
-		w2cpx[3] = canvas->pixels_per_unit;
-		w2cpx[4] = -canvas->scroll_x1 * canvas->pixels_per_unit;
-		w2cpx[5] = -canvas->scroll_y1 * canvas->pixels_per_unit;
-
-		ganv_item_invoke_update(canvas->root, w2cpx, 0);
+		ganv_item_invoke_update(canvas->root, 0);
 
 		canvas->need_update = FALSE;
 	}
@@ -3174,11 +2908,7 @@ ganv_canvas_base_set_pixels_per_unit(GanvCanvasBase* canvas, double n)
 
 	scroll_to(canvas, x1, y1);
 
-	if (!(canvas->root->object.flags & GANV_ITEM_NEED_AFFINE)) {
-		canvas->root->object.flags |= GANV_ITEM_NEED_AFFINE;
-		ganv_canvas_base_request_update(canvas);
-	}
-
+	ganv_canvas_base_request_update(canvas);
 	canvas->need_repick = TRUE;
 }
 
@@ -3368,21 +3098,18 @@ ganv_canvas_base_request_redraw(GanvCanvasBase* canvas, int x1, int y1, int x2, 
  * pixel coordinates.
  **/
 void
-ganv_canvas_base_w2c_affine(GanvCanvasBase* canvas, double affine[6])
+ganv_canvas_base_w2c_affine(GanvCanvasBase* canvas, cairo_matrix_t* matrix)
 {
-	double zooom;
-
 	g_return_if_fail(GANV_IS_CANVAS_BASE(canvas));
-	g_return_if_fail(affine != NULL);
+	g_return_if_fail(matrix != NULL);
 
-	zooom = canvas->pixels_per_unit;
+	cairo_matrix_init_translate(matrix,
+	                            -canvas->scroll_x1,
+	                            -canvas->scroll_y1);
 
-	affine[0] = zooom;
-	affine[1] = 0;
-	affine[2] = 0;
-	affine[3] = zooom;
-	affine[4] = -canvas->scroll_x1 * zooom;
-	affine[5] = -canvas->scroll_y1 * zooom;
+	cairo_matrix_scale(matrix,
+	                   canvas->pixels_per_unit,
+	                   canvas->pixels_per_unit);
 }
 
 /**
@@ -3398,20 +3125,18 @@ ganv_canvas_base_w2c_affine(GanvCanvasBase* canvas, double affine[6])
 void
 ganv_canvas_base_w2c(GanvCanvasBase* canvas, double wx, double wy, int* cx, int* cy)
 {
-	double   affine[6];
-	ArtPoint w, c;
-
 	g_return_if_fail(GANV_IS_CANVAS_BASE(canvas));
 
-	ganv_canvas_base_w2c_affine(canvas, affine);
-	w.x = wx;
-	w.y = wy;
-	art_affine_point(&c, &w, affine);
+	cairo_matrix_t matrix;
+	ganv_canvas_base_w2c_affine(canvas, &matrix);
+
+	cairo_matrix_transform_point(&matrix, &wx, &wy);
+
 	if (cx) {
-		*cx = floor(c.x + 0.5);
+		*cx = floor(wx + 0.5);
 	}
 	if (cy) {
-		*cy = floor(c.y + 0.5);
+		*cy = floor(wy + 0.5);
 	}
 }
 
@@ -3430,20 +3155,18 @@ ganv_canvas_base_w2c(GanvCanvasBase* canvas, double wx, double wy, int* cx, int*
 void
 ganv_canvas_base_w2c_d(GanvCanvasBase* canvas, double wx, double wy, double* cx, double* cy)
 {
-	double   affine[6];
-	ArtPoint w, c;
-
 	g_return_if_fail(GANV_IS_CANVAS_BASE(canvas));
 
-	ganv_canvas_base_w2c_affine(canvas, affine);
-	w.x = wx;
-	w.y = wy;
-	art_affine_point(&c, &w, affine);
+	cairo_matrix_t matrix;
+	ganv_canvas_base_w2c_affine(canvas, &matrix);
+
+	cairo_matrix_transform_point(&matrix, &wx, &wy);
+
 	if (cx) {
-		*cx = c.x;
+		*cx = wx;
 	}
 	if (cy) {
-		*cy = c.y;
+		*cy = wy;
 	}
 }
 
@@ -3460,21 +3183,21 @@ ganv_canvas_base_w2c_d(GanvCanvasBase* canvas, double wx, double wy, double* cx,
 void
 ganv_canvas_base_c2w(GanvCanvasBase* canvas, int cx, int cy, double* wx, double* wy)
 {
-	double   affine[6], inv[6];
-	ArtPoint w, c;
-
 	g_return_if_fail(GANV_IS_CANVAS_BASE(canvas));
 
-	ganv_canvas_base_w2c_affine(canvas, affine);
-	art_affine_invert(inv, affine);
-	c.x = cx;
-	c.y = cy;
-	art_affine_point(&w, &c, inv);
+	cairo_matrix_t matrix;
+	ganv_canvas_base_w2c_affine(canvas, &matrix);
+	cairo_matrix_invert(&matrix);
+
+	double x = cx;
+	double y = cy;
+	cairo_matrix_transform_point(&matrix, &x, &y);
+
 	if (wx) {
-		*wx = w.x;
+		*wx = x;
 	}
 	if (wy) {
-		*wy = w.y;
+		*wy = y;
 	}
 }
 

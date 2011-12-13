@@ -145,7 +145,6 @@ ganv_box_bounds_item(const GanvBoxCoords* coords,
 	}
 }
 
-
 static void
 request_redraw(GanvItem*            item,
                const GanvBoxCoords* coords,
@@ -183,9 +182,7 @@ ganv_box_bounds(GanvItem* item,
 }
 
 static void
-ganv_box_update(GanvItem* item,
-                double*   affine,
-                int       flags)
+ganv_box_update(GanvItem* item, int flags)
 {
 	GanvBox*     box  = GANV_BOX(item);
 	GanvBoxImpl* impl = box->impl;
@@ -195,7 +192,7 @@ ganv_box_update(GanvItem* item,
 	request_redraw(item, &impl->old_coords, TRUE);
 
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-	item_class->update(item, affine, flags);
+	item_class->update(item, flags);
 
 	// Store old coordinates in world relative coordinates in case the
 	// group we are in moves between now and the next update
@@ -212,7 +209,6 @@ ganv_box_update(GanvItem* item,
 
 	// Request redraw of new location
 	request_redraw(item, &impl->coords, FALSE);
-
 }
 
 static void

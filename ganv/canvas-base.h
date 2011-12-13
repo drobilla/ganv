@@ -56,15 +56,13 @@ typedef struct _GanvGroupClass      GanvGroupClass;
 
 /* Object flags for items */
 enum {
-	GANV_ITEM_REALIZED      = 1 << 4,
-	GANV_ITEM_MAPPED        = 1 << 5,
-	GANV_ITEM_ALWAYS_REDRAW = 1 << 6,
-	GANV_ITEM_VISIBLE       = 1 << 7,
-	GANV_ITEM_NEED_UPDATE   = 1 << 8,
-	GANV_ITEM_NEED_AFFINE   = 1 << 9,
-	GANV_ITEM_NEED_CLIP     = 1 << 10,
-	GANV_ITEM_NEED_VIS      = 1 << 11,
-	GANV_ITEM_AFFINE_FULL   = 1 << 12
+	GANV_ITEM_REALIZED      = 1 << 1,
+	GANV_ITEM_MAPPED        = 1 << 2,
+	GANV_ITEM_ALWAYS_REDRAW = 1 << 3,
+	GANV_ITEM_VISIBLE       = 1 << 4,
+	GANV_ITEM_NEED_UPDATE   = 1 << 5,
+	GANV_ITEM_NEED_CLIP     = 1 << 6,
+	GANV_ITEM_NEED_VIS      = 1 << 7,
 };
 
 /* Update flags for items */
@@ -92,12 +90,8 @@ struct _GanvItem {
 	/* Parent canvas group for this item (a GanvGroup) */
 	GanvItem* parent;
 
-	/* If NULL, assumed to be the identity tranform.  If flags does not have
-	 * AFFINE_FULL, then a two-element array containing a translation.  If
-	 * flags contains AFFINE_FULL, a six-element array containing an affine
-	 * transformation.
-	 */
-	double* xform;
+	/* Position in parent-relative coordinates. */
+	double x, y;
 
 	/* Bounding box for this item (in canvas coordinates) */
 	double x1, y1, x2, y2;
@@ -108,11 +102,10 @@ struct _GanvItemClass {
 
 	/* Tell the item to update itself.  The flags are from the update flags
 	 * defined above.  The item should update its internal state from its
-	 * queued state, and recompute and request its repaint area.  The
-	 * affine, if used, is a pointer to a 6-element array of doubles.  The
-	 * update method also recomputes the bounding box of the item.
+	 * queued state, and recompute and request its repaint area.  The update
+	 * method also recomputes the bounding box of the item.
 	 */
-	void (* update)(GanvItem* item, double* affine, int flags);
+	void (* update)(GanvItem* item, int flags);
 
 	/* Realize an item -- create GCs, etc. */
 	void (* realize)(GanvItem* item);
@@ -182,12 +175,6 @@ void ganv_item_set_valist(GanvItem* item,
 /* Move an item by the specified amount */
 void ganv_item_move(GanvItem* item, double dx, double dy);
 
-/* Apply a relative affine transformation to the item. */
-void ganv_item_affine_relative(GanvItem* item, const double affine[6]);
-
-/* Apply an absolute affine transformation to the item. */
-void ganv_item_affine_absolute(GanvItem* item, const double affine[6]);
-
 /* Raise an item in the z-order of its parent group by the specified number of
  * positions.
  */
@@ -236,12 +223,12 @@ void ganv_item_i2w(GanvItem* item, double* x, double* y);
 /* Gets the affine transform that converts from item-relative coordinates to
  * world coordinates.
  */
-void ganv_item_i2w_affine(GanvItem* item, double affine[6]);
+void ganv_item_i2w_affine(GanvItem* item, cairo_matrix_t* matrix);
 
 /* Gets the affine transform that converts from item-relative coordinates to
  * canvas pixel coordinates.
  */
-void ganv_item_i2c_affine(GanvItem* item, double affine[6]);
+void ganv_item_i2c_affine(GanvItem* item, cairo_matrix_t* matrix);
 
 /* Remove the item from its parent group and make the new group its parent.  The
  * item will be put on top of all the items in the new group.  The item's
@@ -486,7 +473,7 @@ void ganv_canvas_base_request_redraw(GanvCanvasBase* canvas, int x1, int y1, int
 /* Gets the affine transform that converts world coordinates into canvas pixel
  * coordinates.
  */
-void ganv_canvas_base_w2c_affine(GanvCanvasBase* canvas, double affine[6]);
+void ganv_canvas_base_w2c_affine(GanvCanvasBase* canvas, cairo_matrix_t* matrix);
 
 /* These functions convert from a coordinate system to another.  "w" is world
  * coordinates, "c" is canvas pixel coordinates (pixel coordinates that are

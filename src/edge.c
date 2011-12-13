@@ -237,15 +237,13 @@ ganv_edge_bounds(GanvItem* item,
 }
 
 static void
-ganv_edge_update(GanvItem* item,
-                 double*   affine,
-                 int       flags)
+ganv_edge_update(GanvItem* item, int flags)
 {
 	GanvEdge*     edge = GANV_EDGE(item);
 	GanvEdgeImpl* impl = edge->impl;
 
 	if (parent_class->update) {
-		(*parent_class->update)(item, affine, flags);
+		(*parent_class->update)(item, flags);
 	}
 
 	// Request redraw of old location
