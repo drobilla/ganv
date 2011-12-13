@@ -2836,11 +2836,8 @@ ganv_canvas_base_expose(GtkWidget* widget, GdkEventExpose* event)
 		rect.y1 = rects[i].y + rects[i].height - canvas->zoom_yofs;
 
 		if (canvas->need_update || canvas->need_redraw) {
-			ArtUta* uta;
-
 			/* Update or drawing is scheduled, so just mark exposed area as dirty */
-			uta = art_uta_from_irect(&rect);
-			ganv_canvas_base_request_redraw_uta(canvas, uta);
+			ganv_canvas_base_request_redraw(canvas, rect.x0, rect.y0, rect.x1, rect.y1);
 		} else {
 			/* No pending updates, draw exposed area immediately */
 			ganv_canvas_base_paint_rect(canvas, rect.x0, rect.y0, rect.x1, rect.y1);
@@ -3464,30 +3461,44 @@ get_visible_region(GanvCanvasBase* canvas, ArtIRect* visible)
 }
 
 /**
- * ganv_canvas_base_request_redraw_uta:
+ * ganv_canvas_base_request_redraw:
  * @canvas: A canvas.
- * @uta: Microtile array that specifies the area to be redrawn.  It will
- * be freed by this function, so the argument you pass will be invalid
- * after you call this function.
+ * @x1: Leftmost coordinate of the rectangle to be redrawn.
+ * @y1: Upper coordinate of the rectangle to be redrawn.
+ * @x2: Rightmost coordinate of the rectangle to be redrawn, plus 1.
+ * @y2: Lower coordinate of the rectangle to be redrawn, plus 1.
  *
- * Informs a canvas that the specified area, given as a microtile array, needs
- * to be repainted.  To be used only by item implementations.
+ * Informs a canvas that the specified area needs to be repainted.  To be used
+ * only by item implementations.
  **/
 void
-ganv_canvas_base_request_redraw_uta(GanvCanvasBase* canvas,
-                                    ArtUta*         uta)
+ganv_canvas_base_request_redraw(GanvCanvasBase* canvas, int x1, int y1, int x2, int y2)
 {
+	ArtUta*  uta;
+	ArtIRect bbox;
 	ArtIRect visible;
+	ArtIRect clip;
 
 	g_return_if_fail(GANV_IS_CANVAS_BASE(canvas));
-	g_return_if_fail(uta != NULL);
 
-	if (!GTK_WIDGET_DRAWABLE(canvas)) {
-		art_uta_free(uta);
+	if (!GTK_WIDGET_DRAWABLE(canvas) || (x1 >= x2) || (y1 >= y2)) {
 		return;
 	}
 
+	bbox.x0 = x1;
+	bbox.y0 = y1;
+	bbox.x1 = x2;
+	bbox.y1 = y2;
+
 	get_visible_region(canvas, &visible);
+
+	art_irect_intersect(&clip, &bbox, &visible);
+
+	if (art_irect_empty(&clip)) {
+		return;
+	}
+
+	uta = art_uta_from_irect(&clip);
 
 	if (canvas->need_redraw) {
 		ArtUta* new_uta;
@@ -3518,48 +3529,7 @@ ganv_canvas_base_request_redraw_uta(GanvCanvasBase* canvas,
 		canvas->need_redraw = TRUE;
 		add_idle(canvas);
 	}
-}
 
-/**
- * ganv_canvas_base_request_redraw:
- * @canvas: A canvas.
- * @x1: Leftmost coordinate of the rectangle to be redrawn.
- * @y1: Upper coordinate of the rectangle to be redrawn.
- * @x2: Rightmost coordinate of the rectangle to be redrawn, plus 1.
- * @y2: Lower coordinate of the rectangle to be redrawn, plus 1.
- *
- * Convenience function that informs a canvas that the specified rectangle needs
- * to be repainted.  This function converts the rectangle to a microtile array
- * and feeds it to ganv_canvas_base_request_redraw_uta().  The rectangle includes
- * @x1 and @y1, but not @x2 and @y2.  To be used only by item implementations.
- **/
-void
-ganv_canvas_base_request_redraw(GanvCanvasBase* canvas, int x1, int y1, int x2, int y2)
-{
-	ArtUta*  uta;
-	ArtIRect bbox;
-	ArtIRect visible;
-	ArtIRect clip;
-
-	g_return_if_fail(GANV_IS_CANVAS_BASE(canvas));
-
-	if (!GTK_WIDGET_DRAWABLE(canvas) || (x1 >= x2) || (y1 >= y2)) {
-		return;
-	}
-
-	bbox.x0 = x1;
-	bbox.y0 = y1;
-	bbox.x1 = x2;
-	bbox.y1 = y2;
-
-	get_visible_region(canvas, &visible);
-
-	art_irect_intersect(&clip, &bbox, &visible);
-
-	if (!art_irect_empty(&clip)) {
-		uta = art_uta_from_irect(&clip);
-		ganv_canvas_base_request_redraw_uta(canvas, uta);
-	}
 }
 
 /**

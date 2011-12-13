@@ -480,12 +480,6 @@ void ganv_canvas_base_update_now(GanvCanvasBase* canvas);
  */
 GanvItem* ganv_canvas_base_get_item_at(GanvCanvasBase* canvas, double x, double y);
 
-/* For use only by item type implementations. Request that the canvas eventually
- * redraw the specified region. The region is specified as a microtile
- * array. This function takes over responsibility for freeing the uta argument.
- */
-void ganv_canvas_base_request_redraw_uta(GanvCanvasBase* canvas, ArtUta* uta);
-
 /* For use only by item type implementations.  Request that the canvas
  * eventually redraw the specified region, specified in canvas pixel
  * coordinates.  The region contains (x1, y1) but not (x2, y2).
