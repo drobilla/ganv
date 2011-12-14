@@ -131,15 +131,6 @@ struct GanvCanvasImpl {
 		, _layout(GTK_LAYOUT(_gcanvas))
 		, _connect_port(NULL)
 		, _last_selected_port(NULL)
-		, _base_rect(ganv_item_new(
-			             GANV_ITEM(ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas))),
-			             ganv_box_get_type(),
-			             "x1", 0.0,
-			             "y1", 0.0,
-			             "x2", 1.0,
-			             "y2", 1.0,
-			             "fill-color", 0x000000FF,
-			             NULL))
 		, _select_rect(NULL)
 		, _zoom(1.0)
 		, _font_size(0.0)
@@ -246,8 +237,7 @@ struct GanvCanvasImpl {
 	GanvPort* _connect_port; ///< Port for which a edge is being made
 	GanvPort* _last_selected_port;
 
-	GanvItem* _base_rect;       ///< Background
-	GanvBox*  _select_rect;     ///< Rectangle for drag selection
+	GanvBox*  _select_rect;  ///< Rectangle for drag selection
 
 	double _zoom;       ///< Current zoom level
 	double _font_size;  ///< Current font size in points
@@ -373,7 +363,7 @@ void
 GanvCanvasImpl::add_item(GanvNode* n)
 {
 	GanvItem* item = GANV_ITEM(n);
-	if (item != _base_rect && item->parent == GANV_ITEM(root())) {
+	if (item->parent == GANV_ITEM(root())) {
 		_items.insert(n);
 	}
 }
@@ -827,7 +817,7 @@ GanvCanvasImpl::scroll_drag_handler(GdkEvent* event)
 
 	if (event->type == GDK_BUTTON_PRESS && event->button.button == 2) {
 		ganv_item_grab(
-			GANV_ITEM(_base_rect),
+			GANV_ITEM(root()),
 			GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 			NULL, event->button.time);
 		ganv_canvas_base_get_scroll_offsets(GANV_CANVAS_BASE(_gcanvas), &original_scroll_x, &original_scroll_y);
@@ -857,7 +847,7 @@ GanvCanvasImpl::scroll_drag_handler(GdkEvent* event)
 		last_x = x;
 		last_y = y;
 	} else if (event->type == GDK_BUTTON_RELEASE && _drag_state == SCROLL) {
-		ganv_item_ungrab(GANV_ITEM(_base_rect), event->button.time);
+		ganv_item_ungrab(GANV_ITEM(root()), event->button.time);
 		_drag_state = NOT_DRAGGING;
 	} else {
 		handled = false;
@@ -902,9 +892,8 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 				"border-color", SELECT_RECT_BORDER_COLOUR,
 				NULL));
 		ganv_item_lower_to_bottom(GANV_ITEM(_select_rect));
-		ganv_item_lower_to_bottom(GANV_ITEM(_base_rect));
 		ganv_item_grab(
-			GANV_ITEM(_base_rect), GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
+			GANV_ITEM(root()), GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 			NULL, event->button.time);
 		return true;
 	} else if (event->type == GDK_MOTION_NOTIFY && _drag_state == SELECT) {
@@ -951,7 +940,7 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 			}
 		}
 
-		ganv_item_ungrab(GANV_ITEM(_base_rect), event->button.time);
+		ganv_item_ungrab(GANV_ITEM(root()), event->button.time);
 
 		gtk_object_destroy(GTK_OBJECT(_select_rect));
 		_select_rect = NULL;
@@ -975,7 +964,6 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 	if (event->type == GDK_MOTION_NOTIFY) {
 		double x, y;
 		get_motion_coords(&event->motion, &x, &y);
-		ganv_item_i2w(GANV_ITEM(_base_rect), &x, &y);
 
 		if (!drag_edge) {
 			// Create drag edge
@@ -1023,11 +1011,10 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 		return true;
 
 	} else if (event->type == GDK_BUTTON_RELEASE) {
-		ganv_item_ungrab(GANV_ITEM(_base_rect), event->button.time);
+		ganv_item_ungrab(GANV_ITEM(root()), event->button.time);
 
 		double x = event->button.x;
 		double y = event->button.y;
-		ganv_item_i2w(GANV_ITEM(_base_rect), &x, &y);
 
 		GanvNode* joinee = get_node_at(x, y);
 
@@ -1175,7 +1162,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			_connect_port = port;
 			port_dragging = false;
 			ganv_item_grab(
-				GANV_ITEM(_base_rect),
+				GANV_ITEM(root()),
 				GDK_BUTTON_PRESS_MASK|GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 				NULL, event->crossing.time);
 			return true;
@@ -1329,8 +1316,6 @@ void
 GanvCanvasImpl::resize(double width, double height)
 {
 	if (width != _gcanvas->width || height != _gcanvas->height) {
-		ganv_box_set_width(GANV_BOX(_base_rect), width);
-		ganv_box_set_height(GANV_BOX(_base_rect), height);
 		_gcanvas->width  = width;
 		_gcanvas->height = height;
 		ganv_canvas_base_set_scroll_region(GANV_CANVAS_BASE(_gcanvas),
@@ -1771,12 +1756,8 @@ ganv_canvas_set_property(GObject*      object,
 	case PROP_LOCKED: {
 		const gboolean tmp = g_value_get_boolean(value);
 		if (canvas->locked != tmp) {
-			GanvItem* base = GANV_ITEM(canvas->impl->_base_rect);
-			ganv_item_set(base,
-			              "fill-color", tmp ? 0x131415FF : 0x000000FF,
-			              NULL);
+			// TODO: change background color
 			canvas->locked = tmp;
-			ganv_item_request_update(base);
 		}
 		break;
 	}

@@ -205,6 +205,11 @@ ganv_group_draw(GanvItem* item, cairo_t* cr,
 
 	group = GANV_GROUP(item);
 
+	// Draw background
+	cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+	cairo_rectangle(cr, x, y, width, height);
+	cairo_fill(cr);
+
 	for (list = group->item_list; list; list = list->next) {
 		child = list->data;
 
@@ -283,7 +288,12 @@ ganv_group_point(GanvItem* item, double x, double y, int cx, int cy,
 		}
 	}
 
-	return best;
+	if (*actual_item) {
+		return best;
+	} else {
+		*actual_item = item;
+		return 0.0;
+	}
 }
 
 static void

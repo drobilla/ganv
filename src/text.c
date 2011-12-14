@@ -299,8 +299,8 @@ ganv_text_draw(GanvItem* item,
 	ganv_item_i2w(item, &wx, &wy);
 
 	// Round to the nearest pixel so text isn't blurry
-	wx = lrint(wx - x);
-	wy = lrint(wy - y);
+	wx = lrint(wx);
+	wy = lrint(wy);
 
 	cairo_set_source_surface(cr, impl->surface, wx, wy);
 	cairo_paint(cr);

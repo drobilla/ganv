@@ -300,10 +300,10 @@ ganv_edge_draw(GanvItem* item,
 	GanvEdge*     edge = GANV_EDGE(item);
 	GanvEdgeImpl* impl = edge->impl;
 
-	double src_x = impl->coords.x1 - x;
-	double src_y = impl->coords.y1 - y;
-	double dst_x = impl->coords.x2 - x;
-	double dst_y = impl->coords.y2 - y;
+	double src_x = impl->coords.x1;
+	double src_y = impl->coords.y1;
+	double dst_x = impl->coords.x2;
+	double dst_y = impl->coords.y2;
 	double dx    = src_x - dst_x;
 	double dy    = src_y - dst_y;
 
@@ -332,16 +332,16 @@ ganv_edge_draw(GanvItem* item,
 
 		// Path 1 (src_x, src_y) -> (join_x, join_y)
 		// Control point 1
-		const double src_x1 = impl->coords.cx1 - x;
-		const double src_y1 = impl->coords.cy1 - y;
+		const double src_x1 = impl->coords.cx1;
+		const double src_y1 = impl->coords.cy1;
 		// Control point 2
 		const double src_x2 = (join_x + src_x1) / 2.0;
 		const double src_y2 = (join_y + src_y1) / 2.0;
 
 		// Path 2, (join_x, join_y) -> (dst_x, dst_y)
 		// Control point 1
-		const double dst_x1 = impl->coords.cx2 - x;
-		const double dst_y1 = impl->coords.cy2 - y;
+		const double dst_x1 = impl->coords.cx2;
+		const double dst_y1 = impl->coords.cy2;
 		// Control point 2
 		const double dst_x2 = (join_x + dst_x1) / 2.0;
 		const double dst_y2 = (join_y + dst_y1) / 2.0;

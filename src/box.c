@@ -236,8 +236,8 @@ ganv_box_draw(GanvItem* item,
 	double degrees = G_PI / 180.0;
 
 	for (int i = (impl->coords.stacked ? 1 : 0); i >= 0; --i) {
-		const int x = cx - (STACKED_OFFSET * i);
-		const int y = cy - (STACKED_OFFSET * i);
+		const double x = 0 - (STACKED_OFFSET * i);
+		const double y = 0 - (STACKED_OFFSET * i);
 
 		if (impl->radius_tl == 0.0 && impl->radius_tr == 0.0
 		    && impl->radius_br == 0.0 && impl->radius_bl == 0.0) {

@@ -263,8 +263,8 @@ ganv_circle_draw(GanvItem* item,
 		&circle->node, &dash_length, &border_color, &fill_color);
 
 	cairo_arc(cr,
-	          cx - x,
-	          cy - y,
+	          cx,
+	          cy,
 	          impl->coords.radius,
 	          0, 2 * G_PI);
 

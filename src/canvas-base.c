@@ -1024,11 +1024,7 @@ ganv_canvas_base_init(GanvCanvasBase* canvas)
 	gtk_layout_set_hadjustment(GTK_LAYOUT(canvas), NULL);
 	gtk_layout_set_vadjustment(GTK_LAYOUT(canvas), NULL);
 
-	/* Disable the gtk+ double buffering since the canvas uses it's own. */
-	gtk_widget_set_double_buffered(GTK_WIDGET(canvas), FALSE);
-
 	/* Create the root item as a special case */
-
 	canvas->root         = GANV_ITEM(g_object_new(ganv_group_get_type(), NULL));
 	canvas->root->canvas = canvas;
 
@@ -1848,14 +1844,11 @@ ganv_canvas_base_focus_out(GtkWidget* widget, GdkEventFocus* event)
 static void
 ganv_canvas_base_paint_rect(GanvCanvasBase* canvas, gint x0, gint y0, gint x1, gint y1)
 {
-	GtkWidget* widget;
-	gint       draw_x1, draw_y1;
-	gint       draw_x2, draw_y2;
-	gint       draw_width, draw_height;
+	gint draw_x1, draw_y1;
+	gint draw_x2, draw_y2;
+	gint draw_width, draw_height;
 
 	g_return_if_fail(!canvas->need_update);
-
-	widget = GTK_WIDGET(canvas);
 
 	draw_x1 = MAX(x0, canvas->layout.hadjustment->value - canvas->zoom_xofs);
 	draw_y1 = MAX(y0, canvas->layout.vadjustment->value - canvas->zoom_yofs);
@@ -1876,16 +1869,11 @@ ganv_canvas_base_paint_rect(GanvCanvasBase* canvas, gint x0, gint y0, gint x1, g
 	canvas->draw_xofs = draw_x1;
 	canvas->draw_yofs = draw_y1;
 
-	GdkPixmap* pixmap;
+	cairo_t* cr = gdk_cairo_create(canvas->layout.bin_window);
 
-	pixmap = gdk_pixmap_new(canvas->layout.bin_window,
-	                        draw_width, draw_height,
-	                        gtk_widget_get_visual(widget)->depth);
-
-	g_signal_emit(G_OBJECT(canvas), canvas_signals[DRAW_BACKGROUND], 0, pixmap,
-	              draw_x1, draw_y1, draw_width, draw_height);
-
-	cairo_t* cr = gdk_cairo_create(pixmap);
+	double wx, wy;
+	ganv_canvas_base_window_to_world(canvas, 0, 0, &wx, &wy);
+	cairo_translate(cr, -wx, -wy);
 
 	if (canvas->root->object.flags & GANV_ITEM_VISIBLE) {
 		(*GANV_ITEM_GET_CLASS(canvas->root)->draw)(
@@ -1895,18 +1883,6 @@ ganv_canvas_base_paint_rect(GanvCanvasBase* canvas, gint x0, gint y0, gint x1, g
 	}
 
 	cairo_destroy(cr);
-
-	/* Copy the pixmap to the window and clean up */
-
-	gdk_draw_drawable(canvas->layout.bin_window,
-	                  canvas->pixmap_gc,
-	                  pixmap,
-	                  0, 0,
-	                  draw_x1 + canvas->zoom_xofs,
-	                  draw_y1 + canvas->zoom_yofs,
-	                  draw_width, draw_height);
-
-	g_object_unref(pixmap);
 }
 
 /* Expose handler for the canvas */
