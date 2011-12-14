@@ -24,9 +24,9 @@
 
 guint signal_moved;
 
-G_DEFINE_TYPE(GanvNode, ganv_node, GANV_TYPE_GROUP)
+G_DEFINE_TYPE(GanvNode, ganv_node, GANV_TYPE_ITEM)
 
-static GanvGroupClass* parent_class;
+static GanvItemClass* parent_class;
 
 enum {
 	PROP_0,
@@ -452,7 +452,7 @@ ganv_node_class_init(GanvNodeClass* class)
 	GtkObjectClass* object_class  = (GtkObjectClass*)class;
 	GanvItemClass*  item_class    = (GanvItemClass*)class;
 
-	parent_class = GANV_GROUP_CLASS(g_type_class_peek_parent(class));
+	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(class));
 
 	g_type_class_add_private(class, sizeof(GanvNodeImpl));
 

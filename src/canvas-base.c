@@ -45,7 +45,9 @@ static void add_idle(GanvCanvasBase* canvas);
 
 enum {
 	ITEM_PROP_0,
-	ITEM_PROP_PARENT
+	ITEM_PROP_PARENT,
+	ITEM_PROP_X,
+	ITEM_PROP_Y
 };
 
 enum {
@@ -120,7 +122,7 @@ item_post_create_setup(GanvItem* item)
 		                                item->x2 + 1, item->y2 + 1);
 		item->canvas->need_repick = TRUE;
 	} else {
-		g_error("item added to non-parent item\n");
+		g_warning("item added to non-parent item\n");
 	}
 }
 
@@ -129,11 +131,9 @@ static void
 ganv_item_set_property(GObject* gobject, guint param_id,
                        const GValue* value, GParamSpec* pspec)
 {
-	GanvItem* item;
-
 	g_return_if_fail(GANV_IS_ITEM(gobject));
 
-	item = GANV_ITEM(gobject);
+	GanvItem* item = GANV_ITEM(gobject);
 
 	switch (param_id) {
 	case ITEM_PROP_PARENT:
@@ -146,6 +146,14 @@ ganv_item_set_property(GObject* gobject, guint param_id,
 			item_post_create_setup(item);
 		}
 		break;
+	case ITEM_PROP_X:
+		item->x = g_value_get_double(value);
+		ganv_item_request_update(item);
+		break;
+	case ITEM_PROP_Y:
+		item->y = g_value_get_double(value);
+		ganv_item_request_update(item);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(gobject, param_id, pspec);
 		break;
@@ -157,17 +165,20 @@ static void
 ganv_item_get_property(GObject* gobject, guint param_id,
                        GValue* value, GParamSpec* pspec)
 {
-	GanvItem* item;
-
 	g_return_if_fail(GANV_IS_ITEM(gobject));
 
-	item = GANV_ITEM(gobject);
+	GanvItem* item = GANV_ITEM(gobject);
 
 	switch (param_id) {
 	case ITEM_PROP_PARENT:
 		g_value_set_object(value, item->parent);
 		break;
-
+	case ITEM_PROP_X:
+		g_value_set_double(value, item->x);
+		break;
+	case ITEM_PROP_Y:
+		g_value_set_double(value, item->y);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(gobject, param_id, pspec);
 		break;
@@ -2650,6 +2661,21 @@ ganv_item_class_init(GanvItemClass* class)
 	    (gobject_class, ITEM_PROP_PARENT,
 	    g_param_spec_object("parent", NULL, NULL,
 	                        GANV_TYPE_ITEM,
+	                        (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+
+	g_object_class_install_property
+	    (gobject_class, ITEM_PROP_X,
+	    g_param_spec_double("x",
+	                        _("X"),
+	                        _("X"),
+	                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
+	                        (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+	g_object_class_install_property
+	    (gobject_class, ITEM_PROP_Y,
+	    g_param_spec_double("y",
+	                        _("Y"),
+	                        _("Y"),
+	                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
 	                        (G_PARAM_READABLE | G_PARAM_WRITABLE)));
 
 	item_signals[ITEM_EVENT]

@@ -514,7 +514,7 @@ ganv_module_update(GanvItem* item, int flags)
 	GanvModule* module = GANV_MODULE(item);
 
 	FOREACH_PORT(module->impl->ports, p) {
-		ganv_item_request_update(GANV_ITEM(*p));
+		ganv_item_invoke_update(GANV_ITEM(*p), flags);
 	}
 
 	if (module->impl->must_resize) {

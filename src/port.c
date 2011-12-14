@@ -402,6 +402,9 @@ ganv_port_set_control_value(GanvPort* port,
 #endif
 
 	impl->control->value = value;
+
+	ganv_item_request_update(GANV_ITEM(port));
+	ganv_item_request_update(GANV_ITEM(port->impl->control->rect));
 }
 
 void

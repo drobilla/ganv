@@ -19,7 +19,6 @@
 #include "ganv/canvas-base.h"
 #include "ganv/types.h"
 #include "ganv/text.h"
-#include "ganv/group.h"
 
 G_BEGIN_DECLS
 
@@ -34,12 +33,12 @@ typedef struct _GanvNodeClass GanvNodeClass;
 typedef struct _GanvNodeImpl GanvNodeImpl;
 
 struct _GanvNode {
-	GanvGroup     group;
+	GanvItem      item;
 	GanvNodeImpl* impl;
 };
 
 struct _GanvNodeClass {
-	GanvGroupClass parent_class;
+	GanvItemClass parent_class;
 
 	void (*tick)(GanvNode* self,
 	             double    seconds);

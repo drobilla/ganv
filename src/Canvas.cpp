@@ -1017,8 +1017,8 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 
 		// Update drag edge for pointer position
 		ganv_node_move_to(drag_node, x, y);
-		ganv_item_request_update(&drag_node->group.item);
-		ganv_item_request_update(&drag_edge->item);
+		ganv_item_request_update(GANV_ITEM(drag_node));
+		ganv_item_request_update(GANV_ITEM(drag_edge));
 
 		return true;
 
