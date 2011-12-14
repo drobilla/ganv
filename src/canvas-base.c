@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <gdk/gdkprivate.h>
 #include <gtk/gtk.h>
 #include <cairo.h>
 
