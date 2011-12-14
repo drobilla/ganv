@@ -322,17 +322,6 @@ ganv_item_point(GanvItem* item,
 	return G_MAXDOUBLE;
 }
 
-/**
- * Invoke the update method of the item
- * Please notice, that we take parent to canvas pixel matrix as argument
- * unlike virtual method ::update, whose argument is item 2 canvas pixel
- * matrix
- *
- * I will try to force somewhat meaningful naming for affines (Lauris)
- * General naming rule is FROM2TO, where FROM and TO are abbreviations
- * So p2cpx is Parent2CanvasPixel and i2cpx is Item2CanvasPixel
- * I hope that this helps to keep track of what really happens
- */
 void
 ganv_item_invoke_update(GanvItem* item, int flags)
 {
@@ -729,7 +718,7 @@ ganv_item_i2c_affine(GanvItem* item, cairo_matrix_t* matrix)
 }
 
 /* Returns whether the item is an inferior of or is equal to the parent. */
-static int
+static gboolean
 is_descendant(GanvItem* item, GanvItem* parent)
 {
 	for (; item; item = item->parent) {
