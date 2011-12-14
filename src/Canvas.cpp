@@ -1080,7 +1080,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 	static double control_start_y     = 0;
 	static float  control_start_value = 0;
 
-switch (event->type) {
+	switch (event->type) {
 	case GDK_BUTTON_PRESS:
 		if (event->button.button == 1) {
 			GanvModule* const module = ganv_port_get_module(port);

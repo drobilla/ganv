@@ -569,6 +569,43 @@ ganv_module_move(GanvNode* node,
 	}
 }
 
+static double
+ganv_module_point(GanvItem* item,
+                  double x, double y,
+                  int cx, int cy,
+                  GanvItem** actual_item)
+{
+	GanvModule* module = GANV_MODULE(item);
+
+	double d = GANV_ITEM_CLASS(parent_class)->point(
+		item, x, y, cx, cy, actual_item);
+
+	if (!*actual_item) {
+		// Point is not inside module at all, no point in checking children
+		return d;
+	}
+
+	FOREACH_PORT(module->impl->ports, p) {
+		GanvItem* const port = GANV_ITEM(*p);
+
+		*actual_item = NULL;
+		d = GANV_ITEM_GET_CLASS(port)->point(
+			port,
+			x - port->x, y - port->y,
+			cx, cy,
+			actual_item);
+
+		if (*actual_item) {
+			// Point is inside a port
+			return d;
+		}
+	}
+
+	// Point is inside module, but not a child port
+	*actual_item = item;
+	return 0.0;
+}
+
 static void
 ganv_module_class_init(GanvModuleClass* class)
 {
@@ -588,6 +625,7 @@ ganv_module_class_init(GanvModuleClass* class)
 
 	item_class->update = ganv_module_update;
 	item_class->draw   = ganv_module_draw;
+	item_class->point  = ganv_module_point;
 
 	node_class->move    = ganv_module_move;
 	node_class->move_to = ganv_module_move_to;

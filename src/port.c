@@ -111,6 +111,23 @@ ganv_port_get_property(GObject*    object,
 }
 
 static void
+ganv_port_draw(GanvItem* item,
+               cairo_t* cr,
+               int cx, int cy,
+               int width, int height)
+{
+	GanvPort* port = GANV_PORT(item);
+
+	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
+	item_class->draw(item, cr, cx, cy, width, height);
+
+	if (port->impl->control) {
+		GanvItem* const rect = GANV_ITEM(port->impl->control->rect);
+		GANV_ITEM_GET_CLASS(rect)->draw(rect, cr, cx, cy, width, height);
+	}
+}
+
+static void
 ganv_port_tail_vector(const GanvNode* self,
                       const GanvNode* head,
                       double*         x,
@@ -238,6 +255,7 @@ ganv_port_class_init(GanvPortClass* class)
 	object_class->destroy = ganv_port_destroy;
 
 	item_class->event = event;
+	item_class->draw  = ganv_port_draw;
 
 	node_class->tail_vector = ganv_port_tail_vector;
 	node_class->head_vector = ganv_port_head_vector;

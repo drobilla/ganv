@@ -299,26 +299,19 @@ ganv_box_point(GanvItem* item,
 
 	// Point is inside the box (distance 0)
 	if ((x >= x1) && (y >= y1) && (x <= x2) && (y <= y2)) {
-		GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-		double d = item_class->point(item, x, y, cx, cy, actual_item);
-		if (*actual_item) {
-			return d;
-		} else {
-			*actual_item = item;
-			return 0.0;
-		}
+		*actual_item = item;
+		return 0.0;
 	}
 
 	// Point is outside the box
-	double dx, dy;
+	double dx = 0.0;
+	double dy = 0.0;
 
 	// Find horizontal distance to nearest edge
 	if (x < x1) {
 		dx = x1 - x;
 	} else if (x > x2) {
 		dx = x - x2;
-	} else {
-		dx = 0.0;
 	}
 
 	// Find vertical distance to nearest edge
@@ -326,8 +319,6 @@ ganv_box_point(GanvItem* item,
 		dy = y1 - y;
 	} else if (y > y2) {
 		dy = y - y2;
-	} else {
-		dy = 0.0;
 	}
 
 	return sqrt((dx * dx) + (dy * dy));
