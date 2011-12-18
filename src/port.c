@@ -284,15 +284,17 @@ ganv_port_new(GanvModule* module,
 	port->impl->is_input = is_input;
 
 	GanvBox* box = GANV_BOX(port);
-	box->impl->radius_tl = (is_input ? 0.0 : 4.0);
-	box->impl->radius_tr = (is_input ? 4.0 : 0.0);
-	box->impl->radius_br = (is_input ? 4.0 : 0.0);
-	box->impl->radius_bl = (is_input ? 0.0 : 4.0);
+	box->impl->radius_tl           = (is_input ? 0.0 : 4.0);
+	box->impl->radius_tr           = (is_input ? 4.0 : 0.0);
+	box->impl->radius_br           = (is_input ? 4.0 : 0.0);
+	box->impl->radius_bl           = (is_input ? 0.0 : 4.0);
+	box->impl->coords.border_width = 1.0;
 
 	GanvNode* node = GANV_NODE(port);
-	node->impl->can_tail  = !is_input;
-	node->impl->can_head  = is_input;
-	node->impl->draggable = FALSE;
+	node->impl->can_tail     = !is_input;
+	node->impl->can_head     = is_input;
+	node->impl->draggable    = FALSE;
+	node->impl->border_width = 1.0;
 
 	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
 	if (!node->impl->label) {

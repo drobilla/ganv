@@ -331,7 +331,7 @@ resize_horiz(GanvModule* module)
 		h = ganv_box_get_height(pbox);
 
 		if (p->impl->is_input) {
-			y = header_height + (i * (h + 1.0));
+			y = header_height + 2.0 + (i * (h + 2.0));
 			++i;
 			ganv_box_set_width(pbox, m.input_width);
 			ganv_node_move_to(pnode, 0.0, y);
@@ -341,7 +341,7 @@ resize_horiz(GanvModule* module)
 				canvas, pnode, ganv_edge_update_location);
 		} else {
 			if (!m.horiz || !last_was_input) {
-				y = header_height + (i * (h + 1.0));
+				y = header_height + 2.0 + (i * (h + 2.0));
 				++i;
 			}
 			ganv_box_set_width(pbox, m.output_width);
