@@ -520,11 +520,9 @@ ganv_module_update(GanvItem* item, int flags)
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	item_class->update(item, flags);
 
-	/*
 	FOREACH_PORT(module->impl->ports, p) {
 		ganv_item_invoke_update(GANV_ITEM(*p), flags);
 	}
-	*/
 }
 
 static void
