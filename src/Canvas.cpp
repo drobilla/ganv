@@ -43,6 +43,7 @@
 #include "ganv/node.h"
 
 #include "./color.h"
+#include "./ganv-marshal.h"
 #include "./ganv-private.h"
 
 #ifdef HAVE_AGRAPH
@@ -1845,7 +1846,8 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	signal_connect = g_signal_new("connect",
 	                              ganv_canvas_get_type(),
 	                              G_SIGNAL_RUN_FIRST,
-	                              0, NULL, NULL, NULL,
+	                              0, NULL, NULL,
+	                              ganv_marshal_VOID__OBJECT_OBJECT,
 	                              G_TYPE_NONE,
 	                              2,
 	                              ganv_node_get_type(),
@@ -1855,7 +1857,8 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	signal_disconnect = g_signal_new("disconnect",
 	                                 ganv_canvas_get_type(),
 	                                 G_SIGNAL_RUN_FIRST,
-	                                 0, NULL, NULL, NULL,
+	                                 0, NULL, NULL,
+	                                 ganv_marshal_VOID__OBJECT_OBJECT,
 	                                 G_TYPE_NONE,
 	                                 2,
 	                                 ganv_node_get_type(),

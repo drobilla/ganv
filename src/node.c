@@ -19,6 +19,7 @@
 
 #include "./boilerplate.h"
 #include "./color.h"
+#include "./ganv-marshal.h"
 #include "./ganv-private.h"
 #include "./gettext.h"
 
@@ -576,7 +577,8 @@ ganv_node_class_init(GanvNodeClass* class)
 	signal_moved = g_signal_new("moved",
 	                            ganv_node_get_type(),
 	                            G_SIGNAL_RUN_FIRST,
-	                            0, NULL, NULL, NULL,
+	                            0, NULL, NULL,
+	                            ganv_marshal_VOID__DOUBLE_DOUBLE,
 	                            G_TYPE_NONE,
 	                            2,
 	                            G_TYPE_DOUBLE,
