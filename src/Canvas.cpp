@@ -192,7 +192,7 @@ struct GanvCanvasImpl {
 	typedef std::set<GanvEdge*, TailHeadOrder> Edges;
 	typedef std::set<GanvEdge*, HeadTailOrder> DstEdges;
 	typedef std::set<GanvEdge*>                SelectedEdges;
-	typedef std::list<GanvPort*>               SelectedPorts;
+	typedef std::set<GanvPort*>                SelectedPorts;
 
 	Edges::const_iterator    first_edge_from(const GanvNode* src);
 	DstEdges::const_iterator first_edge_to(const GanvNode* dst);
@@ -234,9 +234,9 @@ struct GanvCanvasImpl {
 	Items         _selected_items; ///< Currently selected items
 	SelectedEdges _selected_edges; ///< Currently selected edges
 
-	SelectedPorts   _selected_ports; ///< Selected ports (hilited red)
-	GanvPort* _connect_port; ///< Port for which a edge is being made
-	GanvPort* _last_selected_port;
+	SelectedPorts _selected_ports; ///< Selected ports (hilited red)
+	GanvPort*     _connect_port; ///< Port for which a edge is being made
+	GanvPort*     _last_selected_port;
 
 	GanvBox*  _select_rect;  ///< Rectangle for drag selection
 
@@ -623,9 +623,7 @@ GanvCanvasImpl::select_port(GanvPort* p, bool unique)
 		unselect_ports();
 	}
 	g_object_set(G_OBJECT(p), "selected", TRUE, NULL);
-	SelectedPorts::iterator i = find(_selected_ports.begin(), _selected_ports.end(), p);
-	if (i == _selected_ports.end())
-		_selected_ports.push_back(p);
+	_selected_ports.insert(p);
 	_last_selected_port = p;
 }
 
@@ -683,9 +681,7 @@ GanvCanvasImpl::select_port_toggle(GanvPort* port, int mod_state)
 void
 GanvCanvasImpl::unselect_port(GanvPort* p)
 {
-	SelectedPorts::iterator i = find(_selected_ports.begin(), _selected_ports.end(), p);
-	if (i != _selected_ports.end())
-		_selected_ports.erase(i);
+	_selected_ports.erase(p);
 	g_object_set(G_OBJECT(p), "selected", FALSE, NULL);
 	if (_last_selected_port == p) {
 		_last_selected_port = NULL;
