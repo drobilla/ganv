@@ -1085,6 +1085,9 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			} else if (!port->impl->is_input) {
 				port_dragging = true;
 				return true;
+			} else if (_last_selected_port && _last_selected_port != port) {
+				ports_joined(_last_selected_port, port);
+				return true;
 			}
 		}
 		break;
