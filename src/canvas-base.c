@@ -37,7 +37,6 @@
 static void ganv_canvas_base_request_update(GanvCanvasBase* canvas);
 static void add_idle(GanvCanvasBase* canvas);
 
-
 /* Some convenience stuff */
 #define GCI_UPDATE_MASK (GANV_CANVAS_BASE_UPDATE_REQUESTED | GANV_CANVAS_BASE_UPDATE_AFFINE \
                          | GANV_CANVAS_BASE_UPDATE_VISIBILITY)
@@ -1002,10 +1001,10 @@ ganv_canvas_base_init(GanvCanvasBase* canvas)
 {
 	GTK_WIDGET_SET_FLAGS(canvas, GTK_CAN_FOCUS);
 
-	canvas->need_update = FALSE;
-	canvas->need_redraw = FALSE;
+	canvas->need_update   = FALSE;
+	canvas->need_redraw   = FALSE;
 	canvas->redraw_region = NULL;
-	canvas->idle_id     = 0;
+	canvas->idle_id       = 0;
 
 	canvas->scroll_x1 = 0.0;
 	canvas->scroll_y1 = 0.0;
@@ -1059,7 +1058,7 @@ shutdown_transients(GanvCanvasBase* canvas)
 	 */
 	if (canvas->need_redraw) {
 		canvas->need_redraw = FALSE;
-		cairo_region_destroy(canvas->redraw_region);
+		g_slist_free_full(canvas->redraw_region, g_free);
 		canvas->redraw_region = NULL;
 		canvas->redraw_x1   = 0;
 		canvas->redraw_y1   = 0;
@@ -1935,22 +1934,20 @@ ganv_canvas_base_expose(GtkWidget* widget, GdkEventExpose* event)
 static void
 paint(GanvCanvasBase* canvas)
 {
-	const int n_rects = cairo_region_num_rectangles(canvas->redraw_region);
-	for (int i = 0; i < n_rects; ++i) {
-		cairo_rectangle_int_t rect;
-		cairo_region_get_rectangle(canvas->redraw_region, i, &rect);
+	for (GSList* l = canvas->redraw_region; l; l = l->next) {
+		cairo_rectangle_int_t* rect = (cairo_rectangle_int_t*)l->data;
 
 		const GdkRectangle gdkrect = {
-			rect.x + canvas->zoom_xofs,
-			rect.y + canvas->zoom_yofs,
-			rect.width,
-			rect.height
+			rect->x + canvas->zoom_xofs,
+			rect->y + canvas->zoom_yofs,
+			rect->width,
+			rect->height
 		};
 
 		gdk_window_invalidate_rect(canvas->layout.bin_window, &gdkrect, FALSE);
 	}
 
-	cairo_region_destroy(canvas->redraw_region);
+	g_slist_free_full(canvas->redraw_region, g_free);
 	canvas->redraw_region = NULL;
 	canvas->need_redraw = FALSE;
 
@@ -2366,8 +2363,21 @@ ganv_canvas_base_request_update_real(GanvCanvasBase* canvas)
 	}
 }
 
-static inline cairo_region_t*
-get_visible_region(GanvCanvasBase* canvas)
+static inline gboolean
+rect_overlaps(const cairo_rectangle_int_t* a,
+              const cairo_rectangle_int_t* b)
+{
+	if ((a->x             > b->x + b->width) ||
+	    (a->y             > b->y + b->height) ||
+	    (a->x + a->width  < b->x) ||
+	    (a->y + a->height < b->y)) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static inline gboolean
+rect_is_visible(GanvCanvasBase* canvas, const cairo_rectangle_int_t* r)
 {
 	const cairo_rectangle_int_t rect = {
 		canvas->layout.hadjustment->value - canvas->zoom_xofs,
@@ -2376,7 +2386,7 @@ get_visible_region(GanvCanvasBase* canvas)
 		GTK_WIDGET(canvas)->allocation.height
 	};
 
-	return cairo_region_create_rectangle(&rect);
+	return rect_overlaps(&rect, r);
 }
 
 /**
@@ -2401,29 +2411,19 @@ ganv_canvas_base_request_redraw(GanvCanvasBase* canvas, int x1, int y1, int x2, 
 
 	const cairo_rectangle_int_t rect = { x1, y1, x2 - x1, y2 - y1 };
 
-	cairo_region_t* region = get_visible_region(canvas);
-	cairo_region_intersect_rectangle(region, &rect);
-
-	if (cairo_region_is_empty(region)) {
+	if (!rect_is_visible(canvas, &rect)) {
 		return;
 	}
-	
-	if (canvas->need_redraw) {
-		g_assert(canvas->redraw_region != NULL);
 
-		cairo_region_union(canvas->redraw_region, region);
-		cairo_region_destroy(region);
-		if (canvas->idle_id == 0) {
-			add_idle(canvas);
-		}
-	} else {
-		g_assert(canvas->redraw_region == NULL);
+	cairo_rectangle_int_t* r = g_malloc(sizeof(cairo_rectangle_int_t));
+	*r = rect;
 
-		canvas->redraw_region = region;
-		canvas->need_redraw = TRUE;
+	canvas->redraw_region = g_slist_prepend(canvas->redraw_region, r);
+	canvas->need_redraw   = TRUE;
+
+	if (canvas->idle_id == 0) {
 		add_idle(canvas);
 	}
-
 }
 
 /**

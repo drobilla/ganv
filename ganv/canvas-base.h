@@ -255,8 +255,8 @@ struct _GanvCanvasBase {
 	/* Root canvas item */
 	GanvItem* root;
 
-	/* Region that needs redrawing, stored as a microtile array */
-	cairo_region_t* redraw_region;
+	/* Region that needs redrawing (list of cairo_rectangle_int_t) */
+	GSList* redraw_region;
 
 	/* The item containing the mouse pointer, or NULL if none */
 	GanvItem* current_item;
