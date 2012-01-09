@@ -1065,7 +1065,8 @@ shutdown_transients(GanvCanvasBase* canvas)
 	 */
 	if (canvas->need_redraw) {
 		canvas->need_redraw = FALSE;
-		g_slist_free_full(canvas->redraw_region, g_free);
+		g_slist_foreach(canvas->redraw_region, (GFunc)g_free, NULL);
+		g_slist_free(canvas->redraw_region);
 		canvas->redraw_region = NULL;
 		canvas->redraw_x1   = 0;
 		canvas->redraw_y1   = 0;
@@ -1952,9 +1953,10 @@ paint(GanvCanvasBase* canvas)
 		};
 
 		gdk_window_invalidate_rect(canvas->layout.bin_window, &gdkrect, FALSE);
+		g_free(rect);
 	}
 
-	g_slist_free_full(canvas->redraw_region, g_free);
+	g_slist_free(canvas->redraw_region);
 	canvas->redraw_region = NULL;
 	canvas->need_redraw = FALSE;
 
