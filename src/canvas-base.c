@@ -37,6 +37,13 @@
 static void ganv_canvas_base_request_update(GanvCanvasBase* canvas);
 static void add_idle(GanvCanvasBase* canvas);
 
+typedef struct {
+	int x;
+	int y;
+	int width;
+	int height;
+} IRect;
+
 /* Some convenience stuff */
 #define GCI_UPDATE_MASK (GANV_CANVAS_BASE_UPDATE_REQUESTED | GANV_CANVAS_BASE_UPDATE_AFFINE \
                          | GANV_CANVAS_BASE_UPDATE_VISIBILITY)
@@ -1935,7 +1942,7 @@ static void
 paint(GanvCanvasBase* canvas)
 {
 	for (GSList* l = canvas->redraw_region; l; l = l->next) {
-		cairo_rectangle_int_t* rect = (cairo_rectangle_int_t*)l->data;
+		IRect* rect = (IRect*)l->data;
 
 		const GdkRectangle gdkrect = {
 			rect->x + canvas->zoom_xofs,
@@ -2364,8 +2371,7 @@ ganv_canvas_base_request_update_real(GanvCanvasBase* canvas)
 }
 
 static inline gboolean
-rect_overlaps(const cairo_rectangle_int_t* a,
-              const cairo_rectangle_int_t* b)
+rect_overlaps(const IRect* a, const IRect* b)
 {
 	if ((a->x             > b->x + b->width) ||
 	    (a->y             > b->y + b->height) ||
@@ -2377,9 +2383,9 @@ rect_overlaps(const cairo_rectangle_int_t* a,
 }
 
 static inline gboolean
-rect_is_visible(GanvCanvasBase* canvas, const cairo_rectangle_int_t* r)
+rect_is_visible(GanvCanvasBase* canvas, const IRect* r)
 {
-	const cairo_rectangle_int_t rect = {
+	const IRect rect = {
 		canvas->layout.hadjustment->value - canvas->zoom_xofs,
 		canvas->layout.vadjustment->value - canvas->zoom_yofs,
 		GTK_WIDGET(canvas)->allocation.width,
@@ -2409,13 +2415,13 @@ ganv_canvas_base_request_redraw(GanvCanvasBase* canvas, int x1, int y1, int x2, 
 		return;
 	}
 
-	const cairo_rectangle_int_t rect = { x1, y1, x2 - x1, y2 - y1 };
+	const IRect rect = { x1, y1, x2 - x1, y2 - y1 };
 
 	if (!rect_is_visible(canvas, &rect)) {
 		return;
 	}
 
-	cairo_rectangle_int_t* r = g_malloc(sizeof(cairo_rectangle_int_t));
+	IRect* r = g_malloc(sizeof(IRect));
 	*r = rect;
 
 	canvas->redraw_region = g_slist_prepend(canvas->redraw_region, r);
