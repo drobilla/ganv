@@ -79,8 +79,8 @@ ganv_module_destroy(GtkObject* object)
 	GanvModuleImpl* impl   = module->impl;
 
 	if (impl->ports) {
-		FOREACH_PORT(impl->ports, p) {
-			gtk_object_destroy(GTK_OBJECT(*p));
+		  FOREACH_PORT(impl->ports, p) {
+			  g_object_unref(GTK_OBJECT(*p));
 		}
 		g_ptr_array_free(impl->ports, TRUE);
 		impl->ports = NULL;
@@ -508,6 +508,131 @@ ganv_module_resize(GanvNode* self)
 }
 
 static void
+ganv_module_add_port(GanvModule* module,
+                     GanvPort*   port)
+{
+	GanvModuleImpl* impl = module->impl;
+
+	const double width = ganv_port_get_natural_width(port);
+	if (port->impl->is_input && width > impl->widest_input) {
+		impl->widest_input = width;
+		impl->must_resize  = TRUE;
+	} else if (!port->impl->is_input && width > impl->widest_output) {
+		impl->widest_output = width;
+		impl->must_resize   = TRUE;
+	}
+
+#if 0
+
+	double port_x, port_y;
+
+	// Place vertically
+	if (canvas()->direction() == Canvas::HORIZONTAL) {
+		if (gobj()->ports->len != 0) {
+			const Port* const last_port = *back();
+			port_y = last_port->get_y() + last_port->get_height() + 1;
+		} else {
+			port_y = 2.0 + title_height();
+		}
+	} else {
+		if (p->is_input()) {
+			port_y = 0.0;
+		} else {
+			port_y = get_height() - get_empty_port_depth();
+		}
+	}
+
+	// Place horizontally
+	Metrics m;
+	calculate_metrics(m);
+
+	set_width(m.width);
+	if (p->is_input()) {
+		p->set_width(m.input_width);
+		port_x = 0;
+	} else {
+		p->set_width(m.output_width);
+		port_x = m.width - p->get_width();
+	}
+
+	p->move_to(port_x, port_y);
+
+	g_ptr_array_add(gobj()->ports, p->gobj());
+	if (canvas()->direction() == Canvas::HORIZONTAL) {
+		set_height(p->get_y() + p->get_height() + 1);
+	}
+
+	place_title();
+#endif
+	impl->must_resize = TRUE;
+
+	g_ptr_array_add(impl->ports, port);
+	//if (canvas()->direction() == Canvas::HORIZONTAL) {
+	//	set_height(p->get_y() + p->get_height() + 1);
+	//}
+
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
+
+	place_title(module, canvas->direction);
+	ganv_item_request_update(GANV_ITEM(module));
+}
+
+static void
+ganv_module_remove_port(GanvModule* module,
+                        GanvPort*   port)
+{
+	gboolean removed = g_ptr_array_remove(module->impl->ports, port);
+	if (removed) {
+		const double width = ganv_box_get_width(GANV_BOX(port));
+		// Find new widest input or output, if necessary
+		if (port->impl->is_input && width >= module->impl->widest_input) {
+			module->impl->widest_input = 0;
+			FOREACH_PORT_CONST(module->impl->ports, i) {
+				const GanvPort* const p = (*i);
+				const double          w = ganv_box_get_width(GANV_BOX(p));
+				if (p->impl->is_input && w >= module->impl->widest_input) {
+					module->impl->widest_input = w;
+				}
+			}
+		} else if (!port->impl->is_input && width >= module->impl->widest_output) {
+			module->impl->widest_output = 0;
+			FOREACH_PORT_CONST(module->impl->ports, i) {
+				const GanvPort* const p = (*i);
+				const double          w = ganv_box_get_width(GANV_BOX(p));
+				if (!p->impl->is_input && w >= module->impl->widest_output) {
+					module->impl->widest_output = w;
+				}
+			}
+		}
+
+		module->impl->must_resize = TRUE;
+		ganv_item_request_update(GANV_ITEM(module));
+	} else {
+		fprintf(stderr, "Failed to find port to remove\n");
+	}
+}
+
+static void
+ganv_module_add(GanvItem* item, GanvItem* child)
+{
+	if (GANV_IS_PORT(child)) {
+		ganv_module_add_port(GANV_MODULE(item), GANV_PORT(child));
+	} else {
+		fprintf(stderr, "warning: Non-port item added to module.\n");
+	}
+}
+
+static void
+ganv_module_remove(GanvItem* item, GanvItem* child)
+{
+	if (GANV_IS_PORT(child)) {
+		ganv_module_remove_port(GANV_MODULE(item), GANV_PORT(child));
+	} else {
+		fprintf(stderr, "warning: Non-port item removed from module.\n");
+	}
+}
+
+static void
 ganv_module_update(GanvItem* item, int flags)
 {
 	GanvNode*   node   = GANV_NODE(item);
@@ -623,6 +748,8 @@ ganv_module_class_init(GanvModuleClass* class)
 
 	object_class->destroy = ganv_module_destroy;
 
+	item_class->add    = ganv_module_add;
+	item_class->remove = ganv_module_remove;
 	item_class->update = ganv_module_update;
 	item_class->draw   = ganv_module_draw;
 	item_class->point  = ganv_module_point;
@@ -658,112 +785,6 @@ ganv_module_get_port(GanvModule* module,
                      guint       index)
 {
 	return g_ptr_array_index(module->impl->ports, index);
-}
-
-void
-ganv_module_add_port(GanvModule* module,
-                     GanvPort*   port)
-{
-	GanvModuleImpl* impl = module->impl;
-
-	const double width = ganv_port_get_natural_width(port);
-	if (port->impl->is_input && width > impl->widest_input) {
-		impl->widest_input = width;
-		impl->must_resize  = TRUE;
-	} else if (!port->impl->is_input && width > impl->widest_output) {
-		impl->widest_output = width;
-		impl->must_resize   = TRUE;
-	}
-
-#if 0
-
-	double port_x, port_y;
-
-	// Place vertically
-	if (canvas()->direction() == Canvas::HORIZONTAL) {
-		if (gobj()->ports->len != 0) {
-			const Port* const last_port = *back();
-			port_y = last_port->get_y() + last_port->get_height() + 1;
-		} else {
-			port_y = 2.0 + title_height();
-		}
-	} else {
-		if (p->is_input()) {
-			port_y = 0.0;
-		} else {
-			port_y = get_height() - get_empty_port_depth();
-		}
-	}
-
-	// Place horizontally
-	Metrics m;
-	calculate_metrics(m);
-
-	set_width(m.width);
-	if (p->is_input()) {
-		p->set_width(m.input_width);
-		port_x = 0;
-	} else {
-		p->set_width(m.output_width);
-		port_x = m.width - p->get_width();
-	}
-
-	p->move_to(port_x, port_y);
-
-	g_ptr_array_add(gobj()->ports, p->gobj());
-	if (canvas()->direction() == Canvas::HORIZONTAL) {
-		set_height(p->get_y() + p->get_height() + 1);
-	}
-
-	place_title();
-#endif
-	impl->must_resize = TRUE;
-
-	g_ptr_array_add(impl->ports, port);
-	//if (canvas()->direction() == Canvas::HORIZONTAL) {
-	//	set_height(p->get_y() + p->get_height() + 1);
-	//}
-
-	GanvCanvas* canvas = GANV_CANVAS(
-		GANV_ITEM(module)->canvas);
-
-	place_title(module, canvas->direction);
-	ganv_item_request_update(GANV_ITEM(module));
-}
-
-void
-ganv_module_remove_port(GanvModule* module,
-                        GanvPort*   port)
-{
-	printf("FIXME: remove port\n");
-#if 0
-	gboolean removed = g_ptr_array_remove(gobj()->ports, port->gobj());
-	if (removed) {
-		// Find new widest input or output, if necessary
-		if (port->is_input() && port->get_width() >= _widest_input) {
-			_widest_input = 0;
-			FOREACH_PORT_CONST(gobj()->ports, i) {
-				const Port* const p = (*i);
-				if (p->is_input() && p->get_width() >= _widest_input) {
-					_widest_input = p->get_width();
-				}
-			}
-		} else if (port->is_output() && port->get_width() >= _widest_output) {
-			_widest_output = 0;
-			FOREACH_PORT_CONST(gobj()->ports, i) {
-				const Port* const p = (*i);
-				if (p->is_output() && p->get_width() >= _widest_output) {
-					_widest_output = p->get_width();
-				}
-			}
-		}
-
-		_must_resize = true;
-		ganv_item_request_update(GANV_ITEM(_gobj));
-	} else {
-		std::cerr << "Failed to find port to remove" << std::endl;
-	}
-#endif
 }
 
 double

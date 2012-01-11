@@ -46,7 +46,10 @@ public:
 		}
 	}
 
-	virtual ~Item() {}
+	virtual ~Item() {
+		gtk_object_destroy(GTK_OBJECT(_gobj));
+	}
+
 	RW_PROPERTY(double, x)
 	RW_PROPERTY(double, y)
 

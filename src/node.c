@@ -85,7 +85,7 @@ ganv_node_destroy(GtkObject* object)
 	GanvNode*     node = GANV_NODE(object);
 	GanvNodeImpl* impl = node->impl;
 	if (impl->label) {
-		gtk_object_destroy(GTK_OBJECT(impl->label));
+		g_object_unref(impl->label);
 		impl->label = NULL;
 	}
 

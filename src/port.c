@@ -273,6 +273,8 @@ ganv_port_new(GanvModule* module,
 	GanvPort* port = GANV_PORT(
 		g_object_new(ganv_port_get_type(), NULL));
 
+	port->impl->is_input = is_input;
+
 	GanvItem* item = GANV_ITEM(port);
 	va_list args;
 	va_start(args, first_prop_name);
@@ -280,8 +282,6 @@ ganv_port_new(GanvModule* module,
 	                    GANV_ITEM(module),
 	                    first_prop_name, args);
 	va_end(args);
-
-	port->impl->is_input = is_input;
 
 	GanvBox* box = GANV_BOX(port);
 	box->impl->radius_tl           = (is_input ? 0.0 : 4.0);
@@ -309,7 +309,6 @@ ganv_port_new(GanvModule* module,
 		}
 	}
 
-	ganv_module_add_port(module, port);
 	return port;
 }
 

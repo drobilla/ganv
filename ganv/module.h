@@ -61,10 +61,6 @@ GanvPort*
 ganv_module_get_port(GanvModule* module,
                      guint       index);
 
-void
-ganv_module_add_port(GanvModule* module,
-                     GanvPort*   port);
-
 double
 ganv_module_get_empty_port_breadth(const GanvModule* module);
 

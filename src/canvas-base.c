@@ -269,7 +269,11 @@ ganv_item_dispose(GObject* object)
 	}
 
 	if (item->parent) {
-		GANV_ITEM_GET_CLASS(item->parent)->remove(item->parent, item);
+		if (GANV_ITEM_GET_CLASS(item->parent)->remove) {
+			GANV_ITEM_GET_CLASS(item->parent)->remove(item->parent, item);
+		} else {
+			fprintf(stderr, "warning: Item parent has no remove method\n");
+		}
 	}
 
 	G_OBJECT_CLASS(item_parent_class)->dispose(object);
