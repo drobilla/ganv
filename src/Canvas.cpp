@@ -598,7 +598,6 @@ GanvCanvasImpl::remove_edge(GanvEdge* edge)
 		_selected_edges.erase(edge);
 		_edges.erase(edge);
 		_dst_edges.erase(edge);
-		gtk_object_destroy(GTK_OBJECT(edge));
 	}
 }
 
@@ -1478,13 +1477,16 @@ Canvas::destroy()
 	FOREACH_ITEM(items, i) {
 		gtk_object_destroy(GTK_OBJECT(*i));
 	}
+	impl()->_items.clear();
 
+	GanvCanvasImpl::Edges edges = impl()->_edges; // copy
+	FOREACH_EDGE(edges, i) {
+		gtk_object_destroy(GTK_OBJECT(*i));
+	}
 	impl()->_edges.clear();
 
 	impl()->_selected_ports.clear();
 	impl()->_connect_port = NULL;
-
-	impl()->_items.clear();
 }
 
 void
@@ -1503,7 +1505,7 @@ Canvas::remove_edge(Node* item1,
 {
 	Edge* edge = get_edge(item1, item2);
 	if (edge) {
-		impl()->remove_edge(edge->gobj());
+		gtk_object_destroy(GTK_OBJECT(edge->gobj()));
 	}
 }
 
