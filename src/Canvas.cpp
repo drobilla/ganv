@@ -31,7 +31,7 @@
 
 #include <gtkmm/widget.h>
 
-#include "ganv-config.h"
+#include "ganv_config.h"
 #include "ganv/Canvas.hpp"
 #include "ganv/Edge.hpp"
 #include "ganv/Circle.hpp"

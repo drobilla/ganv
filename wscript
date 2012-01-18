@@ -64,7 +64,7 @@ def configure(conf):
 
     conf.env['LIB_GANV'] = ['ganv-%s' % GANV_MAJOR_VERSION]
 
-    conf.write_config_header('ganv-config.h', remove=False)
+    conf.write_config_header('ganv_config.h', remove=False)
 
     autowaf.display_msg(conf, "Auto-arrange", conf.is_defined('HAVE_AGRAPH'))
     autowaf.display_msg(conf, "Native language support", conf.is_defined('ENABLE_NLS'))
