@@ -107,15 +107,15 @@ def build(bld):
         target = 'src/ganv-marshal.c')
 
     # Library
-    obj = bld(features = 'c cshlib cxx cxxshlib')
-    obj.export_includes = ['.']
-    obj.source          = ganv_source
-    obj.includes        = ['.', './src']
-    obj.name            = 'libganv'
-    obj.target          = 'ganv-%s' % GANV_MAJOR_VERSION
-    obj.uselib          = 'GTKMM AGRAPH ART'
-    obj.vnum            = GANV_LIB_VERSION
-    obj.install_path    = '${LIBDIR}'
+    obj = bld(features        = 'c cshlib cxx cxxshlib',
+              export_includes = ['.'],
+              source          = ganv_source,
+              includes        = ['.', './src'],
+              name            = 'libganv',
+              target          = 'ganv-%s' % GANV_MAJOR_VERSION,
+              uselib          = 'GTKMM AGRAPH ART',
+              vnum            = GANV_LIB_VERSION,
+              install_path    = '${LIBDIR}')
 
     # Benchmark program (C++)
     obj = bld(features     = 'cxx cxxprogram',
