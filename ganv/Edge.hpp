@@ -46,7 +46,6 @@ public:
 	     bool     show_arrowhead = false,
 	     bool     curved = true)
 		: Item(GANV_ITEM(
-			       g_object_ref(
 				       ganv_edge_new(
 					       canvas.gobj(),
 					       tail->gobj(),
@@ -54,11 +53,12 @@ public:
 					       "color", color,
 					       "curved", (gboolean)curved,
 					       "arrowhead", (gboolean)show_arrowhead,
-					       NULL))))
-	{}
+					       NULL)))
+	{
+	}
 
 	Edge(GanvEdge* gobj)
-		: Item(GANV_ITEM(g_object_ref(gobj)))
+		: Item(GANV_ITEM(gobj))
 	{}
 
 	virtual ~Edge() {

@@ -77,6 +77,15 @@ void
 ganv_canvas_add_node(GanvCanvas* canvas,
                      GanvNode*   node);
 
+void
+ganv_canvas_disconnect_edge(GanvCanvas* canvas,
+                            GanvEdge*   edge);
+
+void
+ganv_canvas_remove_edge_between(GanvCanvas* canvas,
+                                GanvNode*   tail,
+                                GanvNode*   head);
+
 /** Get the default font size in points. */
 double
 ganv_canvas_get_default_font_size(const GanvCanvas* canvas);

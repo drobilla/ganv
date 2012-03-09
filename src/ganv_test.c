@@ -18,10 +18,21 @@
 #include "ganv/ganv.h"
 
 static void
-on_window_destroy(GtkWidget* widget,
-                  gpointer   data)
+on_window_destroy(GtkWidget* widget, gpointer data)
 {
 	gtk_main_quit();
+}
+
+static void
+on_connect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
+{
+	ganv_edge_new(canvas, tail, head, "color", 0xFFFFFFFF, NULL);
+}
+
+static void
+on_disconnect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
+{
+	ganv_canvas_remove_edge_between(canvas, tail, head);
 }
 
 int
@@ -44,6 +55,10 @@ main(int argc, char** argv)
 	                                     "label", "test",
 	                                     NULL);
 
+	GanvPort* port = ganv_port_new(module, FALSE,
+	                               "label", "Signal",
+	                               NULL);
+
 	GanvPort* cport = ganv_port_new(module, TRUE,
 	                                "label", "Control",
 	                                NULL);
@@ -60,6 +75,26 @@ main(int argc, char** argv)
 
 	ganv_item_show(GANV_ITEM(module));
 	ganv_item_raise_to_top(GANV_ITEM(module));
+
+	GanvModule* module2 = ganv_module_new(canvas,
+	                                      "x", 200.0,
+	                                      "y", 10.0,
+	                                      "draggable", TRUE,
+	                                      "label", "test2",
+	                                      NULL);
+
+	GanvPort* port2 = ganv_port_new(module2, TRUE,
+	                                "label", "Signal",
+	                                NULL);
+
+	g_signal_connect(canvas, "connect",
+	                 G_CALLBACK(on_connect), canvas);
+
+	g_signal_connect(canvas, "disconnect",
+	                 G_CALLBACK(on_disconnect), canvas);
+
+	ganv_item_show(GANV_ITEM(module2));
+	ganv_item_raise_to_top(GANV_ITEM(module2));
 
 	gtk_widget_show_all(GTK_WIDGET(win));
 	gtk_window_present(win);

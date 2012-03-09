@@ -88,7 +88,6 @@ ganv_edge_destroy(GtkObject* object)
 	GanvEdge*   edge   = GANV_EDGE(object);
 	GanvCanvas* canvas = GANV_CANVAS(edge->item.canvas);
 	if (canvas && !edge->impl->ghost) {
-		ganv_canvas_remove_edge(canvas, edge);
 		edge->item.canvas = NULL;
 	}
 	edge->item.parent = NULL;
@@ -639,6 +638,16 @@ ganv_edge_tick(GanvEdge* edge,
 	ganv_item_set(GANV_ITEM(edge),
 	              "dash-offset", seconds * 8.0,
 	              NULL);
+}
+
+void
+ganv_edge_disconnect(GanvEdge* edge)
+{
+	if (!edge->impl->ghost) {
+		ganv_canvas_disconnect_edge(
+			GANV_CANVAS(edge->item.canvas),
+			edge);
+	}
 }
 
 void

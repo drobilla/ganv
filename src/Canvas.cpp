@@ -188,6 +188,9 @@ struct GanvCanvasImpl {
 	void remove_edge(GanvEdge* c);
 	bool are_connected(const GanvNode* tail,
 	                   const GanvNode* head);
+	GanvEdge*
+	get_edge_between(const GanvNode* tail,
+	                 const GanvNode* head);
 
 	typedef std::set<GanvEdge*, TailHeadOrder> Edges;
 	typedef std::set<GanvEdge*, HeadTailOrder> DstEdges;
@@ -598,7 +601,18 @@ GanvCanvasImpl::remove_edge(GanvEdge* edge)
 		_selected_edges.erase(edge);
 		_edges.erase(edge);
 		_dst_edges.erase(edge);
+		gtk_object_destroy(GTK_OBJECT(edge));
 	}
+}
+
+GanvEdge*
+GanvCanvasImpl::get_edge_between(const GanvNode* tail,
+                                 const GanvNode* head)
+{
+	GanvEdgeKey key;
+	make_edge_search_key(&key, tail, head);
+	Edges::const_iterator i = _edges.find((GanvEdge*)&key);
+	return (i != _edges.end()) ? *i : NULL;
 }
 
 /** Return whether there is a edge between item1 and item2.
@@ -610,9 +624,7 @@ bool
 GanvCanvasImpl::are_connected(const GanvNode* tail,
                               const GanvNode* head)
 {
-	GanvEdgeKey key;
-	make_edge_search_key(&key, tail, head);
-	return (_edges.find((GanvEdge*)&key) != _edges.end());
+	return get_edge_between(tail, head) != NULL;
 }
 
 void
@@ -1500,12 +1512,11 @@ Canvas::set_default_placement(Node* i)
 }
 
 void
-Canvas::remove_edge(Node* item1,
-                    Node* item2)
+Canvas::remove_edge(Node* item1, Node* item2)
 {
 	Edge* edge = get_edge(item1, item2);
 	if (edge) {
-		gtk_object_destroy(GTK_OBJECT(edge->gobj()));
+		impl()->remove_edge(edge->gobj());
 	}
 }
 
@@ -1950,6 +1961,22 @@ ganv_canvas_add_node(GanvCanvas* canvas,
                      GanvNode*   node)
 {
 	canvas->impl->add_item(node);
+}
+
+void
+ganv_canvas_remove_edge_between(GanvCanvas* canvas,
+                                GanvNode*   tail,
+                                GanvNode*   head)
+{
+	canvas->impl->remove_edge(canvas->impl->get_edge_between(tail, head));
+}
+
+void
+ganv_canvas_disconnect_edge(GanvCanvas* canvas,
+                            GanvEdge*   edge)
+{
+	g_signal_emit(canvas, signal_disconnect, 0,
+	              edge->impl->tail, edge->impl->head, NULL);
 }
 
 void
