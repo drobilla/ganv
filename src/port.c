@@ -36,6 +36,13 @@ enum {
 	PROP_IS_INPUT
 };
 
+enum {
+	PORT_VALUE_CHANGED,
+	PORT_LAST_SIGNAL
+};
+
+static guint port_signals[PORT_LAST_SIGNAL];
+
 static void
 ganv_port_init(GanvPort* port)
 {
@@ -252,6 +259,16 @@ ganv_port_class_init(GanvPortClass* class)
 			0,
 			G_PARAM_READWRITE));
 
+	port_signals[PORT_VALUE_CHANGED]
+	    = g_signal_new("value-changed",
+	                   G_TYPE_FROM_CLASS(class),
+	                   G_SIGNAL_RUN_LAST,
+	                   0,
+	                   NULL, NULL,
+	                   NULL,
+	                   G_TYPE_NONE, 1,
+	                   G_TYPE_VARIANT);
+
 	object_class->destroy = ganv_port_destroy;
 
 	item_class->event = event;
@@ -270,8 +287,7 @@ ganv_port_new(GanvModule* module,
               gboolean    is_input,
               const char* first_prop_name, ...)
 {
-	GanvPort* port = GANV_PORT(
-		g_object_new(ganv_port_get_type(), NULL));
+	GanvPort* port = GANV_PORT(g_object_new(ganv_port_get_type(), NULL));
 
 	port->impl->is_input = is_input;
 
@@ -397,10 +413,12 @@ ganv_port_set_control_value(GanvPort* port,
 	}
 
 	ganv_box_set_width(impl->control->rect, MAX(0.0, w - 1.0));
-#if 0
-	if (signal && _control->value == value)
-		signal = false;
-#endif
+
+	if (impl->control->value != value) {
+		GVariant* gvar = g_variant_new_double(value);
+		g_signal_emit(port, port_signals[PORT_VALUE_CHANGED], 0, gvar, NULL);
+		g_variant_unref(gvar);
+	}
 
 	impl->control->value = value;
 

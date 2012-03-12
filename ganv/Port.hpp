@@ -60,6 +60,8 @@ public:
 	METHOD1(ganv_port, set_control_min, float, min)
 	METHOD1(ganv_port, set_control_max, float, max)
 
+	sigc::signal<void, const Glib::VariantBase&> signal_value_changed;
+
 	Module* get_module() const;
 
 	GanvPort*       gobj()       { return GANV_PORT(_gobj); }

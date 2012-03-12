@@ -18,7 +18,7 @@
 #include "ganv/ganv.h"
 
 static void
-on_window_destroy(GtkWidget* widget, gpointer data)
+on_window_destroy(GtkWidget* widget, void* data)
 {
 	gtk_main_quit();
 }
@@ -33,6 +33,14 @@ static void
 on_disconnect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
 {
 	ganv_canvas_remove_edge_between(canvas, tail, head);
+}
+
+static void
+on_value_changed(GanvPort* port, GVariant* value, void* data)
+{
+	char* str = g_variant_print(value, TRUE);
+	fprintf(stderr, "Value changed: port %p = %s\n", (void*)port, str);
+	g_free(str);
 }
 
 int
@@ -63,6 +71,8 @@ main(int argc, char** argv)
 	                                "label", "Control",
 	                                NULL);
 	ganv_port_show_control(cport);
+	g_signal_connect(cport, "value-changed",
+	                 G_CALLBACK(on_value_changed), NULL);
 
 	//GtkWidget* entry = gtk_entry_new();
 	//ganv_module_embed(module, entry);

@@ -1131,7 +1131,12 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			const double sens = fmaxf(1.0 - fabs(dy), value_range / range_x);
 
 			const double dvalue = (dx * value_range) * sens;
-			const double value = control_start_value + dvalue;
+			double value = control_start_value + dvalue;
+			if (value < port->impl->control->min) {
+				value = port->impl->control->min;
+			} else if (value > port->impl->control->max) {
+				value = port->impl->control->max;
+			}
 			ganv_port_set_control_value(port, value);
 			return true;
 		}
