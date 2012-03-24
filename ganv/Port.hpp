@@ -21,6 +21,7 @@
 #include <string>
 
 #include <gdkmm/types.h>
+#include <glibmm/variant.h>
 
 #include "ganv/canvas-base.h"
 #include "ganv/Box.hpp"
