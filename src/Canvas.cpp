@@ -985,7 +985,7 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 					"x", x,
 					"y", y,
 					NULL));
-			
+
 			drag_edge = ganv_edge_new(
 				_gcanvas,
 				GANV_NODE(_connect_port),
