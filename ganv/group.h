@@ -45,7 +45,6 @@ struct _GanvGroupClass {
 	GanvItemClass parent_class;
 };
 
-
 GType ganv_group_get_type(void) G_GNUC_CONST;
 
 #endif  /* GANV_GROUP_H */

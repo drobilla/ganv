@@ -1723,7 +1723,6 @@ Canvas::gobj() const
 
 } // namespace Ganv
 
-
 extern "C" {
 
 #include "ganv/canvas-base.h"

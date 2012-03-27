@@ -28,7 +28,6 @@
 
 G_BEGIN_DECLS
 
-
 /* "Small" value used by canvas stuff */
 #define GANV_CANVAS_BASE_EPSILON 1e-10
 
@@ -36,7 +35,6 @@ typedef struct _GanvCanvasBase      GanvCanvasBase;
 typedef struct _GanvCanvasBaseClass GanvCanvasBaseClass;
 typedef struct _GanvItem            GanvItem;
 typedef struct _GanvItemClass       GanvItemClass;
-
 
 /* GanvItem - base item class for canvas items
  *
@@ -150,7 +148,6 @@ struct _GanvItemClass {
 	gpointer spare_vmethods [4];
 };
 
-
 GType ganv_item_get_type(void) G_GNUC_CONST;
 
 /* Create a canvas item using the standard Gtk argument mechanism.  The item
@@ -237,9 +234,7 @@ void ganv_item_get_bounds(GanvItem* item,
  */
 void ganv_item_request_update(GanvItem* item);
 
-
 /*** GanvCanvasBase ***/
-
 
 #define GANV_TYPE_CANVAS_BASE            (ganv_canvas_base_get_type())
 #define GANV_CANVAS_BASE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GANV_TYPE_CANVAS_BASE, GanvCanvasBase))
@@ -247,7 +242,6 @@ void ganv_item_request_update(GanvItem* item);
 #define GANV_IS_CANVAS_BASE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GANV_TYPE_CANVAS_BASE))
 #define GANV_IS_CANVAS_BASE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GANV_TYPE_CANVAS_BASE))
 #define GANV_CANVAS_BASE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GANV_TYPE_CANVAS_BASE, GanvCanvasBaseClass))
-
 
 struct _GanvCanvasBase {
 	GtkLayout layout;
@@ -346,7 +340,6 @@ struct _GanvCanvasBaseClass {
 	/* Reserved for future expansion */
 	gpointer spare_vmethods [4];
 };
-
 
 GType ganv_canvas_base_get_type(void) G_GNUC_CONST;
 

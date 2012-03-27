@@ -61,7 +61,6 @@ struct _GanvNodeClass {
 	                      double          x2,
 	                      double          y2);
 
-
 	void (*tail_vector)(const GanvNode* self,
 	                    const GanvNode* head,
 	                    double*         x,

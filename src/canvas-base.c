@@ -857,9 +857,7 @@ ganv_item_request_update(GanvItem* item)
 	}
 }
 
-
 /*** GanvCanvasBase ***/
-
 
 enum {
 	DRAW_BACKGROUND,
@@ -898,7 +896,6 @@ static void ganv_canvas_base_draw_background(GanvCanvasBase* canvas,
                                              int             y,
                                              int             width,
                                              int             height);
-
 
 static GtkLayoutClass* canvas_parent_class;
 
