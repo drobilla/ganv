@@ -21,6 +21,7 @@
 #include "ganv/module.h"
 
 #include "./boilerplate.h"
+#include "./color.h"
 #include "./ganv-private.h"
 #include "./gettext.h"
 
@@ -131,6 +132,12 @@ ganv_port_draw(GanvItem* item,
 	if (port->impl->control) {
 		GanvItem* const rect = GANV_ITEM(port->impl->control->rect);
 		GANV_ITEM_GET_CLASS(rect)->draw(rect, cr, cx, cy, width, height);
+	}
+
+	GanvNode* node = GANV_NODE(item);
+	if (node->impl->label) {
+		GanvItem* label_item = GANV_ITEM(node->impl->label);
+		GANV_ITEM_GET_CLASS(label_item)->draw(label_item, cr, cx, cy, width, height);
 	}
 }
 
@@ -334,6 +341,8 @@ ganv_port_show_control(GanvPort* port)
 	GanvPortControl* control = (GanvPortControl*)malloc(sizeof(GanvPortControl));
 	port->impl->control = control;
 
+	guint control_col = highlight_color(GANV_NODE(port)->impl->fill_color, 0x40);
+
 	control->value     = 0.0f;
 	control->min       = 0.0f;
 	control->max       = 0.0f;
@@ -345,7 +354,8 @@ ganv_port_show_control(GanvPort* port)
 		                              "y1", 0.0,
 		                              "x2", 0.0,
 		                              "y2", ganv_box_get_height(&port->box),
-		                              "fill-color", 0xFFFFFF80,
+		                              "fill-color", control_col,
+		                              "border-color", control_col,
 		                              "border-width", 0.0,
 		                              NULL));
 	ganv_item_show(GANV_ITEM(control->rect));

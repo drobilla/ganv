@@ -51,7 +51,7 @@ ganv_box_init(GanvBox* box)
 		box, GANV_TYPE_BOX, GanvBoxImpl);
 
 	memset(&box->impl->coords, '\0', sizeof(GanvBoxCoords));
-	box->impl->coords.border_width = box->node.impl->border_width;
+	box->impl->coords.border_width = 0.0;
 
 	box->impl->old_coords = box->impl->coords;
 	box->impl->radius_tl  = 0.0;

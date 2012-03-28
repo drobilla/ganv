@@ -109,13 +109,10 @@ ganv_node_draw(GanvItem* item,
                int cx, int cy,
                int width, int height)
 {
-	GanvNode* node = GANV_NODE(item);
-
-	// Draw label
-	if (node->impl->label) {
-		GanvItem* label_item = GANV_ITEM(node->impl->label);
-		GANV_ITEM_GET_CLASS(label_item)->draw(label_item, cr, cx, cy, width, height);
-	}
+	/* TODO: Label is not drawn here because ports need to draw control
+	   rects then the label on top.  I can't see a way of solving this since
+	   there's no single time parent class draw needs to be called, so perhaps
+	   label shouldn't be part of this class... */
 }
 
 static void
