@@ -21,7 +21,6 @@
 #include <string>
 
 #include <gdkmm/types.h>
-#include <glibmm/variant.h>
 
 #include "ganv/canvas-base.h"
 #include "ganv/Box.hpp"
@@ -61,7 +60,7 @@ public:
 	METHOD1(ganv_port, set_control_min, float, min)
 	METHOD1(ganv_port, set_control_max, float, max)
 
-	sigc::signal<void, const Glib::VariantBase&> signal_value_changed;
+	sigc::signal<void, GVariant*> signal_value_changed;
 
 	Module* get_module() const;
 

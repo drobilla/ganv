@@ -28,7 +28,7 @@ namespace Ganv {
 static void
 on_value_changed(GanvPort* port, GVariant* value, void* portmm)
 {
-	((Port*)portmm)->signal_value_changed.emit(Glib::VariantBase(value));
+	((Port*)portmm)->signal_value_changed.emit(value);
 }
 
 /** Contruct a Port on an existing module.
