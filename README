@@ -1,9 +1,8 @@
 Ganv
 ----
 
-Ganv is an interactive Gtkmm canvas widget for graph-based interfaces
-(patchers, modular synthesizers, finite state automata, interactive graphs,
-etc).
+Ganv is an interactive Gtk canvas widget for graph-based interfaces (patchers,
+modular synthesizers, finite state automata, interactive graphs, etc).
 
 Ganv provides classes for "Modules" (boxes with "Ports"), Circles, and
 Edges (lines that connect either Ports or Circles).  The user can rearrange
