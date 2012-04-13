@@ -92,7 +92,7 @@ int
 print_usage(const char* name)
 {
 	fprintf(stderr,
-	        "USAGE: %s [OPTIONS] CANVAS_W CANVAS_H N_MODULES N_CIRCLES N_EDGES\n\n"
+	        "USAGE: %s [OPTION]... CANVAS_W CANVAS_H N_MODULES N_CIRCLES N_EDGES\n\n"
 	        "Options:\n"
 	        "  -o  Remain open (do not close immediately)\n"
 	        "  -a  Arrange canvas\n"
