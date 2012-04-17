@@ -151,9 +151,10 @@ def build(bld):
     if bld.is_defined('HAVE_GIR'):
         bld.add_group()
 
-        top_level = (len(bld.stack_path) > 1)
-        bld_dir   = os.path.join(out, APPNAME) if top_level else out
-        pc_path   = os.path.abspath(os.path.join(bld_dir, 'ganv-1.pc'))
+        bld_dir = os.path.join(out, APPNAME)
+        pc_path = os.path.abspath(os.path.join(bld_dir, 'ganv-1.pc'))
+        if not (len(bld.stack_path) > 1):  # not top-level
+            bld_dir = out
 
         gir = bld(
             name         = 'ganv-gir',
