@@ -36,6 +36,9 @@
 // Uncomment to see control point path as straight lines
 //#define GANV_DEBUG_CURVES 1
 
+// Uncomment along with GANV_DEBUG_CURVES to see bounding box (buggy)
+//#define GANV_DEBUG_BOUNDS 1
+
 enum {
 	PROP_0,
 	PROP_TAIL,
@@ -164,7 +167,7 @@ static void
 request_redraw(GanvCanvasBase*       canvas,
                const GanvEdgeCoords* coords)
 {
-	const double w  = coords->width;
+	const double w = coords->width;
 	if (coords->curved) {
 		const double src_x  = coords->x1;
 		const double src_y  = coords->y1;
@@ -225,14 +228,22 @@ ganv_edge_bounds(GanvItem* item,
                  double* x1, double* y1,
                  double* x2, double* y2)
 {
-	GanvEdge*     edge = GANV_EDGE(item);
-	GanvEdgeImpl* impl = edge->impl;
+	GanvEdge*       edge   = GANV_EDGE(item);
+	GanvEdgeImpl*   impl   = edge->impl;
+	GanvEdgeCoords* coords = &impl->coords;
+	const double    w      = coords->width;
 
-	// TODO: This is not correct for curved edges
-	*x1 = MIN(impl->coords.x1, impl->coords.x2);
-	*y1 = MIN(impl->coords.y1, impl->coords.y2);
-	*x2 = MAX(impl->coords.x1, impl->coords.x2);
-	*y2 = MAX(impl->coords.y1, impl->coords.y2);
+	if (coords->curved) {
+		*x1 = MIN(coords->x1, MIN(coords->cx1, MIN(coords->x2, coords->cx2))) - w;
+		*y1 = MIN(coords->y1, MIN(coords->cy1, MIN(coords->y2, coords->cy2))) - w;
+		*x2 = MAX(coords->x1, MAX(coords->cx1, MAX(coords->x2, coords->cx2))) + w;
+		*y2 = MAX(coords->y1, MAX(coords->cy1, MAX(coords->y2, coords->cy2))) + w;
+	} else {
+		*x1 = MIN(impl->coords.x1, impl->coords.x2) - w;
+		*y1 = MIN(impl->coords.y1, impl->coords.y2) - w;
+		*x2 = MAX(impl->coords.x1, impl->coords.x2) + w;
+		*y2 = MAX(impl->coords.y1, impl->coords.y2) + w;
+	}
 }
 
 static void
@@ -375,6 +386,15 @@ ganv_edge_draw(GanvItem* item,
 		cairo_move_to(cr, dst_x, dst_y);
 		cairo_line_to(cr, dst_x1, dst_y1);
 		cairo_stroke(cr);
+
+#ifdef GANV_DEBUG_BOUNDS
+		double bounds_x1, bounds_y1, bounds_x2, bounds_y2;
+		ganv_edge_bounds(item, &bounds_x1, &bounds_y1, &bounds_x2, &bounds_y2);
+		cairo_rectangle(cr,
+		                bounds_x1, bounds_y1,
+		                bounds_x2 - bounds_x1, bounds_y2 - bounds_y1);
+#endif
+
 		cairo_restore(cr);
 #endif
 
