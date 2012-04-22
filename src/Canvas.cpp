@@ -1093,7 +1093,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 					control_start_y     = event->button.y_root;
 					control_start_value = ganv_port_get_control_value(port);
 					ganv_item_grab(GANV_ITEM(port),
-					               GDK_BUTTON_RELEASE_MASK,
+					               GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 					               NULL, event->button.time);
 				}
 				return true;
