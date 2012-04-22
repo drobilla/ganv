@@ -195,8 +195,10 @@ ganv_port_resize(GanvNode* self)
 	             "height", &label_h,
 	             NULL);
 
-	ganv_box_set_width(&port->box, label_w + (PORT_LABEL_HPAD * 2.0));
-	ganv_box_set_height(&port->box, label_h + (PORT_LABEL_VPAD * 2.0));
+	ganv_box_set_width(&port->box, MAX(ganv_box_get_width(&port->box),
+	                                   label_w + (PORT_LABEL_HPAD * 2.0)));
+	ganv_box_set_height(&port->box, MAX(ganv_box_get_height(&port->box),
+	                                    label_h + (PORT_LABEL_VPAD * 2.0)));
 
 	ganv_item_set(GANV_ITEM(node->impl->label),
 	              "x", PORT_LABEL_HPAD,
@@ -318,19 +320,6 @@ ganv_port_new(GanvModule* module,
 	node->impl->can_head     = is_input;
 	node->impl->draggable    = FALSE;
 	node->impl->border_width = 1.0;
-
-	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
-	if (!node->impl->label) {
-		const double depth   = ganv_module_get_empty_port_depth(module);
-		const double breadth = ganv_module_get_empty_port_breadth(module);
-		if (canvas->direction == GANV_DIRECTION_RIGHT) {
-			ganv_box_set_width(box, depth);
-			ganv_box_set_height(box, breadth);
-		} else {
-			ganv_box_set_width(box, breadth);
-			ganv_box_set_height(box, depth);
-		}
-	}
 
 	return port;
 }
@@ -458,18 +447,15 @@ ganv_port_set_control_max(GanvPort* port,
 double
 ganv_port_get_natural_width(const GanvPort* port)
 {
-	/*
-	  Canvas* const canvas = _module->canvas();
-	  if (canvas->direction() == Canvas::VERTICAL) {
-	  return _module->empty_port_breadth();
-	  } else*/
-	if (port->box.node.impl->label) {
+	GanvCanvas* const canvas = GANV_CANVAS(GANV_ITEM(port)->canvas);
+	if (canvas->direction == GANV_DIRECTION_DOWN) {
+		return ganv_module_get_empty_port_breadth(ganv_port_get_module(port));
+	} else if (port->box.node.impl->label) {
 		double label_w;
 		g_object_get(port->box.node.impl->label, "width", &label_w, NULL);
 		return label_w + (PORT_LABEL_HPAD * 2.0);
 	} else {
-		//return _module->empty_port_depth();
-		return 4.0;
+		return ganv_module_get_empty_port_depth(ganv_port_get_module(port));
 	}
 }
 

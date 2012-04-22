@@ -333,8 +333,8 @@ resize_horiz(GanvModule* module)
 		if (p->impl->is_input) {
 			y = header_height + 2.0 + (i * (h + 2.0));
 			++i;
-			ganv_box_set_width(pbox, m.input_width);
 			ganv_node_move_to(pnode, 0.0, y);
+			ganv_box_set_width(pbox, m.input_width);
 			last_was_input = TRUE;
 
 			ganv_canvas_for_each_edge_to(
@@ -344,10 +344,8 @@ resize_horiz(GanvModule* module)
 				y = header_height + 2.0 + (i * (h + 2.0));
 				++i;
 			}
+			ganv_node_move_to(pnode, m.width - m.output_width, y);
 			ganv_box_set_width(pbox, m.output_width);
-			ganv_node_move_to(pnode,
-			                  m.width - ganv_box_get_width(pbox),
-			                  y);
 			last_was_input = FALSE;
 
 			ganv_canvas_for_each_edge_from(
@@ -511,7 +509,8 @@ static void
 ganv_module_add_port(GanvModule* module,
                      GanvPort*   port)
 {
-	GanvModuleImpl* impl = module->impl;
+	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
+	GanvModuleImpl* impl   = module->impl;
 
 	const double width = ganv_port_get_natural_width(port);
 	if (port->impl->is_input && width > impl->widest_input) {
@@ -522,56 +521,48 @@ ganv_module_add_port(GanvModule* module,
 		impl->must_resize   = TRUE;
 	}
 
-#if 0
-
 	double port_x, port_y;
 
 	// Place vertically
-	if (canvas()->direction() == Canvas::HORIZONTAL) {
-		if (gobj()->ports->len != 0) {
-			const Port* const last_port = *back();
-			port_y = last_port->get_y() + last_port->get_height() + 1;
+	if (canvas->direction == GANV_DIRECTION_RIGHT) {
+		if (impl->ports->len != 0) {
+			const GanvPort* const last_port = g_ptr_array_index(
+				impl->ports, impl->ports->len - 1);
+			port_y = ganv_box_get_y2(GANV_BOX(last_port)) + 2.0;
 		} else {
-			port_y = 2.0 + title_height();
+			double title_w, title_h;
+			title_size(module, &title_w, &title_h);
+			port_y = title_h + 2.0;
 		}
 	} else {
-		if (p->is_input()) {
+		if (port->impl->is_input) {
 			port_y = 0.0;
 		} else {
-			port_y = get_height() - get_empty_port_depth();
+			port_y = ganv_box_get_height(GANV_BOX(module))
+				- ganv_module_get_empty_port_depth(module);
 		}
 	}
 
 	// Place horizontally
 	Metrics m;
-	calculate_metrics(m);
+	measure(module, &m);
 
-	set_width(m.width);
-	if (p->is_input()) {
-		p->set_width(m.input_width);
-		port_x = 0;
+	ganv_box_set_width(GANV_BOX(module), m.width);
+	if (port->impl->is_input) {
+		port_x = 0.0;
+		ganv_node_move_to(GANV_NODE(port), port_x, port_y);
+		ganv_box_set_width(GANV_BOX(port), m.input_width);
 	} else {
-		p->set_width(m.output_width);
-		port_x = m.width - p->get_width();
+		port_x = m.width - m.output_width;
+		ganv_node_move_to(GANV_NODE(port), port_x, port_y);
+		ganv_box_set_width(GANV_BOX(port), m.output_width);
 	}
-
-	p->move_to(port_x, port_y);
-
-	g_ptr_array_add(gobj()->ports, p->gobj());
-	if (canvas()->direction() == Canvas::HORIZONTAL) {
-		set_height(p->get_y() + p->get_height() + 1);
-	}
-
-	place_title();
-#endif
-	impl->must_resize = TRUE;
 
 	g_ptr_array_add(impl->ports, port);
-	//if (canvas()->direction() == Canvas::HORIZONTAL) {
-	//	set_height(p->get_y() + p->get_height() + 1);
-	//}
-
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
+	if (canvas->direction == GANV_DIRECTION_RIGHT) {
+		ganv_box_set_height(GANV_BOX(module),
+		                    ganv_box_get_y2(GANV_BOX(port)) + 1.0);
+	}
 
 	place_title(module, canvas->direction);
 	ganv_item_request_update(GANV_ITEM(module));
