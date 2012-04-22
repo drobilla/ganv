@@ -1069,6 +1069,7 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 bool
 GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 {
+	static bool   port_pressed        = true;
 	static bool   port_dragging       = false;
 	static bool   control_dragging    = false;
 	static double control_start_x     = 0;
@@ -1087,18 +1088,27 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 						ganv_port_set_control_value(port, 1.0);
 					}
 				} else {
-					control_dragging    = true;
+					control_dragging    = port_pressed = true;
 					control_start_x     = event->button.x_root;
 					control_start_y     = event->button.y_root;
 					control_start_value = ganv_port_get_control_value(port);
+					ganv_item_grab(GANV_ITEM(port),
+					               GDK_BUTTON_RELEASE_MASK,
+					               NULL, event->button.time);
 				}
 				return true;
 			} else if (!port->impl->is_input) {
-				port_dragging = true;
+				port_dragging = port_pressed = true;
+				ganv_item_grab(GANV_ITEM(port),
+				               GDK_BUTTON_RELEASE_MASK|GDK_POINTER_MOTION_MASK|
+				               GDK_ENTER_NOTIFY_MASK|GDK_LEAVE_NOTIFY_MASK,
+				               NULL, event->button.time);
 				return true;
-			} else if (_last_selected_port && _last_selected_port != port) {
-				ports_joined(_last_selected_port, port);
-				return true;
+			} else {
+				port_pressed = true;
+				ganv_item_grab(GANV_ITEM(port),
+				               GDK_BUTTON_RELEASE_MASK,
+				               NULL, event->button.time);
 			}
 		}
 		break;
@@ -1143,6 +1153,10 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 		break;
 
 	case GDK_BUTTON_RELEASE:
+		if (port_pressed) {
+			ganv_item_ungrab(GANV_ITEM(port), event->button.time);
+		}
+
 		if (port_dragging) {
 			if (_connect_port) { // dragging
 				ports_joined(port, _connect_port);
@@ -1161,6 +1175,12 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 		} else if (control_dragging) {
 			control_dragging = false;
 			return true;
+		} else if (event->button.state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK)) {
+			select_port_toggle(port, event->button.state);
+			return true;
+		} else {
+			selection_joined_with(port);
+			return true;
 		}
 		break;
 
@@ -1177,6 +1197,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			_drag_state = GanvCanvasImpl::EDGE;
 			_connect_port = port;
 			port_dragging = false;
+			ganv_item_ungrab(GANV_ITEM(port), event->crossing.time);
 			ganv_item_grab(
 				GANV_ITEM(root()),
 				GDK_BUTTON_PRESS_MASK|GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
