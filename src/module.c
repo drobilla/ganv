@@ -648,6 +648,10 @@ ganv_module_update(GanvItem* item, int flags)
 	FOREACH_PORT(module->impl->ports, p) {
 		ganv_item_invoke_update(GANV_ITEM(*p), flags);
 	}
+
+	if (module->impl->embed_item) {
+		ganv_item_invoke_update(GANV_ITEM(module->impl->embed_item), flags);
+	}
 }
 
 static void
@@ -675,6 +679,12 @@ ganv_module_draw(GanvItem* item,
 		GANV_ITEM_GET_CLASS(GANV_ITEM(*p))->draw(
 			GANV_ITEM(*p), cr, cx, cy, width, height);
 	}
+
+	// Draw embed item
+	if (module->impl->embed_item) {
+		GANV_ITEM_GET_CLASS(module->impl->embed_item)->draw(
+			module->impl->embed_item, cr, cx, cy, width, height);
+	}
 }
 
 static void
@@ -687,6 +697,9 @@ ganv_module_move_to(GanvNode* node,
 	FOREACH_PORT(module->impl->ports, p) {
 		ganv_node_move(GANV_NODE(*p), 0.0, 0.0);
 	}
+	if (module->impl->embed_item) {
+		ganv_item_move(GANV_ITEM(module->impl->embed_item), 0.0, 0.0);
+	}
 }
 
 static void
@@ -698,6 +711,9 @@ ganv_module_move(GanvNode* node,
 	GANV_NODE_CLASS(parent_class)->move(node, dx, dy);
 	FOREACH_PORT(module->impl->ports, p) {
 		ganv_node_move(GANV_NODE(*p), 0.0, 0.0);
+	}
+	if (module->impl->embed_item) {
+		ganv_item_move(GANV_ITEM(module->impl->embed_item), 0.0, 0.0);
 	}
 }
 

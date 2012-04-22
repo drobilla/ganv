@@ -54,12 +54,11 @@ ganv_widget_init(GanvWidget* witem)
 static void
 ganv_widget_destroy(GtkObject* object)
 {
-	GanvWidget* witem;
 
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_WIDGET(object));
 
-	witem = GANV_WIDGET(object);
+	GanvWidget* witem = GANV_WIDGET(object);
 
 	if (witem->widget && !witem->in_destroy) {
 		g_signal_handler_disconnect(witem->widget, witem->destroy_id);
@@ -75,15 +74,12 @@ ganv_widget_destroy(GtkObject* object)
 static void
 recalc_bounds(GanvWidget* witem)
 {
-	GanvItem* item;
-	double    wx, wy;
-
-	item = GANV_ITEM(witem);
+	GanvItem* item = GANV_ITEM(witem);
 
 	/* Get world coordinates */
 
-	wx = witem->x;
-	wy = witem->y;
+	double wx = witem->x;
+	double wy = witem->y;
 	ganv_item_i2w(item, &wx, &wy);
 
 	/* Get canvas pixel coordinates */
@@ -244,12 +240,10 @@ ganv_widget_get_property(GObject*    object,
                          GValue*     value,
                          GParamSpec* pspec)
 {
-	GanvWidget* witem;
-
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_WIDGET(object));
 
-	witem = GANV_WIDGET(object);
+	GanvWidget* witem = GANV_WIDGET(object);
 
 	switch (param_id) {
 	case PROP_WIDGET:
@@ -289,9 +283,7 @@ ganv_widget_get_property(GObject*    object,
 static void
 ganv_widget_update(GanvItem* item, int flags)
 {
-	GanvWidget* witem;
-
-	witem = GANV_WIDGET(item);
+	GanvWidget* witem = GANV_WIDGET(item);
 
 	if (parent_class->update) {
 		(*parent_class->update)(item, flags);
@@ -321,33 +313,26 @@ ganv_widget_draw(GanvItem* item,
                  int x, int y,
                  int width, int height)
 {
-#if 0
-	GanvWidget* witem;
-
-	witem = GANV_WIDGET(item);
+	GanvWidget* witem = GANV_WIDGET(item);
 
 	if (witem->widget) {
 		gtk_widget_queue_draw(witem->widget);
 	}
-#endif
 }
 
 static double
 ganv_widget_point(GanvItem* item, double x, double y,
                   int cx, int cy, GanvItem** actual_item)
 {
-	GanvWidget* witem;
-	double             x1, y1, x2, y2;
-	double             dx, dy;
-
-	witem = GANV_WIDGET(item);
+	GanvWidget* witem = GANV_WIDGET(item);
 
 	*actual_item = item;
 
+	double x1, y1;
 	ganv_canvas_base_c2w(item->canvas, witem->cx, witem->cy, &x1, &y1);
 
-	x2 = x1 + (witem->cwidth - 1) / item->canvas->pixels_per_unit;
-	y2 = y1 + (witem->cheight - 1) / item->canvas->pixels_per_unit;
+	double x2 = x1 + (witem->cwidth - 1) / item->canvas->pixels_per_unit;
+	double y2 = y1 + (witem->cheight - 1) / item->canvas->pixels_per_unit;
 
 	/* Is point inside widget bounds? */
 
@@ -357,6 +342,7 @@ ganv_widget_point(GanvItem* item, double x, double y,
 
 	/* Point is outside widget bounds */
 
+	double dx;
 	if (x < x1) {
 		dx = x1 - x;
 	} else if (x > x2) {
@@ -365,6 +351,7 @@ ganv_widget_point(GanvItem* item, double x, double y,
 		dx = 0.0;
 	}
 
+	double dy;
 	if (y < y1) {
 		dy = y1 - y;
 	} else if (y > y2) {
@@ -379,9 +366,7 @@ ganv_widget_point(GanvItem* item, double x, double y,
 static void
 ganv_widget_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2)
 {
-	GanvWidget* witem;
-
-	witem = GANV_WIDGET(item);
+	GanvWidget* witem = GANV_WIDGET(item);
 
 	*x1 = witem->x;
 	*y1 = witem->y;

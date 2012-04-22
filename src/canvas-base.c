@@ -479,23 +479,7 @@ put_item_after(GList* link, GList* before)
 void
 ganv_item_raise_to_top(GanvItem* item)
 {
-	GList*     link;
-	GanvGroup* parent;
-
-	g_return_if_fail(GANV_IS_ITEM(item));
-
-	if (!item->parent) {
-		return;
-	}
-
-	parent = GANV_GROUP(item->parent);
-	link   = g_list_find(parent->item_list, item);
-	g_assert(link != NULL);
-
-	if (put_item_after(link, parent->item_list_end)) {
-		redraw_if_visible(item);
-		item->canvas->need_repick = TRUE;
-	}
+	fprintf(stderr, "FIXME: ganv_item_raise_to_top\n");
 }
 
 /**
@@ -507,23 +491,7 @@ ganv_item_raise_to_top(GanvItem* item)
 void
 ganv_item_lower_to_bottom(GanvItem* item)
 {
-	GList*     link;
-	GanvGroup* parent;
-
-	g_return_if_fail(GANV_IS_ITEM(item));
-
-	if (!item->parent) {
-		return;
-	}
-
-	parent = GANV_GROUP(item->parent);
-	link   = g_list_find(parent->item_list, item);
-	g_assert(link != NULL);
-
-	if (put_item_after(link, NULL)) {
-		redraw_if_visible(item);
-		item->canvas->need_repick = TRUE;
-	}
+	fprintf(stderr, "FIXME: ganv_item_lower_to_bottom\n");
 }
 
 /**
