@@ -66,7 +66,6 @@ ganv_module_init(GanvModule* module)
 	impl->widest_output     = 0.0;
 	impl->show_port_labels  = FALSE;
 	impl->must_resize       = TRUE;
-	impl->port_size_changed = FALSE;
 }
 
 static void
@@ -108,7 +107,6 @@ ganv_module_set_property(GObject*      object,
 		const gboolean tmp = g_value_get_boolean(value);
 		if (impl->show_port_labels != tmp) {
 			impl->show_port_labels  = tmp;
-			impl->port_size_changed = TRUE;
 			impl->must_resize       = TRUE;
 			/* FIXME
 			   FOREACH_PORT_CONST(gobj()->ports, p) {
@@ -474,10 +472,7 @@ layout(GanvNode* self)
 	ganv_box_set_width(GANV_BOX(module), label_w + (MODULE_LABEL_PAD * 2.0));
 	ganv_box_set_height(GANV_BOX(module), label_h);
 
-	if (impl->port_size_changed) {
-		measure_ports(module);
-		impl->port_size_changed = FALSE;
-	}
+	measure_ports(module);
 
 	switch (canvas->direction) {
 	case GANV_DIRECTION_RIGHT:
@@ -496,9 +491,7 @@ ganv_module_resize(GanvNode* self)
 {
 	GanvModule* module = GANV_MODULE(self);
 
-	if (module->impl->must_resize) {
-		layout(self);
-	}
+	layout(self);
 
 	if (parent_class->parent_class.resize) {
 		parent_class->parent_class.resize(self);

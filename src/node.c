@@ -331,6 +331,15 @@ ganv_node_default_move_to(GanvNode* node,
 	}
 }
 
+static void
+ganv_node_default_resize(GanvNode* node)
+{
+	GanvItem* item = GANV_ITEM(node);
+	if (GANV_IS_NODE(item->parent)) {
+		ganv_node_resize(GANV_NODE(item->parent));
+	}
+}
+
 static gboolean
 ganv_node_default_event(GanvItem* item,
                         GdkEvent* event)
@@ -591,6 +600,7 @@ ganv_node_class_init(GanvNodeClass* class)
 	class->disconnect  = ganv_node_default_disconnect;
 	class->move        = ganv_node_default_move;
 	class->move_to     = ganv_node_default_move_to;
+	class->resize      = ganv_node_default_resize;
 	class->tick        = ganv_node_default_tick;
 	class->tail_vector = ganv_node_default_tail_vector;
 	class->head_vector = ganv_node_default_head_vector;
@@ -665,9 +675,6 @@ ganv_node_get_partner(const GanvNode* node)
 	return node->impl->partner;
 }
 
-void ganv_node_set_label(GanvNode*   node,
-                         const char* str);
-
 void
 ganv_node_move(GanvNode* node,
                double    dx,
@@ -687,10 +694,7 @@ ganv_node_move_to(GanvNode* node,
 void
 ganv_node_resize(GanvNode* node)
 {
-	GanvNodeClass* klass = GANV_NODE_GET_CLASS(node);
-	if (klass->resize) {
-		klass->resize(node);
-	}
+	GANV_NODE_GET_CLASS(node)->resize(node);
 }
 
 void

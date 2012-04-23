@@ -32,8 +32,8 @@ typedef struct _GanvTextClass GanvTextClass;
 typedef struct _GanvTextImpl  GanvTextImpl;
 
 struct _GanvText {
-	GanvItem item;
-	GanvTextImpl*   impl;
+	GanvItem      item;
+	GanvTextImpl* impl;
 };
 
 struct _GanvTextClass {

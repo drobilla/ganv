@@ -94,7 +94,6 @@ struct _GanvModuleImpl
 	double     widest_output;
 	gboolean   show_port_labels;
 	gboolean   must_resize;
-	gboolean   port_size_changed;
 };
 
 /* Node */
