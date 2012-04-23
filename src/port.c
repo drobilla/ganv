@@ -189,21 +189,23 @@ ganv_port_resize(GanvNode* self)
 	GanvPort* port = GANV_PORT(self);
 	GanvNode* node = GANV_NODE(self);
 
-	double label_w, label_h;
-	g_object_get(node->impl->label,
-	             "width", &label_w,
-	             "height", &label_h,
-	             NULL);
+	if (node->impl->label) {
+		double label_w, label_h;
+		g_object_get(node->impl->label,
+		             "width", &label_w,
+		             "height", &label_h,
+		             NULL);
 
-	ganv_box_set_width(&port->box, MAX(ganv_box_get_width(&port->box),
-	                                   label_w + (PORT_LABEL_HPAD * 2.0)));
-	ganv_box_set_height(&port->box, MAX(ganv_box_get_height(&port->box),
-	                                    label_h + (PORT_LABEL_VPAD * 2.0)));
+		ganv_box_set_width(&port->box, MAX(ganv_box_get_width(&port->box),
+		                                   label_w + (PORT_LABEL_HPAD * 2.0)));
+		ganv_box_set_height(&port->box, MAX(ganv_box_get_height(&port->box),
+		                                    label_h + (PORT_LABEL_VPAD * 2.0)));
 
-	ganv_item_set(GANV_ITEM(node->impl->label),
-	              "x", PORT_LABEL_HPAD,
-	              "y", PORT_LABEL_VPAD,
-	              NULL);
+		ganv_item_set(GANV_ITEM(node->impl->label),
+		              "x", PORT_LABEL_HPAD,
+		              "y", PORT_LABEL_VPAD,
+		              NULL);
+	}
 
 	if (parent_class->parent_class.resize) {
 		parent_class->parent_class.resize(self);
