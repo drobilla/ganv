@@ -94,7 +94,7 @@ ganv_item_init(GanvItem* item)
  * should use g_object_new() to pass the parameters and
  * ganv_item_construct() to set up the canvas item.
  *
- * Return value: The newly-created item.
+ * Return value: (transfer full): The newly-created item.
  **/
 GanvItem*
 ganv_item_new(GanvItem* parent, GType type, const gchar* first_arg_name, ...)
@@ -610,7 +610,7 @@ ganv_item_ungrab(GanvItem* item, guint32 etime)
 /**
  * ganv_item_i2w_affine:
  * @item: A canvas item
- * @affine: An affine transformation matrix (return value).
+ * @matrix: An affine transformation matrix (return value).
  *
  * Gets the affine transform that converts from the item's coordinate system to
  * world coordinates.
@@ -677,7 +677,7 @@ ganv_item_i2w(GanvItem* item, double* x, double* y)
 /**
  * ganv_item_i2c_affine:
  * @item: A canvas item.
- * @affine: An affine transformation matrix (return value).
+ * @matrix: An affine transformation matrix (return value).
  *
  * Gets the affine transform that converts from item-relative coordinates to
  * canvas pixel coordinates.
@@ -2026,7 +2026,7 @@ add_idle(GanvCanvasBase* canvas)
  *
  * Queries the root group of a canvas.
  *
- * Return value: The root group of the specified canvas.
+ * Return value: (transfer none): The root group of the specified canvas.
  **/
 GanvItem*
 ganv_canvas_base_root(GanvCanvasBase* canvas)
@@ -2295,8 +2295,8 @@ ganv_canvas_base_update_now(GanvCanvasBase* canvas)
  * Looks for the item that is under the specified position, which must be
  * specified in world coordinates.
  *
- * Return value: The sought item, or NULL if no item is at the specified
- * coordinates.
+ * Return value: (transfer none): The sought item, or NULL if no item is at the
+ * specified coordinates.
  **/
 GanvItem*
 ganv_canvas_base_get_item_at(GanvCanvasBase* canvas, double x, double y)
@@ -2406,7 +2406,7 @@ ganv_canvas_base_request_redraw(GanvCanvasBase* canvas, int x1, int y1, int x2, 
 /**
  * ganv_canvas_base_w2c_affine:
  * @canvas: A canvas.
- * @affine: An affine transformation matrix (return value).
+ * @matrix: An affine transformation matrix (return value).
  *
  * Gets the affine transform that converts from world coordinates to canvas
  * pixel coordinates.
