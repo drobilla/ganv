@@ -58,14 +58,14 @@ ganv_module_init(GanvModule* module)
 	GANV_NODE(module)->impl->can_tail = FALSE;
 
 	impl->ports = g_ptr_array_new();
-	impl->icon_box          = NULL;
-	impl->embed_item        = NULL;
-	impl->embed_width       = 0;
-	impl->embed_height      = 0;
-	impl->widest_input      = 0.0;
-	impl->widest_output     = 0.0;
-	impl->show_port_labels  = FALSE;
-	impl->must_resize       = TRUE;
+	impl->icon_box         = NULL;
+	impl->embed_item       = NULL;
+	impl->embed_width      = 0;
+	impl->embed_height     = 0;
+	impl->widest_input     = 0.0;
+	impl->widest_output    = 0.0;
+	impl->show_port_labels = FALSE;
+	impl->must_resize      = TRUE;
 }
 
 static void
@@ -359,7 +359,6 @@ resize_horiz(GanvModule* module)
 	if (impl->embed_item && m.embed_between)
 		height = MAX(height, impl->embed_height + header_height + 2.0);
 
-	fprintf(stderr, "SET HEIGHT %lf\n", height);
 	ganv_box_set_height(GANV_BOX(module), height);
 
 	place_title(module, GANV_DIRECTION_RIGHT);
@@ -490,10 +489,7 @@ layout(GanvNode* self)
 static void
 ganv_module_resize(GanvNode* self)
 {
-	GanvModule* module = GANV_MODULE(self);
-	if (module->impl->must_resize) {
-		layout(self);
-	}
+	layout(self);
 
 	if (parent_class->parent_class.resize) {
 		parent_class->parent_class.resize(self);
@@ -507,69 +503,17 @@ ganv_module_add_port(GanvModule* module,
 	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
 	GanvModuleImpl* impl   = module->impl;
 
-	#if 0
 	const double width = ganv_port_get_natural_width(port);
 	if (port->impl->is_input && width > impl->widest_input) {
-		fprintf(stderr, "MUST RESIZE 1\n");
 		impl->widest_input = width;
-		impl->must_resize  = TRUE;
 	} else if (!port->impl->is_input && width > impl->widest_output) {
-		fprintf(stderr, "MUST RESIZE 2\n");
 		impl->widest_output = width;
-		impl->must_resize   = TRUE;
-	} else {
-		fprintf(stderr, "----------------- NO RESIZE WOOOOOOOOO!\n");
 	}
 
-	double port_x, port_y;
-
-	// Place vertically
-	if (canvas->direction == GANV_DIRECTION_RIGHT) {
-		if (impl->ports->len > 0) {
-			const GanvPort* const last_port = g_ptr_array_index(
-				impl->ports, impl->ports->len - 1);
-			g_object_get(G_OBJECT(last_port), "y", &port_y, NULL);
-			fprintf(stderr, "LAST PORT Y: %lf\n", port_y);
-			port_y += ganv_box_get_height(GANV_BOX(last_port)) + 2.0;
-		} else {
-			double title_w, title_h;
-			title_size(module, &title_w, &title_h);
-			port_y = title_h + 2.0;
-		}
-	} else {
-		if (port->impl->is_input) {
-			port_y = 0.0;
-		} else {
-			port_y = ganv_box_get_height(GANV_BOX(module))
-				- ganv_module_get_empty_port_depth(module);
-		}
-	}
-
-	// Resize module to fit
-	Metrics m;
-	measure(module, &m);
-	ganv_box_set_width(GANV_BOX(module), m.width);
-	if (canvas->direction == GANV_DIRECTION_RIGHT) {
-		ganv_box_set_height(GANV_BOX(module),
-		                    port_y + ganv_box_get_height(GANV_BOX(port)) + 4.0);
-	}
-
-	// Place horizontally
-	if (port->impl->is_input) {
-		port_x = 0.0;
-		ganv_node_move_to(GANV_NODE(port), port_x, port_y);
-		ganv_box_set_width(GANV_BOX(port), m.input_width);
-	} else {
-		port_x = m.width - m.output_width;
-		ganv_node_move_to(GANV_NODE(port), port_x, port_y);
-		ganv_box_set_width(GANV_BOX(port), m.output_width);
-	}
-	#endif
+	impl->must_resize = TRUE;
 
 	g_ptr_array_add(impl->ports, port);
-
 	place_title(module, canvas->direction);
-	impl->must_resize  = TRUE;
 	ganv_item_request_update(GANV_ITEM(module));
 }
 
@@ -601,7 +545,6 @@ ganv_module_remove_port(GanvModule* module,
 			}
 		}
 
-		fprintf(stderr, "MUST RESIZE 3\n");
 		module->impl->must_resize = TRUE;
 		ganv_item_request_update(GANV_ITEM(module));
 	} else {
