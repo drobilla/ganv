@@ -222,10 +222,8 @@ ganv_port_resize(GanvNode* self)
 		             "height", &label_h,
 		             NULL);
 
-		ganv_box_set_width(&port->box, MAX(ganv_box_get_width(&port->box),
-		                                   label_w + (PORT_LABEL_HPAD * 2.0)));
-		ganv_box_set_height(&port->box, MAX(ganv_box_get_height(&port->box),
-		                                    label_h + (PORT_LABEL_VPAD * 2.0)));
+		ganv_box_set_width(&port->box, label_w + (PORT_LABEL_HPAD * 2.0));
+		ganv_box_set_height(&port->box, label_h + (PORT_LABEL_VPAD * 2.0));
 
 		ganv_item_set(GANV_ITEM(node->impl->label),
 		              "x", PORT_LABEL_HPAD,
