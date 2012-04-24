@@ -185,7 +185,7 @@ struct GanvCanvasImpl {
 	void selection_move_finished();
 
 #ifdef HAVE_AGRAPH
-	GVNodes layout_dot(bool use_length_hints, const std::string& filename);
+	GVNodes layout_dot(const std::string& filename);
 #endif
 
 	void remove_edge(GanvEdge* c);
@@ -453,7 +453,7 @@ gv_set(void* subject, const char* key, double value)
 }
 
 GVNodes
-GanvCanvasImpl::layout_dot(bool use_length_hints, const std::string& filename)
+GanvCanvasImpl::layout_dot(const std::string& filename)
 {
 	GVNodes nodes;
 
@@ -1502,59 +1502,6 @@ Canvas::zoom_full()
 }
 
 void
-Canvas::clear_selection()
-{
-	impl()->clear_selection();
-}
-
-double
-Canvas::get_zoom()
-{
-	return impl()->_zoom;
-}
-
-void
-Canvas::select_all()
-{
-	clear_selection();
-	FOREACH_ITEM(impl()->_items, m) {
-		impl()->select_item(*m);
-	}
-}
-
-void
-Canvas::destroy()
-{
-	impl()->_selected_items.clear();
-	impl()->_selected_edges.clear();
-
-	Items items = impl()->_items; // copy
-	FOREACH_ITEM(items, i) {
-		gtk_object_destroy(GTK_OBJECT(*i));
-	}
-	impl()->_items.clear();
-
-	GanvCanvasImpl::Edges edges = impl()->_edges; // copy
-	FOREACH_EDGE(edges, i) {
-		gtk_object_destroy(GTK_OBJECT(*i));
-	}
-	impl()->_edges.clear();
-
-	impl()->_selected_ports.clear();
-	impl()->_connect_port = NULL;
-}
-
-void
-Canvas::set_default_placement(Node* i)
-{
-	// Simple cascade.  This will get more clever in the future.
-	double x = ((get_width() / 2.0) + (impl()->_items.size() * 25));
-	double y = ((get_height() / 2.0) + (impl()->_items.size() * 25));
-
-	i->move_to(x, y);
-}
-
-void
 Canvas::remove_edge(Node* item1, Node* item2)
 {
 	Edge* edge = get_edge(item1, item2);
@@ -1586,16 +1533,16 @@ void
 Canvas::render_to_dot(const string& dot_output_filename)
 {
 #ifdef HAVE_AGRAPH
-	GVNodes nodes = impl()->layout_dot(false, dot_output_filename);
+	GVNodes nodes = impl()->layout_dot(dot_output_filename);
 	nodes.cleanup();
 #endif
 }
 
 void
-Canvas::arrange(bool use_length_hints)
+Canvas::arrange()
 {
 #ifdef HAVE_AGRAPH
-	GVNodes nodes = impl()->layout_dot(use_length_hints, "");
+	GVNodes nodes = impl()->layout_dot("");
 
 	double least_x=HUGE_VAL, least_y=HUGE_VAL, most_x=0, most_y=0;
 
@@ -1661,41 +1608,6 @@ Canvas::arrange(bool use_length_hints)
 }
 
 void
-Canvas::move_contents_to(double x, double y)
-{
-	double min_x=HUGE_VAL, min_y=HUGE_VAL;
-	FOREACH_ITEM(impl()->_items, i) {
-		double x, y;
-		g_object_get(*i, "x", &x, "y", &y, NULL);
-		min_x = std::min(min_x, x);
-		min_y = std::min(min_y, y);
-	}
-	impl()->move_contents_to_internal(x, y, min_x, min_y);
-}
-
-void
-Canvas::resize(double width, double height)
-{
-	impl()->resize(width, height);
-}
-
-void
-Canvas::for_each_node(GanvNodeFunction f, void* data)
-{
-	FOREACH_ITEM(impl()->_items, i) {
-		f(*i, data);
-	}
-}
-
-void
-Canvas::for_each_selected_node(GanvNodeFunction f, void* data)
-{
-	FOREACH_ITEM(impl()->_selected_items, i) {
-		f(*i, data);
-	}
-}
-
-void
 Canvas::for_each_edge(EdgePtrFunction f, void* data)
 {
 	FOREACH_EDGE(impl()->_edges, i) {
@@ -1739,12 +1651,6 @@ GQuark
 Canvas::wrapper_key()
 {
 	return impl()->_wrapper_key;
-}
-
-GdkCursor*
-Canvas::move_cursor()
-{
-	return impl()->_move_cursor;
 }
 
 GanvCanvas*
@@ -1975,6 +1881,12 @@ ganv_canvas_set_font_size(GanvCanvas* canvas, double points)
 	canvas->impl->set_zoom_and_font_size(canvas->impl->_zoom, points);
 }
 
+void
+ganv_canvas_set_scale(GanvCanvas* canvas, double zoom, double points)
+{
+	canvas->impl->set_zoom_and_font_size(zoom, points);
+}
+
 static void
 set_node_direction(GanvNode* node, void* data)
 {
@@ -2094,6 +2006,16 @@ ganv_canvas_for_each_node(GanvCanvas*      canvas,
 }
 
 void
+ganv_canvas_for_each_selected_node(GanvCanvas*      canvas,
+                                   GanvNodeFunction f,
+                                   void*            data)
+{
+	FOREACH_ITEM(canvas->impl->_selected_items, i) {
+		f(*i, data);
+	}
+}
+
+void
 ganv_canvas_for_each_edge_from(GanvCanvas*      canvas,
                                const GanvNode*  tail,
                                GanvEdgeFunction f)
@@ -2129,6 +2051,56 @@ ganv_canvas_port_event(GanvCanvas* canvas,
                        GdkEvent*   event)
 {
 	return canvas->impl->port_event(event, port);
+}
+
+void
+ganv_canvas_destroy(GanvCanvas* canvas)
+{
+	canvas->impl->_selected_items.clear();
+	canvas->impl->_selected_edges.clear();
+
+	Items items = canvas->impl->_items; // copy
+	FOREACH_ITEM(items, i) {
+		gtk_object_destroy(GTK_OBJECT(*i));
+	}
+	canvas->impl->_items.clear();
+
+	GanvCanvasImpl::Edges edges = canvas->impl->_edges; // copy
+	FOREACH_EDGE(edges, i) {
+		gtk_object_destroy(GTK_OBJECT(*i));
+	}
+	canvas->impl->_edges.clear();
+
+	canvas->impl->_selected_ports.clear();
+	canvas->impl->_connect_port = NULL;
+}
+
+void
+ganv_canvas_select_all(GanvCanvas* canvas)
+{
+	ganv_canvas_clear_selection(canvas);
+	FOREACH_ITEM(canvas->impl->_items, m) {
+		canvas->impl->select_item(*m);
+	}
+}
+
+double
+ganv_canvas_get_zoom(GanvCanvas* canvas)
+{
+	return canvas->impl->_zoom;
+}
+
+void
+ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y)
+{
+	double min_x=HUGE_VAL, min_y=HUGE_VAL;
+	FOREACH_ITEM(canvas->impl->_items, i) {
+		double x, y;
+		g_object_get(*i, "x", &x, "y", &y, NULL);
+		min_x = std::min(min_x, x);
+		min_y = std::min(min_y, y);
+	}
+	canvas->impl->move_contents_to_internal(x, y, min_x, min_y);
 }
 
 } // extern "C"

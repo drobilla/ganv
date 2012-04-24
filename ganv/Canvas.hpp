@@ -57,8 +57,7 @@ public:
 
 	Gtk::Layout& widget();
 
-	/** Remove all ports and edges and modules. */
-	void destroy();
+	METHOD0(ganv_canvas, destroy);
 
 	/** Get the edge from @c tail to @c head if one exists. */
 	Edge* get_edge(Node* tail, Node* head) const;
@@ -66,18 +65,12 @@ public:
 	/** Delete the edge from @c tail to @c head. */
 	void remove_edge(Node* tail, Node* head);
 
-	/** Place @c i at a reasonable default location. */
-	void set_default_placement(Node* i);
-
-	/** Unselect all selected objects. */
-	virtual void clear_selection();
-
-	void select_all();
+	METHOD0(ganv_canvas, clear_selection);
+	METHOD0(ganv_canvas, select_all);
 
 	RW_PROPERTY(gboolean, locked);
 
-	/** Return the current zoom factor (pixels per unit). */
-	double get_zoom();
+	METHOD0(ganv_canvas, get_zoom);
 
 	/** Set the current zoom factor (pixels per unit). */
 	void set_zoom(double pix_per_unit);
@@ -98,21 +91,22 @@ public:
 	void render_to_dot(const std::string& filename);
 
 	/** Automatically arrange the canvas contents if Graphviz is available. */
-	void arrange(bool use_length_hints=false);
+	void arrange();
 
-	/** Shift all canvas contents so the top-left object is at (x, y). */
-	void move_contents_to(double x, double y);
+	METHOD2(ganv_canvas, move_contents_to, double, x, double, y);
 
 	RW_PROPERTY(double, width)
 	RW_PROPERTY(double, height)
 
-	/** Resize the canvas to the given dimensions. */
-	void resize(double width, double height);
+	METHOD2(ganv_canvas, resize, double, width, double, height);
 
 	RW_PROPERTY(GanvDirection, direction);
 
-	void for_each_node(GanvNodeFunction f, void* data);
-	void for_each_selected_node(GanvNodeFunction f, void* data);
+	METHOD2(ganv_canvas, for_each_node,
+	        GanvNodeFunction, f, void*, data)
+
+	METHOD2(ganv_canvas, for_each_selected_node,
+	        GanvNodeFunction, f, void*, data)
 
 	typedef void (*EdgePtrFunction)(GanvEdge* edge, void* data);
 
@@ -131,14 +125,14 @@ public:
 	        const GanvNode*, node,
 	        GanvEdgeFunction, f);
 
-	GQuark wrapper_key();
-
-	GanvItem* root();
-
-	GdkCursor* move_cursor();
+	METHOD0(ganv_canvas, get_move_cursor);
 
 	void get_scroll_offsets(int& cx, int& cy) const;
 	void scroll_to(int x, int y);
+
+	GQuark wrapper_key();
+
+	GanvItem* root();
 
 	GanvCanvas*       gobj();
 	const GanvCanvas* gobj() const;

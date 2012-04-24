@@ -63,6 +63,10 @@ GType ganv_canvas_get_type(void);
 
 GanvCanvas* ganv_canvas_new(double width, double height);
 
+/**
+ * ganv_canvas_resize:
+ * Resize the canvas to the given dimensions.
+ */
 void
 ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
 
@@ -90,10 +94,6 @@ ganv_canvas_remove_edge_between(GanvCanvas* canvas,
 double
 ganv_canvas_get_default_font_size(const GanvCanvas* canvas);
 
-/** Get the current font size in points. */
-double
-ganv_canvas_get_font_size(const GanvCanvas* canvas);
-
 void
 ganv_canvas_set_font_size(GanvCanvas* canvas, double points);
 
@@ -116,6 +116,22 @@ typedef void (*GanvEdgeFunction)(GanvEdge* edge);
 void
 ganv_canvas_for_each_node(GanvCanvas*      canvas,
                           GanvNodeFunction f,
+                          void*            data);
+
+void
+ganv_canvas_for_each_selected_node(GanvCanvas*      canvas,
+                                   GanvNodeFunction f,
+                                   void*            data);
+
+/**
+ * ganv_canvas_for_each_edge:
+ * @canvas: The canvas.
+ * @f: (scope call): A function to call on every edge on @canvas.
+ * @data: Data to pass to @f.
+ */
+void
+ganv_canvas_for_each_edge(GanvCanvas*      canvas,
+                          GanvEdgeFunction f,
                           void*            data);
 
 /**
@@ -150,6 +166,55 @@ void
 ganv_canvas_for_each_edge_on(GanvCanvas*      canvas,
                              const GanvNode*  node,
                              GanvEdgeFunction f);
+
+/**
+ * ganv_canvas_destroy:
+ * Remove all items from the canvas.
+ */
+void
+ganv_canvas_destroy(GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_select_all:
+ * Select all items on the canvas.
+ */
+void
+ganv_canvas_select_all(GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_get_zoom:
+ * Return the current zoom factor (pixels per unit).
+ */
+double
+ganv_canvas_get_zoom(GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_get_font_size:
+ * Get the current font size in points.
+ */
+double
+ganv_canvas_get_font_size(const GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_set_scale:
+ * Set the zoom and font size for the canvas.
+ */
+void
+ganv_canvas_set_scale(GanvCanvas* canvas, double zoom, double points);
+
+/**
+ * ganv_canvas_get_move_cursor:
+ * Return the cursor to use while dragging canvas objects.
+ */
+GdkCursor*
+ganv_canvas_get_move_cursor(const GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_move_contents_to:
+ * Shift all canvas contents so the top-left object is at (x, y).
+ */
+void
+ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y);
 
 G_END_DECLS
 
