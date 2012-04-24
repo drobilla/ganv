@@ -164,6 +164,8 @@ struct GanvCanvasImpl {
 
 	void resize(double width, double height);
 
+	void set_zoom_and_font_size(double zoom, double points);
+
 	void for_each_node(GanvNodeFunction f, void* data);
 	void for_each_edge_from(const GanvNode* tail, GanvEdgeFunction f);
 	void for_each_edge_to(const GanvNode* head, GanvEdgeFunction f);
@@ -1371,6 +1373,27 @@ GanvCanvasImpl::resize(double width, double height)
 	}
 }
 
+void
+GanvCanvasImpl::set_zoom_and_font_size(double zoom, double points)
+{
+	points = std::max(points, 1.0);
+	zoom   = std::max(zoom, 0.01);
+
+	if (zoom == _zoom && points == _font_size)
+		return;
+
+	if (zoom != _zoom) {
+		_zoom = zoom;
+		ganv_canvas_base_set_pixels_per_unit(GANV_CANVAS_BASE(_gcanvas), zoom);
+	}
+
+	_font_size = points;
+
+	FOREACH_ITEM(_items, i) {
+		ganv_node_redraw_text(*i);
+	}
+}
+
 namespace Ganv {
 
 static gboolean
@@ -1432,24 +1455,7 @@ Canvas::set_font_size(double points)
 void
 Canvas::set_zoom_and_font_size(double zoom, double points)
 {
-	points = std::max(points, 1.0);
-	zoom   = std::max(zoom, 0.01);
-
-	if (zoom == impl()->_zoom && points == impl()->_font_size)
-		return;
-
-	if (zoom != impl()->_zoom) {
-		impl()->_zoom = zoom;
-		ganv_canvas_base_set_pixels_per_unit(GANV_CANVAS_BASE(impl()->_gcanvas), zoom);
-	}
-
-	impl()->_font_size = points;
-
-#if 0
-	FOREACH_ITEM(impl()->_items, i) {
-		(*i)->redraw_text();
-	}
-#endif
+	impl()->set_zoom_and_font_size(zoom, points);
 }
 
 void
@@ -1773,6 +1779,7 @@ enum {
 	PROP_WIDTH,
 	PROP_HEIGHT,
 	PROP_DIRECTION,
+	PROP_FONT_SIZE,
 	PROP_LOCKED
 };
 
@@ -1805,14 +1812,12 @@ ganv_canvas_set_property(GObject*      object,
 	case PROP_DIRECTION:
 		ganv_canvas_set_direction(canvas, (GanvDirection)g_value_get_enum(value));
 		break;
-	case PROP_LOCKED: {
-		const gboolean tmp = g_value_get_boolean(value);
-		if (canvas->locked != tmp) {
-			// TODO: change background color
-			canvas->locked = tmp;
-		}
+	case PROP_FONT_SIZE:
+		ganv_canvas_set_font_size(canvas, g_value_get_double(value));
 		break;
-	}
+	case PROP_LOCKED:
+		canvas->locked = g_value_get_boolean(value);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -1887,6 +1892,15 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 			(GParamFlags)G_PARAM_READWRITE));
 
 	g_object_class_install_property(
+		gobject_class, PROP_FONT_SIZE, g_param_spec_double(
+			"font-size",
+			_("Font size"),
+			_("The default font size for the canvas"),
+			0.0, G_MAXDOUBLE,
+			12.0,
+			(GParamFlags)G_PARAM_READWRITE));
+
+	g_object_class_install_property(
 		gobject_class, PROP_LOCKED, g_param_spec_boolean(
 			"locked",
 			_("Locked"),
@@ -1952,13 +1966,13 @@ ganv_canvas_get_default_font_size(const GanvCanvas* canvas)
 double
 ganv_canvas_get_font_size(const GanvCanvas* canvas)
 {
-	return ganv_canvas_get_default_font_size(canvas);
+	return canvas->impl->_font_size;
 }
 
 void
 ganv_canvas_set_font_size(GanvCanvas* canvas, double points)
 {
-	g_object_set(canvas, "font-size", points, NULL);
+	canvas->impl->set_zoom_and_font_size(canvas->impl->_zoom, points);
 }
 
 static void

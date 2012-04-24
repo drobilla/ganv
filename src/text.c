@@ -86,7 +86,7 @@ ganv_text_destroy(GtkObject* object)
 	}
 }
 
-static void
+void
 ganv_text_layout(GanvText* text)
 {
 	GanvTextImpl* impl      = text->impl;

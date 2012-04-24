@@ -76,8 +76,8 @@ ganv_module_destroy(GtkObject* object)
 	GanvModuleImpl* impl   = module->impl;
 
 	if (impl->ports) {
-		  FOREACH_PORT(impl->ports, p) {
-			  g_object_unref(GTK_OBJECT(*p));
+		FOREACH_PORT(impl->ports, p) {
+			g_object_unref(GTK_OBJECT(*p));
 		}
 		g_ptr_array_free(impl->ports, TRUE);
 		impl->ports = NULL;
@@ -476,6 +476,18 @@ ganv_module_resize(GanvNode* self)
 }
 
 static void
+ganv_module_redraw_text(GanvNode* self)
+{
+	FOREACH_PORT(GANV_MODULE(self)->impl->ports, p) {
+		ganv_node_redraw_text(GANV_NODE(*p));
+	}
+
+	if (parent_class->parent_class.redraw_text) {
+		parent_class->parent_class.redraw_text(self);
+	}
+}
+
+static void
 ganv_module_add_port(GanvModule* module,
                      GanvPort*   port)
 {
@@ -696,9 +708,10 @@ ganv_module_class_init(GanvModuleClass* class)
 	item_class->draw   = ganv_module_draw;
 	item_class->point  = ganv_module_point;
 
-	node_class->move    = ganv_module_move;
-	node_class->move_to = ganv_module_move_to;
-	node_class->resize  = ganv_module_resize;
+	node_class->move        = ganv_module_move;
+	node_class->move_to     = ganv_module_move_to;
+	node_class->resize      = ganv_module_resize;
+	node_class->redraw_text = ganv_module_redraw_text;
 }
 
 GanvModule*

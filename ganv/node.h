@@ -53,6 +53,8 @@ struct _GanvNodeClass {
 
 	void (*resize)(GanvNode* node);
 
+	void (*redraw_text)(GanvNode* node);
+
 	void (*disconnect)(GanvNode* node);
 
 	gboolean (*is_within)(const GanvNode* self,
@@ -148,6 +150,9 @@ ganv_node_move_to(GanvNode* node,
 
 void
 ganv_node_resize(GanvNode* node);
+
+void
+ganv_node_redraw_text(GanvNode* node);
 
 void
 ganv_node_disconnect(GanvNode* node);

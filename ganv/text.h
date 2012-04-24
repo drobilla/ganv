@@ -42,6 +42,8 @@ struct _GanvTextClass {
 
 GType ganv_text_get_type(void);
 
+void ganv_text_layout(GanvText* text);
+
 G_END_DECLS
 
 #endif  /* GANV_TEXT_H */

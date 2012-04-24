@@ -362,6 +362,15 @@ ganv_node_default_resize(GanvNode* node)
 	}
 }
 
+static void
+ganv_node_default_redraw_text(GanvNode* node)
+{
+	if (node->impl->label) {
+		ganv_text_layout(node->impl->label);
+		ganv_node_resize(node);
+	}
+}
+
 static gboolean
 ganv_node_default_event(GanvItem* item,
                         GdkEvent* event)
@@ -631,6 +640,7 @@ ganv_node_class_init(GanvNodeClass* class)
 	class->move        = ganv_node_default_move;
 	class->move_to     = ganv_node_default_move_to;
 	class->resize      = ganv_node_default_resize;
+	class->redraw_text = ganv_node_default_redraw_text;
 	class->tick        = ganv_node_default_tick;
 	class->tail_vector = ganv_node_default_tail_vector;
 	class->head_vector = ganv_node_default_head_vector;
@@ -725,6 +735,12 @@ void
 ganv_node_resize(GanvNode* node)
 {
 	GANV_NODE_GET_CLASS(node)->resize(node);
+}
+
+void
+ganv_node_redraw_text(GanvNode* node)
+{
+	GANV_NODE_GET_CLASS(node)->redraw_text(node);
 }
 
 void
