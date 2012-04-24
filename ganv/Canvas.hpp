@@ -111,10 +111,8 @@ public:
 
 	RW_PROPERTY(GanvDirection, direction);
 
-	typedef void (*NodeFunction)(GanvNode* node, void* data);
-
-	void for_each_node(NodeFunction f, void* data);
-	void for_each_selected_node(NodeFunction f, void* data);
+	void for_each_node(GanvNodeFunction f, void* data);
+	void for_each_selected_node(GanvNodeFunction f, void* data);
 
 	typedef void (*EdgePtrFunction)(GanvEdge* edge, void* data);
 

@@ -134,6 +134,7 @@ GanvNode*
 ganv_node_get_partner(const GanvNode* node);
 
 void ganv_node_set_label(GanvNode* node, const char* str);
+void ganv_node_set_show_label(GanvNode* node, gboolean show);
 
 void
 ganv_node_move(GanvNode* node,

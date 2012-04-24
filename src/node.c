@@ -34,6 +34,7 @@ enum {
 	PROP_CANVAS,
 	PROP_PARTNER,
 	PROP_LABEL,
+	PROP_SHOW_LABEL,
 	PROP_DASH_LENGTH,
 	PROP_DASH_OFFSET,
 	PROP_BORDER_WIDTH,
@@ -66,6 +67,7 @@ ganv_node_init(GanvNode* node)
 	impl->selected     = FALSE;
 	impl->highlighted  = FALSE;
 	impl->draggable    = FALSE;
+	impl->show_label   = TRUE;
 }
 
 static void
@@ -151,7 +153,9 @@ ganv_node_set_property(GObject*      object,
 		break;
 	case PROP_LABEL:
 		ganv_node_set_label(node, g_value_get_string(value));
-		ganv_item_request_update(GANV_ITEM(object));
+		break;
+	case PROP_SHOW_LABEL:
+		ganv_node_set_show_label(node, g_value_get_boolean(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -259,7 +263,7 @@ void
 ganv_node_set_label(GanvNode* node, const char* str)
 {
 	GanvNodeImpl* impl = node->impl;
-	if (str[0] == '\0' || !str) {
+	if (!str || str[0] == '\0') {
 		if (impl->label) {
 			gtk_object_destroy(GTK_OBJECT(impl->label));
 			impl->label = NULL;
@@ -276,10 +280,28 @@ ganv_node_set_label(GanvNode* node, const char* str)
 		                                      NULL));
 	}
 
-	GanvNodeClass* klass = GANV_NODE_GET_CLASS(node);
-	if (klass->resize) {
-		klass->resize(node);
+	if (impl->show_label) {
+		GanvNodeClass* klass = GANV_NODE_GET_CLASS(node);
+		if (klass->resize) {
+			klass->resize(node);
+		}
+
+		ganv_item_request_update(GANV_ITEM(node));
 	}
+}
+
+void
+ganv_node_set_show_label(GanvNode* node, gboolean show)
+{
+	if (node->impl->label) {
+		if (show) {
+			ganv_item_show(GANV_ITEM(node->impl->label));
+		} else {
+			ganv_item_hide(GANV_ITEM(node->impl->label));
+		}
+	}
+	node->impl->show_label = show;
+	ganv_item_request_update(GANV_ITEM(node));
 }
 
 static void
@@ -493,6 +515,14 @@ ganv_node_class_init(GanvNodeClass* class)
 			_("Label"),
 			_("The text to display as a label on this node."),
 			NULL,
+			G_PARAM_READWRITE));
+
+	g_object_class_install_property(
+		gobject_class, PROP_SHOW_LABEL, g_param_spec_boolean(
+			"show-label",
+			_("Show label"),
+			_("Whether or not to show the label."),
+			0,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(

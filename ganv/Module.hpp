@@ -43,8 +43,7 @@ public:
 	       const std::string& name,
 	       double             x                = 0,
 	       double             y                = 0,
-	       bool               show_title       = true,
-	       bool               show_port_labels = true)
+	       bool               show_title       = true)
 		: Box(&canvas, GANV_BOX(
 			      ganv_item_new(
 				      GANV_ITEM(canvas.root()),
@@ -120,7 +119,7 @@ public:
 	guint num_ports() const { return ganv_module_num_ports(gobj()); }
 
 	RW_PROPERTY(gboolean, stacked)
-	RW_PROPERTY(gboolean, show_port_labels)
+
 	METHODRET0(ganv_module, double, get_empty_port_breadth)
 	METHODRET0(ganv_module, double, get_empty_port_depth)
 

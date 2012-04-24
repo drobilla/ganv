@@ -49,6 +49,10 @@ ganv_port_new(GanvModule* module,
               const char* first_prop_name, ...);
 
 void
+ganv_port_set_direction(GanvPort*     port,
+                        GanvDirection direction);
+
+void
 ganv_port_show_control(GanvPort* port);
 
 void

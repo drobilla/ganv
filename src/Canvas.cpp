@@ -164,6 +164,7 @@ struct GanvCanvasImpl {
 
 	void resize(double width, double height);
 
+	void for_each_node(GanvNodeFunction f, void* data);
 	void for_each_edge_from(const GanvNode* tail, GanvEdgeFunction f);
 	void for_each_edge_to(const GanvNode* head, GanvEdgeFunction f);
 	void for_each_edge_on(const GanvNode* node, GanvEdgeFunction f);
@@ -520,9 +521,10 @@ GanvCanvasImpl::layout_dot(bool use_length_hints, const std::string& filename)
 				agsafeset(pnode, (char*)"shape", (char*)"box", NULL);
 				agsafeset(pnode, (char*)"margin", (char*)"0", NULL);
 				agsafeset(pnode, (char*)"pin", (char*)"true", NULL);
-				agsafeset(pnode, (char*)"label",
-				          (char*)ganv_node_get_label(GANV_NODE(port)),
-				          NULL);
+				const char* port_label = ganv_node_get_label(GANV_NODE(port));
+				if (_gcanvas->direction == GANV_DIRECTION_RIGHT && port_label) {
+					agsafeset(pnode, (char*)"label", (char*)port_label, NULL);
+				}
 
 				// Fix position (we don't want ports to be arranged)
 				// (TODO: I don't think dot actually supports this...)
@@ -1288,6 +1290,15 @@ GanvCanvasImpl::move_contents_to_internal(double x, double y, double min_x, doub
 }
 
 void
+GanvCanvasImpl::for_each_node(GanvNodeFunction f,
+                              void*            data)
+{
+	FOREACH_ITEM(_items, i) {
+		f(*i, data);
+	}
+}
+
+void
 GanvCanvasImpl::for_each_edge_from(const GanvNode*  tail,
                                    GanvEdgeFunction f)
 {
@@ -1663,7 +1674,7 @@ Canvas::resize(double width, double height)
 }
 
 void
-Canvas::for_each_node(NodeFunction f, void* data)
+Canvas::for_each_node(GanvNodeFunction f, void* data)
 {
 	FOREACH_ITEM(impl()->_items, i) {
 		f(*i, data);
@@ -1671,7 +1682,7 @@ Canvas::for_each_node(NodeFunction f, void* data)
 }
 
 void
-Canvas::for_each_selected_node(NodeFunction f, void* data)
+Canvas::for_each_selected_node(GanvNodeFunction f, void* data)
 {
 	FOREACH_ITEM(impl()->_selected_items, i) {
 		f(*i, data);
@@ -1790,6 +1801,9 @@ ganv_canvas_set_property(GObject*      object,
 		break;
 	case PROP_HEIGHT:
 		ganv_canvas_resize(canvas, canvas->width, g_value_get_double(value));
+		break;
+	case PROP_DIRECTION:
+		ganv_canvas_set_direction(canvas, (GanvDirection)g_value_get_enum(value));
 		break;
 	case PROP_LOCKED: {
 		const gboolean tmp = g_value_get_boolean(value);
@@ -1947,6 +1961,23 @@ ganv_canvas_set_font_size(GanvCanvas* canvas, double points)
 	g_object_set(canvas, "font-size", points, NULL);
 }
 
+static void
+set_node_direction(GanvNode* node, void* data)
+{
+	if (GANV_IS_MODULE(node)) {
+		ganv_module_set_direction(GANV_MODULE(node), *(GanvDirection*)data);
+	}
+}
+
+void
+ganv_canvas_set_direction(GanvCanvas* canvas, GanvDirection dir)
+{
+	if (canvas->direction != dir) {
+		canvas->direction = dir;
+		ganv_canvas_for_each_node(canvas, set_node_direction, &dir);
+	}
+}
+
 void
 ganv_canvas_clear_selection(GanvCanvas* canvas)
 {
@@ -2038,6 +2069,14 @@ ganv_canvas_unselect_edge(GanvCanvas* canvas,
                           GanvEdge*   edge)
 {
 	canvas->impl->unselect_edge(edge);
+}
+
+void
+ganv_canvas_for_each_node(GanvCanvas*      canvas,
+                          GanvNodeFunction f,
+                          void*            data)
+{
+	canvas->impl->for_each_node(f, data);
 }
 
 void

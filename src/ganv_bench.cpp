@@ -40,7 +40,6 @@ make_module(Canvas* canvas)
 	Module* m(new Module(*canvas, name,
 	                     rand() % (int)canvas->get_width(),
 	                     rand() % (int)canvas->get_height(),
-	                     true,
 	                     true));
 
 	int n_ins = rand() % MAX_NUM_PORTS;

@@ -75,6 +75,10 @@ void
 ganv_module_embed(GanvModule* module,
                   GtkWidget*  widget);
 
+void
+ganv_module_set_direction(GanvModule*   module,
+                          GanvDirection direction);
+
 /**
  * ganv_module_for_each_port:
  * @module: The module.

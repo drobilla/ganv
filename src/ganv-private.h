@@ -92,7 +92,6 @@ struct _GanvModuleImpl
 	int        embed_height;
 	double     widest_input;
 	double     widest_output;
-	gboolean   show_port_labels;
 	gboolean   must_resize;
 };
 
@@ -111,6 +110,7 @@ struct _GanvNodeImpl {
 	gboolean          selected;
 	gboolean          highlighted;
 	gboolean          draggable;
+	gboolean          show_label;
 };
 
 /* Port */

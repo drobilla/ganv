@@ -98,9 +98,25 @@ void
 ganv_canvas_set_font_size(GanvCanvas* canvas, double points);
 
 void
+ganv_canvas_set_direction(GanvCanvas* canvas, GanvDirection dir);
+
+void
 ganv_canvas_clear_selection(GanvCanvas* canvas);
 
+typedef void (*GanvNodeFunction)(GanvNode* node, void* data);
+
 typedef void (*GanvEdgeFunction)(GanvEdge* edge);
+
+/**
+ * ganv_canvas_for_each_node:
+ * @canvas: The canvas.
+ * @f: (scope call): A function to call on every node on @canvas.
+ * @data: Data to pass to @f.
+ */
+void
+ganv_canvas_for_each_node(GanvCanvas*      canvas,
+                          GanvNodeFunction f,
+                          void*            data);
 
 /**
  * ganv_canvas_for_each_edge_from:

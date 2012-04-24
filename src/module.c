@@ -43,7 +43,6 @@ static GanvBoxClass* parent_class;
 
 enum {
 	PROP_0,
-	PROP_SHOW_PORT_LABELS
 };
 
 static void
@@ -64,7 +63,6 @@ ganv_module_init(GanvModule* module)
 	impl->embed_height     = 0;
 	impl->widest_input     = 0.0;
 	impl->widest_output    = 0.0;
-	impl->show_port_labels = FALSE;
 	impl->must_resize      = TRUE;
 }
 
@@ -99,23 +97,7 @@ ganv_module_set_property(GObject*      object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_MODULE(object));
 
-	GanvModule*     module = GANV_MODULE(object);
-	GanvModuleImpl* impl   = module->impl;
-
 	switch (prop_id) {
-	case PROP_SHOW_PORT_LABELS: {
-		const gboolean tmp = g_value_get_boolean(value);
-		if (impl->show_port_labels != tmp) {
-			impl->show_port_labels  = tmp;
-			impl->must_resize       = TRUE;
-			/* FIXME
-			   FOREACH_PORT_CONST(gobj()->ports, p) {
-			   (*p)->show_label(b);
-			   }*/
-			ganv_item_request_update(GANV_ITEM(object));
-		}
-		break;
-	}
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -131,11 +113,7 @@ ganv_module_get_property(GObject*    object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_MODULE(object));
 
-	GanvModule*     module = GANV_MODULE(object);
-	GanvModuleImpl* impl   = module->impl;
-
 	switch (prop_id) {
-		GET_CASE(SHOW_PORT_LABELS, boolean, impl->show_port_labels);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -217,7 +195,7 @@ measure(GanvModule* module, Metrics* m)
 	m->input_width  = impl->widest_input;
 	m->output_width = impl->widest_output;
 	double expand_w = (m->horiz ? (m->width / 2.0) : m->width) - hor_pad;
-	if (impl->show_port_labels && !impl->embed_item) {
+	if (!impl->embed_item) {
 		m->input_width  = MAX(impl->widest_input,  expand_w);
 		m->output_width = MAX(impl->widest_output, expand_w);
 	}
@@ -256,13 +234,12 @@ measure(GanvModule* module, Metrics* m)
 static void
 place_title(GanvModule* module, GanvDirection dir)
 {
-	GanvBox* box = GANV_BOX(module);
+	GanvBox*        box          = GANV_BOX(module);
+	GanvText*       canvas_title = GANV_NODE(module)->impl->label;
+	GanvModuleImpl* impl         = module->impl;
 
 	double title_w, title_h;
 	title_size(module, &title_w, &title_h);
-
-	GanvText*       canvas_title = GANV_NODE(module)->impl->label;
-	GanvModuleImpl* impl         = module->impl;
 
 	if (!canvas_title) {
 		return;
@@ -270,11 +247,13 @@ place_title(GanvModule* module, GanvDirection dir)
 		if (impl->icon_box) {
 			ganv_item_set(GANV_ITEM(canvas_title),
 			              "x", MODULE_ICON_SIZE + 1.0,
+			              "y", 2.0,
 			              NULL);
 		} else {
 			ganv_item_set(GANV_ITEM(canvas_title),
 			              "x", ((ganv_box_get_width(box) / 2.0)
 			                    - (title_w / 2.0)),
+			              "y", 2.0,
 			              NULL);
 		}
 	} else {
@@ -875,6 +854,17 @@ ganv_module_embed(GanvModule* module,
 
 	layout(GANV_NODE(module));
 	ganv_item_request_update(GANV_ITEM(module));
+}
+
+void
+ganv_module_set_direction(GanvModule*   module,
+                          GanvDirection direction)
+{
+	FOREACH_PORT(module->impl->ports, p) {
+		ganv_port_set_direction(*p, direction);
+	}
+	module->impl->must_resize = TRUE;
+	ganv_module_resize(GANV_NODE(module));
 }
 
 void

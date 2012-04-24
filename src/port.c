@@ -137,7 +137,10 @@ ganv_port_draw(GanvItem* item,
 	GanvNode* node = GANV_NODE(item);
 	if (node->impl->label) {
 		GanvItem* label_item = GANV_ITEM(node->impl->label);
-		GANV_ITEM_GET_CLASS(label_item)->draw(label_item, cr, cx, cy, width, height);
+		if (label_item->object.flags & GANV_ITEM_VISIBLE) {
+			GANV_ITEM_GET_CLASS(label_item)->draw(
+				label_item, cr, cx, cy, width, height);
+		}
 	}
 }
 
@@ -149,15 +152,26 @@ ganv_port_tail_vector(const GanvNode* self,
                       double*         dx,
                       double*         dy)
 {
-	GanvPort* port = GANV_PORT(self);
+	GanvPort*   port   = GANV_PORT(self);
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
 
 	double px, py;
 	g_object_get(G_OBJECT(self), "x", &px, "y", &py, NULL);
 
-	*x  = px + ganv_box_get_width(&port->box);
-	*y  = py + ganv_box_get_height(&port->box) / 2.0;
-	*dx = 1.0;
-	*dy = 0.0;
+	switch (canvas->direction) {
+	case GANV_DIRECTION_RIGHT:
+		*x  = px + ganv_box_get_width(&port->box);
+		*y  = py + ganv_box_get_height(&port->box) / 2.0;
+		*dx = 1.0;
+		*dy = 0.0;
+		break;
+	case GANV_DIRECTION_DOWN:
+		*x  = px + ganv_box_get_width(&port->box) / 2.0;
+		*y  = py + ganv_box_get_height(&port->box);
+		*dx = 0.0;
+		*dy = 1.0;
+		break;
+	}
 
 	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
 }
@@ -170,15 +184,26 @@ ganv_port_head_vector(const GanvNode* self,
                       double*         dx,
                       double*         dy)
 {
-	GanvPort* port = GANV_PORT(self);
+	GanvPort*   port   = GANV_PORT(self);
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
 
 	double px, py;
 	g_object_get(G_OBJECT(self), "x", &px, "y", &py, NULL);
 
-	*x  = px;
-	*y  = py + ganv_box_get_height(&port->box) / 2.0;
-	*dx = -1.0;
-	*dy = 0.0;
+	switch (canvas->direction) {
+	case GANV_DIRECTION_RIGHT:
+		*x  = px;
+		*y  = py + ganv_box_get_height(&port->box) / 2.0;
+		*dx = -1.0;
+		*dy = 0.0;
+		break;
+	case GANV_DIRECTION_DOWN:
+		*x  = px + ganv_box_get_width(&port->box) / 2.0;
+		*y  = 0.0;
+		*dx = 0.0;
+		*dy = -1.0;
+		break;
+	}
 
 	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
 }
@@ -186,10 +211,11 @@ ganv_port_head_vector(const GanvNode* self,
 static void
 ganv_port_resize(GanvNode* self)
 {
-	GanvPort* port = GANV_PORT(self);
-	GanvNode* node = GANV_NODE(self);
+	GanvPort* port  = GANV_PORT(self);
+	GanvNode* node  = GANV_NODE(self);
+	GanvText* label = node->impl->label;
 
-	if (node->impl->label) {
+	if (label && GANV_ITEM(label)->object.flags & GANV_ITEM_VISIBLE) {
 		double label_w, label_h;
 		g_object_get(node->impl->label,
 		             "width", &label_w,
@@ -323,7 +349,35 @@ ganv_port_new(GanvModule* module,
 	node->impl->draggable    = FALSE;
 	node->impl->border_width = 1.0;
 
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(port)->canvas);
+	ganv_port_set_direction(port, canvas->direction);
+		
 	return port;
+}
+
+void
+ganv_port_set_direction(GanvPort*     port,
+                        GanvDirection direction)
+{
+	GanvNode* node     = GANV_NODE(port);
+	GanvBox*  box      = GANV_BOX(port);
+	gboolean  is_input = port->impl->is_input;
+	switch (direction) {
+	case GANV_DIRECTION_RIGHT:
+		box->impl->radius_tl = (is_input ? 0.0 : 4.0);
+		box->impl->radius_tr = (is_input ? 4.0 : 0.0);
+		box->impl->radius_br = (is_input ? 4.0 : 0.0);
+		box->impl->radius_bl = (is_input ? 0.0 : 4.0);
+		break;
+	case GANV_DIRECTION_DOWN:
+		box->impl->radius_tl = (is_input ? 0.0 : 4.0);
+		box->impl->radius_tr = (is_input ? 0.0 : 4.0);
+		box->impl->radius_br = (is_input ? 4.0 : 0.0);
+		box->impl->radius_bl = (is_input ? 4.0 : 0.0);
+		break;
+	}
+	ganv_node_set_show_label(node, direction == GANV_DIRECTION_RIGHT);
+	ganv_node_resize(node);
 }
 
 void
@@ -450,9 +504,10 @@ double
 ganv_port_get_natural_width(const GanvPort* port)
 {
 	GanvCanvas* const canvas = GANV_CANVAS(GANV_ITEM(port)->canvas);
+	GanvText* const   label  = port->box.node.impl->label;
 	if (canvas->direction == GANV_DIRECTION_DOWN) {
 		return ganv_module_get_empty_port_breadth(ganv_port_get_module(port));
-	} else if (port->box.node.impl->label) {
+	} else if (label && (GANV_ITEM(label)->object.flags & GANV_ITEM_VISIBLE)) {
 		double label_w;
 		g_object_get(port->box.node.impl->label, "width", &label_w, NULL);
 		return label_w + (PORT_LABEL_HPAD * 2.0);
