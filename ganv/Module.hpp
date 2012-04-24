@@ -109,7 +109,11 @@ public:
 	}
 
 	void embed(Gtk::Widget* widget) {
-		ganv_module_embed(gobj(), widget->gobj());
+		if (widget) {
+			ganv_module_embed(gobj(), widget->gobj());
+		} else {
+			ganv_module_embed(gobj(), NULL);
+		}
 	}
 
 	void for_each_port(GanvPortFunction f, void* data) {
