@@ -72,26 +72,18 @@ public:
 
 	METHOD0(ganv_canvas, get_zoom);
 
-	/** Set the current zoom factor (pixels per unit). */
-	void set_zoom(double pix_per_unit);
+	METHOD1(ganv_canvas, set_zoom, double, pix_per_unit);
+	METHOD1(ganv_canvas, set_font_size, double, points);
+	METHOD2(ganv_canvas, set_scale, double, zoom, double, points);
 
-	/** Zoom so all canvas contents are visible. */
-	void zoom_full();
+	METHOD0(ganv_canvas, zoom_full);
 
 	METHODRET0(ganv_canvas, double, get_font_size)
 	METHODRET0(ganv_canvas, double, get_default_font_size)
 
-	/** Set the current font size. */
-	void set_font_size(double points);
+	METHOD1(ganv_canvas, export_dot, const char*, filename);
 
-	/** Set both the zoom factor and font size. */
-	void set_zoom_and_font_size(double zoom, double points);
-
-	/** Write a Graphviz DOT description of the canvas to @c filename. */
-	void render_to_dot(const std::string& filename);
-
-	/** Automatically arrange the canvas contents if Graphviz is available. */
-	void arrange();
+	METHOD0(ganv_canvas, arrange);
 
 	METHOD2(ganv_canvas, move_contents_to, double, x, double, y);
 

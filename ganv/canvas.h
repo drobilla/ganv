@@ -95,13 +95,26 @@ double
 ganv_canvas_get_default_font_size(const GanvCanvas* canvas);
 
 void
+ganv_canvas_set_zoom(GanvCanvas* canvas, double zoom);
+
+void
 ganv_canvas_set_font_size(GanvCanvas* canvas, double points);
+
+void
+ganv_canvas_set_scale(GanvCanvas* canvas, double zoom, double points);
 
 void
 ganv_canvas_set_direction(GanvCanvas* canvas, GanvDirection dir);
 
 void
 ganv_canvas_clear_selection(GanvCanvas* canvas);
+
+void
+ganv_canvas_arrange(GanvCanvas* canvas);
+
+/** Write a Graphviz DOT description of the canvas to @c filename. */
+void
+ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename);
 
 typedef void (*GanvNodeFunction)(GanvNode* node, void* data);
 
@@ -201,6 +214,13 @@ ganv_canvas_get_font_size(const GanvCanvas* canvas);
  */
 void
 ganv_canvas_set_scale(GanvCanvas* canvas, double zoom, double points);
+
+/**
+ * ganv_canvas_zoom_full:
+ * Zoom so all canvas contents are visible.
+ */
+void
+ganv_canvas_zoom_full(GanvCanvas* canvas);
 
 /**
  * ganv_canvas_get_move_cursor:

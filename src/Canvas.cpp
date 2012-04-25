@@ -1441,67 +1441,6 @@ Canvas::~Canvas()
 }
 
 void
-Canvas::set_zoom(double pix_per_unit)
-{
-	set_zoom_and_font_size(pix_per_unit, impl()->_font_size);
-}
-
-void
-Canvas::set_font_size(double points)
-{
-	set_zoom_and_font_size(impl()->_zoom, points);
-}
-
-void
-Canvas::set_zoom_and_font_size(double zoom, double points)
-{
-	impl()->set_zoom_and_font_size(zoom, points);
-}
-
-void
-Canvas::zoom_full()
-{
-#if 0
-	if (impl()->_items.empty())
-		return;
-
-	int win_width, win_height;
-	Glib::RefPtr<Gdk::Window> win = GANV_CANVAS_BASE(impl()->_gcanvas)->get_window();
-	win->get_size(win_width, win_height);
-
-	// Box containing all canvas items
-	double left   = DBL_MAX;
-	double right  = DBL_MIN;
-	double top    = DBL_MIN;
-	double bottom = DBL_MAX;
-
-	FOREACH_ITEM(impl()->_items, i) {
-		if ((*i)->get_x() < left)
-			left = (*i)->get_x();
-		if ((*i)->get_x() + (*i)->width() > right)
-			right = (*i)->get_x() + (*i)->width();
-		if ((*i)->get_y() < bottom)
-			bottom = (*i)->get_y();
-		if ((*i)->get_y() + (*i)->height() > top)
-			top = (*i)->get_y() + (*i)->height();
-	}
-
-	static const double pad = 8.0;
-
-	const double new_zoom = std::min(
-		((double)win_width / (double)(right - left + pad*2.0)),
-		((double)win_height / (double)(top - bottom + pad*2.0)));
-
-	set_zoom(new_zoom);
-
-	int scroll_x, scroll_y;
-	GANV_CANVAS_BASE(impl()->_gcanvas)->w2c(lrintf(left - pad), lrintf(bottom - pad), scroll_x, scroll_y);
-
-	GANV_CANVAS_BASE(impl()->_gcanvas)->scroll_to(scroll_x, scroll_y);
-#endif
-}
-
-void
 Canvas::remove_edge(Node* item1, Node* item2)
 {
 	Edge* edge = get_edge(item1, item2);
@@ -1527,84 +1466,6 @@ Canvas::get_edge(Node* tail, Node* head) const
 	}
 
 	return NULL;
-}
-
-void
-Canvas::render_to_dot(const string& dot_output_filename)
-{
-#ifdef HAVE_AGRAPH
-	GVNodes nodes = impl()->layout_dot(dot_output_filename);
-	nodes.cleanup();
-#endif
-}
-
-void
-Canvas::arrange()
-{
-#ifdef HAVE_AGRAPH
-	GVNodes nodes = impl()->layout_dot("");
-
-	double least_x=HUGE_VAL, least_y=HUGE_VAL, most_x=0, most_y=0;
-
-	// Set numeric locale to POSIX for reading graphviz output with strtod
-	char* locale = strdup(setlocale(LC_NUMERIC, NULL));
-	setlocale(LC_NUMERIC, "POSIX");
-
-	// Arrange to graphviz coordinates
-	for (GVNodes::iterator i = nodes.begin(); i != nodes.end(); ++i) {
-		if (GANV_ITEM(i->first)->parent != GANV_ITEM(root())) {
-			continue;
-		}
-		const string pos   = agget(i->second, (char*)"pos");
-		const string x_str = pos.substr(0, pos.find(","));
-		const string y_str = pos.substr(pos.find(",") + 1);
-		const double cx    = strtod(x_str.c_str(), NULL) * 1.1;
-		const double cy    = strtod(y_str.c_str(), NULL) * 1.1;
-		const double w     = ganv_box_get_width(GANV_BOX(i->first));
-
-		/* Dot node positions are supposedly node centers, but things only
-		   match up if x is interpreted as center and y as top...
-		*/
-		const double x = cx - (w / 2.0);
-		const double y = -cy;
-
-		ganv_node_move_to(i->first, x, y);
-
-		least_x = std::min(least_x, x);
-		least_y = std::min(least_y, y);
-		most_x  = std::max(most_x, x);
-		most_y  = std::max(most_y, y);
-	}
-
-	// Reset numeric locale to original value
-	setlocale(LC_NUMERIC, locale);
-	free(locale);
-
-	const double graph_width  = most_x - least_x;
-	const double graph_height = most_y - least_y;
-
-	//cerr << "CWH: " << _width << ", " << _height << endl;
-	//cerr << "GWH: " << graph_width << ", " << graph_height << endl;
-
-	const double old_width  = get_width();
-	const double old_height = get_height();
-	const double new_width  = std::max(graph_width + 10.0, old_width);
-	const double new_height = std::max(graph_height + 10.0, old_height);
-	if (new_width != old_width || new_height != old_height) {
-		resize(new_width, new_height);
-	}
-	nodes.cleanup();
-
-	static const double border_width = impl()->_font_size;
-	impl()->move_contents_to_internal(border_width, border_width, least_x, least_y);
-	ganv_canvas_base_scroll_to(GANV_CANVAS_BASE(impl()->_gcanvas), 0, 0);
-
-	FOREACH_ITEM(impl()->_items, i) {
-		double x, y;
-		g_object_get(*i, "x", &x, "y", &y, NULL);
-		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
-	}
-#endif
 }
 
 void
@@ -1876,6 +1737,12 @@ ganv_canvas_get_font_size(const GanvCanvas* canvas)
 }
 
 void
+ganv_canvas_set_zoom(GanvCanvas* canvas, double zoom)
+{
+	canvas->impl->set_zoom_and_font_size(zoom, canvas->impl->_font_size);
+}
+
+void
 ganv_canvas_set_font_size(GanvCanvas* canvas, double points)
 {
 	canvas->impl->set_zoom_and_font_size(canvas->impl->_zoom, points);
@@ -1885,6 +1752,53 @@ void
 ganv_canvas_set_scale(GanvCanvas* canvas, double zoom, double points)
 {
 	canvas->impl->set_zoom_and_font_size(zoom, points);
+}
+
+void
+ganv_canvas_zoom_full(GanvCanvas* canvas)
+{
+	if (canvas->impl->_items.empty())
+		return;
+
+	int win_width, win_height;
+	GdkWindow* win = gtk_widget_get_window(
+		GTK_WIDGET(GANV_CANVAS_BASE(canvas->impl->_gcanvas)));
+	gdk_window_get_size(win, &win_width, &win_height);
+
+	// Box containing all canvas items
+	double left   = DBL_MAX;
+	double right  = DBL_MIN;
+	double top    = DBL_MIN;
+	double bottom = DBL_MAX;
+
+	FOREACH_ITEM(canvas->impl->_items, i) {
+		double x, y, w, h;
+		g_object_get(G_OBJECT(*i), "x", &x, "y", &y, "w", &w, "h", &h, NULL);
+		if (x < left)
+			left = x;
+		if (x + w > right)
+			right = x + w;
+		if (y < bottom)
+			bottom = y;
+		if (y + h > top)
+			top = y + h;
+	}
+
+	static const double pad = 8.0;
+
+	const double new_zoom = std::min(
+		((double)win_width / (double)(right - left + pad*2.0)),
+		((double)win_height / (double)(top - bottom + pad*2.0)));
+
+	ganv_canvas_set_zoom(canvas, new_zoom);
+
+	int scroll_x, scroll_y;
+	ganv_canvas_base_w2c(GANV_CANVAS_BASE(canvas->impl->_gcanvas),
+	                     lrintf(left - pad), lrintf(bottom - pad),
+	                     &scroll_x, &scroll_y);
+
+	ganv_canvas_base_scroll_to(GANV_CANVAS_BASE(canvas->impl->_gcanvas),
+	                           scroll_x, scroll_y);
 }
 
 static void
@@ -2101,6 +2015,88 @@ ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y)
 		min_y = std::min(min_y, y);
 	}
 	canvas->impl->move_contents_to_internal(x, y, min_x, min_y);
+}
+
+void
+ganv_canvas_arrange(GanvCanvas* canvas)
+{
+#ifdef HAVE_AGRAPH
+	GVNodes nodes = canvas->impl->layout_dot("");
+
+	double least_x=HUGE_VAL, least_y=HUGE_VAL, most_x=0, most_y=0;
+
+	// Set numeric locale to POSIX for reading graphviz output with strtod
+	char* locale = strdup(setlocale(LC_NUMERIC, NULL));
+	setlocale(LC_NUMERIC, "POSIX");
+
+	// Arrange to graphviz coordinates
+	for (GVNodes::iterator i = nodes.begin(); i != nodes.end(); ++i) {
+		if (GANV_ITEM(i->first)->parent != GANV_ITEM(ganv_canvas_get_root(canvas))) {
+			continue;
+		}
+		const string pos   = agget(i->second, (char*)"pos");
+		const string x_str = pos.substr(0, pos.find(","));
+		const string y_str = pos.substr(pos.find(",") + 1);
+		const double cx    = strtod(x_str.c_str(), NULL) * 1.1;
+		const double cy    = strtod(y_str.c_str(), NULL) * 1.1;
+		const double w     = ganv_box_get_width(GANV_BOX(i->first));
+
+		/* Dot node positions are supposedly node centers, but things only
+		   match up if x is interpreted as center and y as top...
+		*/
+		const double x = cx - (w / 2.0);
+		const double y = -cy;
+
+		ganv_node_move_to(i->first, x, y);
+
+		least_x = std::min(least_x, x);
+		least_y = std::min(least_y, y);
+		most_x  = std::max(most_x, x);
+		most_y  = std::max(most_y, y);
+	}
+
+	// Reset numeric locale to original value
+	setlocale(LC_NUMERIC, locale);
+	free(locale);
+
+	const double graph_width  = most_x - least_x;
+	const double graph_height = most_y - least_y;
+
+	//cerr << "CWH: " << _width << ", " << _height << endl;
+	//cerr << "GWH: " << graph_width << ", " << graph_height << endl;
+
+	double old_width, old_height;
+	g_object_get(G_OBJECT(canvas),
+	             "width", &old_width,
+	             "height", &old_height,
+	             NULL);
+
+	const double new_width  = std::max(graph_width + 10.0, old_width);
+	const double new_height = std::max(graph_height + 10.0, old_height);
+	if (new_width != old_width || new_height != old_height) {
+		ganv_canvas_resize(canvas, new_width, new_height);
+	}
+	nodes.cleanup();
+
+	static const double border_width = canvas->impl->_font_size;
+	canvas->impl->move_contents_to_internal(border_width, border_width, least_x, least_y);
+	ganv_canvas_base_scroll_to(GANV_CANVAS_BASE(canvas->impl->_gcanvas), 0, 0);
+
+	FOREACH_ITEM(canvas->impl->_items, i) {
+		double x, y;
+		g_object_get(*i, "x", &x, "y", &y, NULL);
+		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
+	}
+#endif
+}
+
+void
+ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename)
+{
+#ifdef HAVE_AGRAPH
+	GVNodes nodes = canvas->impl->layout_dot(filename);
+	nodes.cleanup();
+#endif
 }
 
 } // extern "C"
