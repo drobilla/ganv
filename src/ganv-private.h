@@ -86,7 +86,6 @@ struct _GanvEdgeImpl
 struct _GanvModuleImpl
 {
 	GPtrArray* ports;
-	GanvItem*  icon_box;
 	GanvItem*  embed_item;
 	int        embed_width;
 	int        embed_height;

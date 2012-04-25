@@ -57,13 +57,12 @@ ganv_module_init(GanvModule* module)
 	GANV_NODE(module)->impl->can_tail = FALSE;
 
 	impl->ports = g_ptr_array_new();
-	impl->icon_box         = NULL;
-	impl->embed_item       = NULL;
-	impl->embed_width      = 0;
-	impl->embed_height     = 0;
-	impl->widest_input     = 0.0;
-	impl->widest_output    = 0.0;
-	impl->must_resize      = TRUE;
+	impl->embed_item    = NULL;
+	impl->embed_width   = 0;
+	impl->embed_height  = 0;
+	impl->widest_input  = 0.0;
+	impl->widest_output = 0.0;
+	impl->must_resize   = TRUE;
 }
 
 static void
@@ -161,9 +160,6 @@ measure(GanvModule* module, Metrics* m)
 		if (canvas_title) {
 			contents_width += title_w;
 		}
-		if (impl->icon_box) {
-			contents_width += MODULE_ICON_SIZE + PAD;
-		}
 
 		m->embed_x      = 0;
 		m->input_width  = ganv_module_get_empty_port_breadth(module);
@@ -183,9 +179,6 @@ measure(GanvModule* module, Metrics* m)
 	m->width = (canvas_title)
 		? title_w + 10.0
 		: 1.0;
-
-	if (impl->icon_box)
-		m->width += MODULE_ICON_SIZE + 2;
 
 	// Title is wide, put inputs and outputs beside each other
 	m->horiz = (impl->widest_input + impl->widest_output + 10.0
@@ -234,9 +227,8 @@ measure(GanvModule* module, Metrics* m)
 static void
 place_title(GanvModule* module, GanvDirection dir)
 {
-	GanvBox*        box          = GANV_BOX(module);
-	GanvText*       canvas_title = GANV_NODE(module)->impl->label;
-	GanvModuleImpl* impl         = module->impl;
+	GanvBox*  box          = GANV_BOX(module);
+	GanvText* canvas_title = GANV_NODE(module)->impl->label;
 
 	double title_w, title_h;
 	title_size(module, &title_w, &title_h);
@@ -244,18 +236,11 @@ place_title(GanvModule* module, GanvDirection dir)
 	if (!canvas_title) {
 		return;
 	} else if (dir == GANV_DIRECTION_RIGHT) {
-		if (impl->icon_box) {
-			ganv_item_set(GANV_ITEM(canvas_title),
-			              "x", MODULE_ICON_SIZE + 1.0,
-			              "y", 2.0,
-			              NULL);
-		} else {
-			ganv_item_set(GANV_ITEM(canvas_title),
-			              "x", ((ganv_box_get_width(box) / 2.0)
-			                    - (title_w / 2.0)),
-			              "y", 2.0,
-			              NULL);
-		}
+		ganv_item_set(GANV_ITEM(canvas_title),
+		              "x", ((ganv_box_get_width(box) / 2.0)
+		                    - (title_w / 2.0)),
+		              "y", 2.0,
+		              NULL);
 	} else {
 		ganv_item_set(GANV_ITEM(canvas_title),
 		              "x", ((ganv_box_get_width(box) / 2.0)
@@ -277,10 +262,9 @@ resize_horiz(GanvModule* module)
 	double title_w, title_h;
 	title_size(module, &title_w, &title_h);
 
-	// Basic height contains title, icon
+	// Basic height contains title
 	double header_height = 2.0 + title_h;
-
-	double height = header_height;
+	double height        = header_height;
 
 	if (impl->embed_item) {
 		ganv_item_set(impl->embed_item,
@@ -755,45 +739,6 @@ ganv_module_get_empty_port_depth(const GanvModule* module)
 		GANV_ITEM(module)->canvas);
 
 	return ganv_canvas_get_font_size(canvas);
-}
-
-void
-ganv_module_set_icon(GanvModule* module,
-                     GdkPixbuf*  icon)
-{
-	fprintf(stderr, "FIXME: icon\n");
-	return;
-#if 0
-	GanvModuleImpl* impl = module->impl;
-
-	if (impl->icon_box) {
-		gtk_object_destroy(GTK_OBJECT(impl->icon_box));
-		impl->icon_box = NULL;
-	}
-
-	if (icon) {
-		impl->icon_box = ganv_item_new(module,
-		                               ganv_canvas_base_pixbuf_get_type(),
-		                               "x", 8.0,
-		                               "y", 10.0,
-		                               "pixbuf", icon,
-		                               NULL);
-
-		const double icon_w = gdk_pixbuf_get_width(icon);
-		const double icon_h = gdk_pixbuf_get_height(icon);
-		const double scale  = MODULE_ICON_SIZE / ((icon_w > icon_h)
-		                                          ? icon_w : icon_h);
-		const double scale_trans[6] = {
-			scale, 0.0, 0.0,
-			scale, 0.0, 0.0
-		};
-
-		ganv_item_affine_relative(impl->icon_box, scale_trans);
-		ganv_item_raise_to_top(impl->icon_box);
-		ganv_item_show(impl->icon_box);
-	}
-	impl->must_resize = TRUE;
-#endif
 }
 
 static void
