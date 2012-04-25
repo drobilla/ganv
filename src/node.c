@@ -208,13 +208,24 @@ ganv_node_default_tail_vector(const GanvNode* self,
                               double*         dx,
                               double*         dy)
 {
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
+
 	g_object_get(G_OBJECT(self),
 	             "x", x,
 	             "y", y,
 	             NULL);
 
-	*dx = 1.0;
-	*dy = 0.0;
+	switch (canvas->direction) {
+	case GANV_DIRECTION_RIGHT:
+		*dx = 1.0;
+		*dy = 0.0;
+		break;
+	case GANV_DIRECTION_DOWN:
+		*dx = 0.0;
+		*dy = 1.0;
+		break;
+	}
+
 	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
 }
 
@@ -226,13 +237,24 @@ ganv_node_default_head_vector(const GanvNode* self,
                               double*         dx,
                               double*         dy)
 {
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
+
 	g_object_get(G_OBJECT(self),
 	             "x", x,
 	             "y", y,
 	             NULL);
 
-	*dx = -1.0;
-	*dy = 0.0;
+	switch (canvas->direction) {
+	case GANV_DIRECTION_RIGHT:
+		*dx = -1.0;
+		*dy = 0.0;
+		break;
+	case GANV_DIRECTION_DOWN:
+		*dx = 0.0;
+		*dy = -1.0;
+		break;
+	}
+
 	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
 }
 
