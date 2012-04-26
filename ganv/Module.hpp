@@ -104,10 +104,6 @@ public:
 	const_iterator end()   const { return iterator(const_cast<GanvModule*>(gobj()), num_ports()); }
 	const_iterator back()  const { return iterator(const_cast<GanvModule*>(gobj()), num_ports() - 1); }
 
-	void set_icon(Gdk::Pixbuf* icon) {
-		ganv_module_set_icon(gobj(), icon->gobj());
-	}
-
 	void embed(Gtk::Widget* widget) {
 		if (widget) {
 			ganv_module_embed(gobj(), widget->gobj());
