@@ -826,9 +826,9 @@ ganv_module_set_direction(GanvModule*   module,
 }
 
 void
-ganv_module_for_each_port(GanvModule*      module,
-                          GanvPortFunction f,
-                          void*            data)
+ganv_module_for_each_port(GanvModule*  module,
+                          GanvPortFunc f,
+                          void*        data)
 {
 	GanvModuleImpl* impl = module->impl;
 	const int       len  = impl->ports->len;

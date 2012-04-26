@@ -166,10 +166,10 @@ struct GanvCanvasImpl {
 
 	void set_zoom_and_font_size(double zoom, double points);
 
-	void for_each_node(GanvNodeFunction f, void* data);
-	void for_each_edge_from(const GanvNode* tail, GanvEdgeFunction f);
-	void for_each_edge_to(const GanvNode* head, GanvEdgeFunction f);
-	void for_each_edge_on(const GanvNode* node, GanvEdgeFunction f);
+	void for_each_node(GanvNodeFunc f, void* data);
+	void for_each_edge_from(const GanvNode* tail, GanvEdgeFunc f);
+	void for_each_edge_to(const GanvNode* head, GanvEdgeFunc f);
+	void for_each_edge_on(const GanvNode* node, GanvEdgeFunc f);
 
 	void add_item(GanvNode* i);
 	bool remove_item(GanvNode* i);
@@ -1292,8 +1292,8 @@ GanvCanvasImpl::move_contents_to_internal(double x, double y, double min_x, doub
 }
 
 void
-GanvCanvasImpl::for_each_node(GanvNodeFunction f,
-                              void*            data)
+GanvCanvasImpl::for_each_node(GanvNodeFunc f,
+                              void*        data)
 {
 	FOREACH_ITEM(_items, i) {
 		f(*i, data);
@@ -1301,8 +1301,8 @@ GanvCanvasImpl::for_each_node(GanvNodeFunction f,
 }
 
 void
-GanvCanvasImpl::for_each_edge_from(const GanvNode*  tail,
-                                   GanvEdgeFunction f)
+GanvCanvasImpl::for_each_edge_from(const GanvNode* tail,
+                                   GanvEdgeFunc    f)
 {
 	for (GanvCanvasImpl::Edges::const_iterator i = first_edge_from(tail);
 	     i != _edges.end() && (*i)->impl->tail == tail;) {
@@ -1314,8 +1314,8 @@ GanvCanvasImpl::for_each_edge_from(const GanvNode*  tail,
 }
 
 void
-GanvCanvasImpl::for_each_edge_to(const GanvNode*  head,
-                                 GanvEdgeFunction f)
+GanvCanvasImpl::for_each_edge_to(const GanvNode* head,
+                                 GanvEdgeFunc    f)
 {
 	for (GanvCanvasImpl::Edges::const_iterator i = first_edge_to(head);
 	     i != _dst_edges.end() && (*i)->impl->head == head;) {
@@ -1327,8 +1327,8 @@ GanvCanvasImpl::for_each_edge_to(const GanvNode*  head,
 }
 
 void
-GanvCanvasImpl::for_each_edge_on(const GanvNode*  node,
-                                 GanvEdgeFunction f)
+GanvCanvasImpl::for_each_edge_on(const GanvNode* node,
+                                 GanvEdgeFunc    f)
 {
 	for_each_edge_from(node, f);
 	for_each_edge_to(node, f);
@@ -1469,7 +1469,7 @@ Canvas::get_edge(Node* tail, Node* head) const
 }
 
 void
-Canvas::for_each_edge(EdgePtrFunction f, void* data)
+Canvas::for_each_edge(EdgePtrFunc f, void* data)
 {
 	FOREACH_EDGE(impl()->_edges, i) {
 		f((*i), data);
@@ -1477,7 +1477,7 @@ Canvas::for_each_edge(EdgePtrFunction f, void* data)
 }
 
 void
-Canvas::for_each_selected_edge(EdgePtrFunction f, void* data)
+Canvas::for_each_selected_edge(EdgePtrFunc f, void* data)
 {
 	FOREACH_EDGE(impl()->_selected_edges, i) {
 		f((*i), data);
@@ -1912,17 +1912,17 @@ ganv_canvas_unselect_edge(GanvCanvas* canvas,
 }
 
 void
-ganv_canvas_for_each_node(GanvCanvas*      canvas,
-                          GanvNodeFunction f,
-                          void*            data)
+ganv_canvas_for_each_node(GanvCanvas*  canvas,
+                          GanvNodeFunc f,
+                          void*        data)
 {
 	canvas->impl->for_each_node(f, data);
 }
 
 void
-ganv_canvas_for_each_selected_node(GanvCanvas*      canvas,
-                                   GanvNodeFunction f,
-                                   void*            data)
+ganv_canvas_for_each_selected_node(GanvCanvas*  canvas,
+                                   GanvNodeFunc f,
+                                   void*        data)
 {
 	FOREACH_ITEM(canvas->impl->_selected_items, i) {
 		f(*i, data);
@@ -1930,25 +1930,25 @@ ganv_canvas_for_each_selected_node(GanvCanvas*      canvas,
 }
 
 void
-ganv_canvas_for_each_edge_from(GanvCanvas*      canvas,
-                               const GanvNode*  tail,
-                               GanvEdgeFunction f)
+ganv_canvas_for_each_edge_from(GanvCanvas*     canvas,
+                               const GanvNode* tail,
+                               GanvEdgeFunc    f)
 {
 	canvas->impl->for_each_edge_from(tail, f);
 }
 
 void
-ganv_canvas_for_each_edge_to(GanvCanvas*      canvas,
-                             const GanvNode*  head,
-                             GanvEdgeFunction f)
+ganv_canvas_for_each_edge_to(GanvCanvas*     canvas,
+                             const GanvNode* head,
+                             GanvEdgeFunc    f)
 {
 	canvas->impl->for_each_edge_to(head, f);
 }
 
 void
-ganv_canvas_for_each_edge_on(GanvCanvas*      canvas,
-                             const GanvNode*  node,
-                             GanvEdgeFunction f)
+ganv_canvas_for_each_edge_on(GanvCanvas*     canvas,
+                             const GanvNode* node,
+                             GanvEdgeFunc    f)
 {
 	canvas->impl->for_each_edge_on(node, f);
 }

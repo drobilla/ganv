@@ -33,7 +33,7 @@ G_BEGIN_DECLS
 typedef struct _GanvModuleClass GanvModuleClass;
 typedef struct _GanvModuleImpl GanvModuleImpl;
 
-typedef void (*GanvPortFunction)(GanvPort* port, void* data);
+typedef void (*GanvPortFunc)(GanvPort* port, void* data);
 
 struct _GanvModule {
 	GanvBox         box;
@@ -86,9 +86,9 @@ ganv_module_set_direction(GanvModule*   module,
  * @data: User data to pass to @f.
  */
 void
-ganv_module_for_each_port(GanvModule*      module,
-                          GanvPortFunction f,
-                          void*            data);
+ganv_module_for_each_port(GanvModule*  module,
+                          GanvPortFunc f,
+                          void*        data);
 
 G_END_DECLS
 

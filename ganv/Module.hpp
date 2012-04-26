@@ -116,11 +116,9 @@ public:
 		}
 	}
 
-	void for_each_port(GanvPortFunction f, void* data) {
-		ganv_module_for_each_port(gobj(), f, data);
-	}
+	METHOD2(ganv_module, for_each_port, GanvPortFunc, f, void*, data);
 
-	guint num_ports() const { return ganv_module_num_ports(gobj()); }
+	METHODRET0(ganv_module, guint, num_ports);
 
 	RW_PROPERTY(gboolean, stacked)
 

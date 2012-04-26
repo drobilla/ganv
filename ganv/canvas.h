@@ -116,9 +116,9 @@ ganv_canvas_arrange(GanvCanvas* canvas);
 void
 ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename);
 
-typedef void (*GanvNodeFunction)(GanvNode* node, void* data);
+typedef void (*GanvNodeFunc)(GanvNode* node, void* data);
 
-typedef void (*GanvEdgeFunction)(GanvEdge* edge);
+typedef void (*GanvEdgeFunc)(GanvEdge* edge);
 
 /**
  * ganv_canvas_for_each_node:
@@ -127,14 +127,14 @@ typedef void (*GanvEdgeFunction)(GanvEdge* edge);
  * @data: Data to pass to @f.
  */
 void
-ganv_canvas_for_each_node(GanvCanvas*      canvas,
-                          GanvNodeFunction f,
-                          void*            data);
+ganv_canvas_for_each_node(GanvCanvas*  canvas,
+                          GanvNodeFunc f,
+                          void*        data);
 
 void
-ganv_canvas_for_each_selected_node(GanvCanvas*      canvas,
-                                   GanvNodeFunction f,
-                                   void*            data);
+ganv_canvas_for_each_selected_node(GanvCanvas*  canvas,
+                                   GanvNodeFunc f,
+                                   void*        data);
 
 /**
  * ganv_canvas_for_each_edge:
@@ -143,9 +143,9 @@ ganv_canvas_for_each_selected_node(GanvCanvas*      canvas,
  * @data: Data to pass to @f.
  */
 void
-ganv_canvas_for_each_edge(GanvCanvas*      canvas,
-                          GanvEdgeFunction f,
-                          void*            data);
+ganv_canvas_for_each_edge(GanvCanvas*  canvas,
+                          GanvEdgeFunc f,
+                          void*        data);
 
 /**
  * ganv_canvas_for_each_edge_from:
@@ -154,9 +154,9 @@ ganv_canvas_for_each_edge(GanvCanvas*      canvas,
  * @f: (scope call): A function to call on every edge leaving @tail.
  */
 void
-ganv_canvas_for_each_edge_from(GanvCanvas*      canvas,
-                               const GanvNode*  tail,
-                               GanvEdgeFunction f);
+ganv_canvas_for_each_edge_from(GanvCanvas*     canvas,
+                               const GanvNode* tail,
+                               GanvEdgeFunc    f);
 
 /**
  * ganv_canvas_for_each_edge_to:
@@ -165,9 +165,9 @@ ganv_canvas_for_each_edge_from(GanvCanvas*      canvas,
  * @f: (scope call): A function to call on every edge entering @head.
  */
 void
-ganv_canvas_for_each_edge_to(GanvCanvas*      canvas,
-                             const GanvNode*  head,
-                             GanvEdgeFunction f);
+ganv_canvas_for_each_edge_to(GanvCanvas*     canvas,
+                             const GanvNode* head,
+                             GanvEdgeFunc    f);
 
 /**
  * ganv_canvas_for_each_edge_on:
@@ -176,9 +176,9 @@ ganv_canvas_for_each_edge_to(GanvCanvas*      canvas,
  * @f: (scope call): A function to call on every edge attached to @node.
  */
 void
-ganv_canvas_for_each_edge_on(GanvCanvas*      canvas,
-                             const GanvNode*  node,
-                             GanvEdgeFunction f);
+ganv_canvas_for_each_edge_on(GanvCanvas*     canvas,
+                             const GanvNode* node,
+                             GanvEdgeFunc    f);
 
 /**
  * ganv_canvas_destroy:

@@ -70,7 +70,7 @@
 		prefix##_##name(gobj(), a1, a2); \
 	}
 
-#define SIGNAL(name, argtype) \
+#define SIGNAL1(name, argtype) \
 public: \
 	virtual bool on_##name(argtype arg) { \
 		return _signal_##name.emit(arg); \

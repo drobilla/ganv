@@ -55,9 +55,43 @@ public:
 	Canvas(double width, double height);
 	virtual	~Canvas();
 
-	Gtk::Layout& widget();
-
 	METHOD0(ganv_canvas, destroy);
+	METHOD0(ganv_canvas, clear_selection);
+	METHOD0(ganv_canvas, select_all);
+	METHOD0(ganv_canvas, get_zoom);
+	METHOD1(ganv_canvas, set_zoom, double, pix_per_unit);
+	METHOD1(ganv_canvas, set_font_size, double, points);
+	METHOD2(ganv_canvas, set_scale, double, zoom, double, points);
+	METHOD0(ganv_canvas, zoom_full);
+	METHODRET0(ganv_canvas, double, get_font_size)
+	METHODRET0(ganv_canvas, double, get_default_font_size)
+	METHOD1(ganv_canvas, export_dot, const char*, filename);
+	METHOD0(ganv_canvas, arrange);
+	METHOD2(ganv_canvas, move_contents_to, double, x, double, y);
+	METHOD2(ganv_canvas, resize, double, width, double, height);
+	METHOD2(ganv_canvas, for_each_node, GanvNodeFunc, f, void*, data)
+	METHOD2(ganv_canvas, for_each_selected_node, GanvNodeFunc, f, void*, data)
+
+	METHOD2(ganv_canvas, for_each_edge_from,
+	        const GanvNode*, tail,
+	        GanvEdgeFunc, f);
+
+	METHOD2(ganv_canvas, for_each_edge_to,
+	        const GanvNode*, head,
+	        GanvEdgeFunc, f);
+
+	METHOD2(ganv_canvas, for_each_edge_on,
+	        const GanvNode*, node,
+	        GanvEdgeFunc, f);
+
+	METHOD0(ganv_canvas, get_move_cursor);
+
+	RW_PROPERTY(gboolean, locked);
+	RW_PROPERTY(double, width)
+	RW_PROPERTY(double, height)
+	RW_PROPERTY(GanvDirection, direction);
+
+	Gtk::Layout& widget();
 
 	/** Get the edge from @c tail to @c head if one exists. */
 	Edge* get_edge(Node* tail, Node* head) const;
@@ -65,59 +99,10 @@ public:
 	/** Delete the edge from @c tail to @c head. */
 	void remove_edge(Node* tail, Node* head);
 
-	METHOD0(ganv_canvas, clear_selection);
-	METHOD0(ganv_canvas, select_all);
+	typedef void (*EdgePtrFunc)(GanvEdge* edge, void* data);
 
-	RW_PROPERTY(gboolean, locked);
-
-	METHOD0(ganv_canvas, get_zoom);
-
-	METHOD1(ganv_canvas, set_zoom, double, pix_per_unit);
-	METHOD1(ganv_canvas, set_font_size, double, points);
-	METHOD2(ganv_canvas, set_scale, double, zoom, double, points);
-
-	METHOD0(ganv_canvas, zoom_full);
-
-	METHODRET0(ganv_canvas, double, get_font_size)
-	METHODRET0(ganv_canvas, double, get_default_font_size)
-
-	METHOD1(ganv_canvas, export_dot, const char*, filename);
-
-	METHOD0(ganv_canvas, arrange);
-
-	METHOD2(ganv_canvas, move_contents_to, double, x, double, y);
-
-	RW_PROPERTY(double, width)
-	RW_PROPERTY(double, height)
-
-	METHOD2(ganv_canvas, resize, double, width, double, height);
-
-	RW_PROPERTY(GanvDirection, direction);
-
-	METHOD2(ganv_canvas, for_each_node,
-	        GanvNodeFunction, f, void*, data)
-
-	METHOD2(ganv_canvas, for_each_selected_node,
-	        GanvNodeFunction, f, void*, data)
-
-	typedef void (*EdgePtrFunction)(GanvEdge* edge, void* data);
-
-	void for_each_edge(EdgePtrFunction f, void* data);
-	void for_each_selected_edge(EdgePtrFunction f, void* data);
-
-	METHOD2(ganv_canvas, for_each_edge_from,
-	        const GanvNode*, tail,
-	        GanvEdgeFunction, f);
-
-	METHOD2(ganv_canvas, for_each_edge_to,
-	        const GanvNode*, head,
-	        GanvEdgeFunction, f);
-
-	METHOD2(ganv_canvas, for_each_edge_on,
-	        const GanvNode*, node,
-	        GanvEdgeFunction, f);
-
-	METHOD0(ganv_canvas, get_move_cursor);
+	void for_each_edge(EdgePtrFunc f, void* data);
+	void for_each_selected_edge(EdgePtrFunc f, void* data);
 
 	void get_scroll_offsets(int& cx, int& cy) const;
 	void scroll_to(int x, int y);

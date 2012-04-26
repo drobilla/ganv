@@ -70,8 +70,8 @@ public:
 
 	GanvItem* gobj() const { return _gobj; }
 
-	SIGNAL(event, GdkEvent*)
-	SIGNAL(click, GdkEventButton*)
+	SIGNAL1(event, GdkEvent*)
+	SIGNAL1(click, GdkEventButton*)
 
 protected:
 	GanvItem* const _gobj;
