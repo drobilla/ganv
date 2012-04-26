@@ -190,10 +190,10 @@ struct GanvCanvasImpl {
 
 	void remove_edge(GanvEdge* c);
 	bool are_connected(const GanvNode* tail,
-	                   const GanvNode* head);
+	                   const GanvNode* head) const;
 	GanvEdge*
 	get_edge_between(const GanvNode* tail,
-	                 const GanvNode* head);
+	                 const GanvNode* head) const;
 
 	typedef std::set<GanvEdge*, TailHeadOrder> Edges;
 	typedef std::set<GanvEdge*, HeadTailOrder> DstEdges;
@@ -611,7 +611,7 @@ GanvCanvasImpl::remove_edge(GanvEdge* edge)
 
 GanvEdge*
 GanvCanvasImpl::get_edge_between(const GanvNode* tail,
-                                 const GanvNode* head)
+                                 const GanvNode* head) const
 {
 	GanvEdgeKey key;
 	make_edge_search_key(&key, tail, head);
@@ -626,7 +626,7 @@ GanvCanvasImpl::get_edge_between(const GanvNode* tail,
  */
 bool
 GanvCanvasImpl::are_connected(const GanvNode* tail,
-                              const GanvNode* head)
+                              const GanvNode* head) const
 {
 	return get_edge_between(tail, head) != NULL;
 }
@@ -1449,23 +1449,15 @@ Canvas::remove_edge(Node* item1, Node* item2)
 	}
 }
 
-/** Get the edge between two items.
- *
- * Note that edges are directed.
- * This will only return a edge from @a tail to @a head.
- */
 Edge*
 Canvas::get_edge(Node* tail, Node* head) const
 {
-	FOREACH_EDGE(impl()->_edges, i) {
-		const GanvNode* const t = (*i)->impl->tail;
-		const GanvNode* const h = (*i)->impl->head;
-
-		if (t == tail->gobj() && h == head->gobj())
-			return Glib::wrap(*i);
+	GanvEdge* e = impl()->get_edge_between(tail->gobj(), head->gobj());
+	if (e) {
+		return Glib::wrap(e);
+	} else {
+		return NULL;
 	}
-
-	return NULL;
 }
 
 void
@@ -1857,6 +1849,14 @@ ganv_canvas_add_node(GanvCanvas* canvas,
                      GanvNode*   node)
 {
 	canvas->impl->add_item(node);
+}
+
+GanvEdge*
+ganv_canvas_get_edge(GanvCanvas* canvas,
+                     GanvNode*   tail,
+                     GanvNode*   head)
+{
+	return canvas->impl->get_edge_between(tail, head);
 }
 
 void
