@@ -2037,8 +2037,8 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 		const string pos   = agget(i->second, (char*)"pos");
 		const string x_str = pos.substr(0, pos.find(","));
 		const string y_str = pos.substr(pos.find(",") + 1);
-		const double cx    = strtod(x_str.c_str(), NULL) * 1.1;
-		const double cy    = strtod(y_str.c_str(), NULL) * 1.1;
+		const double cx    = lrint(strtod(x_str.c_str(), NULL) * 1.2);
+		const double cy    = lrint(strtod(y_str.c_str(), NULL) * 1.2);
 		const double w     = ganv_box_get_width(GANV_BOX(i->first));
 
 		/* Dot node positions are supposedly node centers, but things only
