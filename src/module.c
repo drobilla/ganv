@@ -237,21 +237,19 @@ place_title(GanvModule* module, GanvDirection dir)
 		return;
 	} else if (dir == GANV_DIRECTION_RIGHT) {
 		ganv_item_set(GANV_ITEM(canvas_title),
-		              "x", ((ganv_box_get_width(box) / 2.0)
-		                    - (title_w / 2.0)),
+		              "x", (ganv_box_get_width(box) - title_w) / 2.0,
 		              "y", 2.0,
 		              NULL);
 	} else {
 		ganv_item_set(GANV_ITEM(canvas_title),
-		              "x", ((ganv_box_get_width(box) / 2.0)
-		                    - (title_w / 2.0)),
-		              "y", ganv_module_get_empty_port_depth(module) + 2.0,
+		              "x", (ganv_box_get_width(box) - title_w) / 2.0,
+		              "y", ganv_module_get_empty_port_depth(module) + 1.0,
 		              NULL);
 	}
 }
 
 static void
-resize_horiz(GanvModule* module)
+resize_right(GanvModule* module)
 {
 	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
 	GanvModuleImpl* impl   = module->impl;
@@ -328,7 +326,7 @@ resize_horiz(GanvModule* module)
 }
 
 static void
-resize_vert(GanvModule* module)
+resize_down(GanvModule* module)
 {
 	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
 	GanvModuleImpl* impl   = module->impl;
@@ -355,9 +353,8 @@ resize_vert(GanvModule* module)
 		+ impl->embed_height + (port_depth * 2.0);
 
 	// Move ports to appropriate locations
-	int      i              = 0;
-	gboolean last_was_input = FALSE;
-	double   x              = 0.0;
+	guint in_count  = 0;
+	guint out_count = 0;
 	FOREACH_PORT(impl->ports, pi) {
 		GanvPort* const p     = (*pi);
 		GanvBox*  const pbox  = GANV_BOX(p);
@@ -365,23 +362,13 @@ resize_vert(GanvModule* module)
 		ganv_box_set_width(pbox, port_breadth);
 		ganv_box_set_height(pbox, port_depth);
 		if (p->impl->is_input) {
-			x = PAD + (i * (port_breadth + PAD));
-			++i;
+			const double x = PAD + (in_count++ * (port_breadth + PAD));
 			ganv_node_move_to(pnode, x, 0);
-			last_was_input = TRUE;
-
 			ganv_canvas_for_each_edge_to(canvas, pnode,
 			                             ganv_edge_update_location);
 		} else {
-			if (!last_was_input) {
-				x = PAD + (i * (port_breadth + PAD));
-				++i;
-			}
-			ganv_node_move_to(pnode,
-			                  x,
-			                  height - ganv_box_get_height(pbox));
-			last_was_input = FALSE;
-
+			double x = PAD + (out_count++ * (port_breadth + PAD));
+			ganv_node_move_to(pnode, x, height - ganv_box_get_height(pbox));
 			ganv_canvas_for_each_edge_from(canvas, pnode,
 			                               ganv_edge_update_location);
 		}
@@ -439,10 +426,10 @@ layout(GanvNode* self)
 
 	switch (canvas->direction) {
 	case GANV_DIRECTION_RIGHT:
-		resize_horiz(module);
+		resize_right(module);
 		break;
 	case GANV_DIRECTION_DOWN:
-		resize_vert(module);
+		resize_down(module);
 		break;
 	}
 
