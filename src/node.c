@@ -299,6 +299,7 @@ ganv_node_set_label(GanvNode* node, const char* str)
 		                                      ganv_text_get_type(),
 		                                      "text", str,
 		                                      "color", 0xFFFFFFFF,
+		                                      "managed", TRUE,
 		                                      NULL));
 	}
 

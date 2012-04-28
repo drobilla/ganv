@@ -88,6 +88,9 @@ struct _GanvItem {
 
 	/* Bounding box for this item (in canvas coordinates) */
 	double x1, y1, x2, y2;
+
+	/* True if parent manages this item (don't call add/remove) */
+	gboolean managed;
 };
 
 struct _GanvItemClass {

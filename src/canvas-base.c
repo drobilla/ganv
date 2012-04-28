@@ -52,7 +52,8 @@ enum {
 	ITEM_PROP_0,
 	ITEM_PROP_PARENT,
 	ITEM_PROP_X,
-	ITEM_PROP_Y
+	ITEM_PROP_Y,
+	ITEM_PROP_MANAGED
 };
 
 enum {
@@ -75,6 +76,7 @@ static void
 ganv_item_init(GanvItem* item)
 {
 	item->object.flags |= GANV_ITEM_VISIBLE;
+	item->managed       = FALSE;
 }
 
 /**
@@ -120,15 +122,17 @@ static void
 item_post_create_setup(GanvItem* item)
 {
 	GanvItemClass* parent_class = GANV_ITEM_GET_CLASS(item->parent);
-	if (parent_class->add) {
-		parent_class->add(item->parent, item);
-		ganv_canvas_base_request_redraw(item->canvas,
-		                                item->x1, item->y1,
-		                                item->x2 + 1, item->y2 + 1);
-		item->canvas->need_repick = TRUE;
-	} else {
-		g_warning("item added to non-parent item\n");
+	if (!item->managed) {
+		if (parent_class->add) {
+			parent_class->add(item->parent, item);
+		} else {
+			g_warning("item added to non-parent item\n");
+		}
 	}
+	ganv_canvas_base_request_redraw(item->canvas,
+	                                item->x1, item->y1,
+	                                item->x2 + 1, item->y2 + 1);
+	item->canvas->need_repick = TRUE;
 }
 
 /* Set_property handler for canvas items */
@@ -159,6 +163,9 @@ ganv_item_set_property(GObject* gobject, guint param_id,
 		item->y = g_value_get_double(value);
 		ganv_item_request_update(item);
 		break;
+	case ITEM_PROP_MANAGED:
+		item->managed = g_value_get_boolean(value);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(gobject, param_id, pspec);
 		break;
@@ -183,6 +190,9 @@ ganv_item_get_property(GObject* gobject, guint param_id,
 		break;
 	case ITEM_PROP_Y:
 		g_value_set_double(value, item->y);
+		break;
+	case ITEM_PROP_MANAGED:
+		g_value_set_boolean(value, item->managed);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(gobject, param_id, pspec);
@@ -268,7 +278,7 @@ ganv_item_dispose(GObject* object)
 		(*GANV_ITEM_GET_CLASS(item)->unrealize)(item);
 	}
 
-	if (item->parent) {
+	if (!item->managed && item->parent) {
 		if (GANV_ITEM_GET_CLASS(item->parent)->remove) {
 			GANV_ITEM_GET_CLASS(item->parent)->remove(item->parent, item);
 		} else {
@@ -2617,6 +2627,14 @@ ganv_item_class_init(GanvItemClass* class)
 	                        _("Y"),
 	                        _("Y"),
 	                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
+	                        (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+
+	g_object_class_install_property
+	    (gobject_class, ITEM_PROP_MANAGED,
+	    g_param_spec_boolean("managed",
+	                        _("Managed"),
+	                        _("Whether the item is managed by its parent"),
+	                         0,
 	                        (G_PARAM_READABLE | G_PARAM_WRITABLE)));
 
 	item_signals[ITEM_EVENT]

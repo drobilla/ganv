@@ -400,6 +400,7 @@ ganv_port_show_control(GanvPort* port)
 		                              "fill-color", control_col,
 		                              "border-color", control_col,
 		                              "border-width", 0.0,
+		                              "managed", TRUE,
 		                              NULL));
 	ganv_item_show(GANV_ITEM(control->rect));
 }
