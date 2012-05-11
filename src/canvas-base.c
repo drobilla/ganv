@@ -425,6 +425,7 @@ ganv_item_move(GanvItem* item, double dx, double dy)
 /* Convenience function to reorder items in a group's child list.  This puts the
  * specified link after the "before" link. Returns TRUE if the list was changed.
  */
+#if 0
 static gboolean
 put_item_after(GList* link, GList* before)
 {
@@ -479,6 +480,7 @@ put_item_after(GList* link, GList* before)
 
 	return TRUE;
 }
+#endif
 
 /**
  * ganv_item_raise_to_top:
