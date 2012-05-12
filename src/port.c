@@ -469,7 +469,7 @@ ganv_port_set_control_value(GanvPort* port,
 	ganv_box_set_width(impl->control->rect, MAX(0.0, w - 1.0));
 
 	if (impl->control->value != value) {
-		GVariant* gvar = g_variant_new_double(value);
+		GVariant* gvar = g_variant_ref_sink(g_variant_new_double(value));
 		g_signal_emit(port, port_signals[PORT_VALUE_CHANGED], 0, gvar, NULL);
 		g_variant_unref(gvar);
 	}
