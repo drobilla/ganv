@@ -1350,16 +1350,16 @@ GanvCanvasImpl::clear_selection()
 {
 	unselect_ports();
 
-	FOREACH_ITEM(_selected_items, i) {
+	Items items(_selected_items);
+	_selected_items.clear();
+	FOREACH_ITEM(items, i) {
 		ganv_item_set(GANV_ITEM(*i), "selected", FALSE, NULL);
 	}
 
-	FOREACH_SELECTED_EDGE(_selected_edges, c) {
+	SelectedEdges edges(_selected_edges);
+	FOREACH_SELECTED_EDGE(edges, c) {
 		ganv_item_set(GANV_ITEM(*c), "selected", FALSE, NULL);
 	}
-
-	_selected_items.clear();
-	_selected_edges.clear();
 }
 
 void

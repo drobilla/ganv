@@ -139,9 +139,21 @@ ganv_node_set_property(GObject*      object,
 		SET_CASE(BORDER_COLOR, uint, impl->border_color);
 		SET_CASE(CAN_TAIL, boolean, impl->can_tail);
 		SET_CASE(CAN_HEAD, boolean, impl->can_head);
-		SET_CASE(SELECTED, boolean, impl->selected);
 		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
 		SET_CASE(DRAGGABLE, boolean, impl->draggable);
+	case PROP_SELECTED:
+		if (impl->selected != g_value_get_boolean(value)) {
+			impl->selected = g_value_get_boolean(value);
+			if (item->canvas) {
+				if (impl->selected) {
+					ganv_canvas_select_node(GANV_CANVAS(item->canvas), node);
+				} else {
+					ganv_canvas_unselect_node(GANV_CANVAS(item->canvas), node);
+				}
+				ganv_item_request_update(item);
+			}
+		}
+		break;
 	case PROP_CANVAS:
 		if (!item->parent) {
 			GanvCanvasBase* canvas = GANV_CANVAS_BASE(g_value_get_object(value));
