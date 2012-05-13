@@ -262,7 +262,6 @@ resize_right(GanvModule* module)
 
 	// Basic height contains title
 	double header_height = 2.0 + title_h;
-	double height        = header_height;
 
 	if (impl->embed_item) {
 		ganv_item_set(impl->embed_item,
@@ -316,7 +315,7 @@ resize_right(GanvModule* module)
 		h += header_height;
 	}
 
-	height = y + h + 4.0;
+	double height = y + h + 4.0;
 	if (impl->embed_item && m.embed_between)
 		height = MAX(height, impl->embed_height + header_height + 2.0);
 
