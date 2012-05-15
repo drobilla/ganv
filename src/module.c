@@ -352,8 +352,10 @@ resize_down(GanvModule* module)
 		+ impl->embed_height + (port_depth * 2.0);
 
 	// Move ports to appropriate locations
-	guint in_count  = 0;
-	guint out_count = 0;
+	guint  in_count  = 0;
+	guint  out_count = 0;
+	double in_x      = 0.0;
+	double out_x     = 0.0;
 	FOREACH_PORT(impl->ports, pi) {
 		GanvPort* const p     = (*pi);
 		GanvBox*  const pbox  = GANV_BOX(p);
@@ -361,20 +363,21 @@ resize_down(GanvModule* module)
 		ganv_box_set_width(pbox, port_breadth);
 		ganv_box_set_height(pbox, port_depth);
 		if (p->impl->is_input) {
-			const double x = PAD + (in_count++ * (port_breadth + PAD));
-			ganv_node_move_to(pnode, x, 0);
+			in_x = PAD + (in_count++ * (port_breadth + PAD));
+			ganv_node_move_to(pnode, in_x, 0);
 			ganv_canvas_for_each_edge_to(canvas, pnode,
 			                             ganv_edge_update_location);
 		} else {
-			double x = PAD + (out_count++ * (port_breadth + PAD));
-			ganv_node_move_to(pnode, x, height - ganv_box_get_height(pbox));
+			out_x = PAD + (out_count++ * (port_breadth + PAD));
+			ganv_node_move_to(pnode, out_x, height - ganv_box_get_height(pbox));
 			ganv_canvas_for_each_edge_from(canvas, pnode,
 			                               ganv_edge_update_location);
 		}
 	}
 
-	ganv_box_set_width(GANV_BOX(module), m.width);
 	ganv_box_set_height(GANV_BOX(module), height);
+	ganv_box_set_width(GANV_BOX(module),
+	                   MAX(in_x, out_x) + port_breadth  + PAD);
 
 	place_title(module, GANV_DIRECTION_DOWN);
 }
