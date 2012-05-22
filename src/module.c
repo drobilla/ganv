@@ -377,7 +377,7 @@ resize_down(GanvModule* module)
 
 	ganv_box_set_height(GANV_BOX(module), height);
 	ganv_box_set_width(GANV_BOX(module),
-	                   MAX(in_x, out_x) + port_breadth  + PAD);
+	                   MAX(title_w, MAX(in_x, out_x) + port_breadth) + PAD);
 
 	place_title(module, GANV_DIRECTION_DOWN);
 }
