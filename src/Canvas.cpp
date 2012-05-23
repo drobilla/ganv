@@ -1100,20 +1100,19 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 					               GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 					               NULL, event->button.time);
 				}
-				return true;
 			} else if (!port->impl->is_input) {
 				port_dragging = port_pressed = true;
 				ganv_item_grab(GANV_ITEM(port),
 				               GDK_BUTTON_RELEASE_MASK|GDK_POINTER_MOTION_MASK|
 				               GDK_ENTER_NOTIFY_MASK|GDK_LEAVE_NOTIFY_MASK,
 				               NULL, event->button.time);
-				return true;
 			} else {
 				port_pressed = true;
 				ganv_item_grab(GANV_ITEM(port),
 				               GDK_BUTTON_RELEASE_MASK,
 				               NULL, event->button.time);
 			}
+			return true;
 		}
 		break;
 
@@ -1175,18 +1174,14 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 				}
 			}
 			port_dragging = false;
-			return true;
 		} else if (control_dragging) {
 			control_dragging = false;
-			return true;
 		} else if (event->button.state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK)) {
 			select_port_toggle(port, event->button.state);
-			return true;
 		} else {
 			selection_joined_with(port);
-			return true;
 		}
-		break;
+		return true;
 
 	case GDK_ENTER_NOTIFY:
 		gboolean selected;
