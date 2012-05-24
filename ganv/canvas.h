@@ -89,7 +89,7 @@ GanvEdge*
 ganv_canvas_get_edge(GanvCanvas* canvas,
                      GanvNode*   tail,
                      GanvNode*   head);
-                     
+
 void
 ganv_canvas_disconnect_edge(GanvCanvas* canvas,
                             GanvEdge*   edge);

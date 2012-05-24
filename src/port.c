@@ -349,7 +349,7 @@ ganv_port_new(GanvModule* module,
 
 	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(port)->canvas);
 	ganv_port_set_direction(port, canvas->direction);
-		
+
 	return port;
 }
 
