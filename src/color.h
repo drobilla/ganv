@@ -16,7 +16,7 @@
 #ifndef GANV_UTIL_H
 #define GANV_UTIL_H
 
-#include <glib/gmacros.h>
+#include <glib.h>
 
 #define DEFAULT_TEXT_COLOR   0xFFFFFFFF
 #define DEFAULT_FILL_COLOR   0x1E2224FF
