@@ -84,6 +84,7 @@ ganv_canvas_add_node(GanvCanvas* canvas,
 /**
  * ganv_canvas_get_edge:
  * Get the edge between two nodes, or NULL if none exists.
+ * Return value: (transfer none): The root group of @canvas.
  */
 GanvEdge*
 ganv_canvas_get_edge(GanvCanvas* canvas,
@@ -102,15 +103,6 @@ ganv_canvas_remove_edge_between(GanvCanvas* canvas,
 /** Get the default font size in points. */
 double
 ganv_canvas_get_default_font_size(const GanvCanvas* canvas);
-
-void
-ganv_canvas_set_zoom(GanvCanvas* canvas, double zoom);
-
-void
-ganv_canvas_set_font_size(GanvCanvas* canvas, double points);
-
-void
-ganv_canvas_set_scale(GanvCanvas* canvas, double zoom, double points);
 
 void
 ganv_canvas_set_direction(GanvCanvas* canvas, GanvDirection dir);
@@ -140,6 +132,12 @@ ganv_canvas_for_each_node(GanvCanvas*  canvas,
                           GanvNodeFunc f,
                           void*        data);
 
+/**
+ * ganv_canvas_for_each_selected_node:
+ * @canvas: The canvas.
+ * @f: (scope call): A function to call on every selected node on @canvas.
+ * @data: Data to pass to @f.
+ */
 void
 ganv_canvas_for_each_selected_node(GanvCanvas*  canvas,
                                    GanvNodeFunc f,
@@ -211,11 +209,25 @@ double
 ganv_canvas_get_zoom(GanvCanvas* canvas);
 
 /**
+ * ganv_canvas_set_zoom:
+ * Set the current zoom factor (pixels per unit).
+ */
+void
+ganv_canvas_set_zoom(GanvCanvas* canvas, double zoom);
+
+/**
  * ganv_canvas_get_font_size:
  * Get the current font size in points.
  */
 double
 ganv_canvas_get_font_size(const GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_set_font_size:
+ * Set the current font size in points.
+ */
+void
+ganv_canvas_set_font_size(GanvCanvas* canvas, double points);
 
 /**
  * ganv_canvas_set_scale:
