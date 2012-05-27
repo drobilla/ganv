@@ -166,6 +166,7 @@ def build(bld):
             ' --no-libtool ' +
             ('--pkg=%s' % pc_path) +
             (' -I%s' % bld.path.bldpath()) +
+            ''.join([' -I' + path for path in bld.env.INCLUDES_GTK]) +
             (' -L%s' % bld_dir) +
             ' --library=ganv-1'
             ' --include=GObject-2.0 --include=Gdk-2.0 --include Gtk-2.0'
