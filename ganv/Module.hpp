@@ -112,6 +112,10 @@ public:
 		}
 	}
 
+	Port* get_port(guint index) {
+		return Glib::wrap(ganv_module_get_port(gobj(), index));
+	}
+
 	METHOD2(ganv_module, for_each_port, GanvPortFunc, f, void*, data);
 
 	METHODRET0(ganv_module, guint, num_ports);
