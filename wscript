@@ -40,7 +40,6 @@ def configure(conf):
     conf.load('compiler_c')
     conf.load('compiler_cxx')
     autowaf.configure(conf)
-    conf.line_just = 44
     autowaf.display_header('Ganv Configuration')
 
     conf.env.append_unique('CFLAGS', '-std=c99')
