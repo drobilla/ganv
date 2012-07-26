@@ -472,7 +472,8 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 	nodes.gvc = gvc;
 	nodes.G   = G;
 
-	if (_gcanvas->direction == GANV_DIRECTION_RIGHT) {
+	const bool flow_right = _gcanvas->direction;
+	if (flow_right) {
 		agraphattr(G, (char*)"rankdir", (char*)"LR");
 	} else {
 		agraphattr(G, (char*)"rankdir", (char*)"TD");
@@ -522,12 +523,12 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 			
 				cell += ">";
 				const char* label = ganv_node_get_label(GANV_NODE(port));
-				if (label && _gcanvas->direction == GANV_DIRECTION_RIGHT) {
+				if (label && flow_right) {
 					cell += label;
 				}
 				cell += "</TD>";
 
-				if (_gcanvas->direction == GANV_DIRECTION_RIGHT) {
+				if (flow_right) {
 					ports += "<TR>" + cell + "</TR>";
 				} else if (port->impl->is_input) {
 					inputs += cell;
@@ -552,8 +553,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 
 			// Label row
 			std::stringstream colspan;
-			colspan << ((_gcanvas->direction == GANV_DIRECTION_RIGHT)
-			            ? 1 : (n_cols + 1));
+			colspan << (flow_right ? 1 : (n_cols + 1));
 			html += std::string("<TR><TD BORDER=\"0\" CELLPADDING=\"2\" COLSPAN=\"")
 				+ colspan.str()
 				+ "\">";
@@ -604,10 +604,10 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 		if (tail_i != nodes.end() && head_i != nodes.end()) {
 			Agedge_t* e = agedge(G, tail_i->second, head_i->second);
 			ss.str("");
-			ss << edge->impl->tail;
+			ss << edge->impl->tail << (flow_right ? ":e" : ":s");
 			agsafeset(e, (char*)"tailport", (char*)ss.str().c_str(), NULL);
 			ss.str("");
-			ss << edge->impl->head;
+			ss << edge->impl->head << (flow_right ? ":w" : ":n");
 			agsafeset(e, (char*)"headport", (char*)ss.str().c_str(), NULL);
 		} else {
 			std::cerr << "Unable to find graphviz node" << std::endl;
