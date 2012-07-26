@@ -482,65 +482,104 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 	std::ostringstream ss;
 	FOREACH_ITEM(_items, i) {
 		if (GANV_IS_MODULE(*i)) {
-			// Create a subgraph for this node
-			ss.str("");
-			ss << "cluster" << id++;
-			Agraph_t* subg = agsubg(G, (char*)ss.str().c_str());
-			agsafeset(subg, (char*)"shape", (char*)"box", NULL);
-			agsafeset(subg, (char*)"pad", (char*)"0", NULL);
-			gv_set(subg, "width",
-			       ganv_box_get_width(GANV_BOX(*i)) / dpi);
-			gv_set(subg, "height",
-			       ganv_box_get_height(GANV_BOX(*i)) / dpi);
+			GanvModule* const m = GANV_MODULE(*i);
 
-			// Make a borderless node for the title (instead of simply setting
-			// a title on the subgraph, so partners can be connected)
 			ss.str("");
 			ss << "n" << id++;
-			Agnode_t* node = agnode(subg, strdup(ss.str().c_str()));
-			agsafeset(node, (char*)"pos", (char*)"0,0", NULL);
-			agsafeset(node, (char*)"shape", (char*)"box", NULL);
-			agsafeset(node, (char*)"penwidth", (char*)"0", NULL);
-			agsafeset(node, (char*)"margin", (char*)"0", NULL);
-			agsafeset(node, (char*)"pad", (char*)"0", NULL);
-			const char* label = ganv_node_get_label(GANV_NODE(*i));
-			if (label) {
-				agsafeset(node, (char*)"label", (char*)label, NULL);
-				double width, height;
-				g_object_get((*i)->impl->label, "width", &width, "height", &height, NULL);
-				gv_set(node, "width", width / dpi);
-				gv_set(node, "height", height / dpi);
-			}
+			const std::string node_id = ss.str();
+			Agnode_t* node = agnode(G, strdup(node_id.c_str()));
 			nodes.insert(std::make_pair(*i, (Agnode_t*)node));
+			agsafeset(node, (char*)"shape", (char*)"plaintext", NULL);
+			gv_set(node, "width", ganv_box_get_width(GANV_BOX(*i)) / dpi);
+			gv_set(node, "height", ganv_box_get_height(GANV_BOX(*i)) / dpi);
 
-			// Make a node in the subgraph for each port on this module
-			GanvModule* const m = GANV_MODULE(*i);
+			std::string inputs;   // Down flow
+			std::string outputs;  // Down flow
+			std::string ports;    // Right flow
+			unsigned    n_inputs  = 0;
+			unsigned    n_outputs = 0;
 			for (size_t i = 0; i < ganv_module_num_ports(m); ++i) {
 				GanvPort* port = ganv_module_get_port(m, i);
 				ss.str("");
-				ss << "p" << id++;
-				Agnode_t* pnode = agnode(subg, (char*)ss.str().c_str());
-				agsafeset(pnode, (char*)"shape", (char*)"box", NULL);
-				agsafeset(pnode, (char*)"margin", (char*)"0", NULL);
-				agsafeset(pnode, (char*)"pin", (char*)"true", NULL);
-				const char* port_label = ganv_node_get_label(GANV_NODE(port));
-				if (_gcanvas->direction == GANV_DIRECTION_RIGHT && port_label) {
-					agsafeset(pnode, (char*)"label", (char*)port_label, NULL);
+				ss << port;
+
+				if (port->impl->is_input) {
+					++n_inputs;
+				} else {
+					++n_outputs;
 				}
 
-				// Fix position (we don't want ports to be arranged)
-				// (TODO: I don't think dot actually supports this...)
-				double x, y;
-				g_object_get(G_OBJECT(port), "x", &x, "y", &y, NULL);
+				std::string cell = std::string("<TD PORT=\"") + ss.str() + "\"";
+
+				cell += " FIXEDSIZE=\"TRUE\"";
 				ss.str("");
-				ss << (x / dpi) << "," << (-y / dpi);
-				agsafeset(pnode, (char*)"pos", (char*)ss.str().c_str(), NULL);
-				gv_set(pnode, "width",
-				       ganv_box_get_width(GANV_BOX(port)) / dpi);
-				gv_set(pnode, "height",
-				       ganv_box_get_height(GANV_BOX(port)) / dpi);
-				nodes.insert(std::make_pair(GANV_NODE(port), pnode));
+				ss << ganv_box_get_width(GANV_BOX(port));// / dpp * 1.3333333;
+				cell += " WIDTH=\"" + ss.str() + "\"";
+
+				ss.str("");
+				ss << ganv_box_get_height(GANV_BOX(port));// / dpp * 1.333333;
+				cell += " HEIGHT=\"" + ss.str() + "\"";
+			
+				cell += ">";
+				const char* label = ganv_node_get_label(GANV_NODE(port));
+				if (label && _gcanvas->direction == GANV_DIRECTION_RIGHT) {
+					cell += label;
+				}
+				cell += "</TD>";
+
+				if (_gcanvas->direction == GANV_DIRECTION_RIGHT) {
+					ports += "<TR>" + cell + "</TR>";
+				} else if (port->impl->is_input) {
+					inputs += cell;
+				} else {
+					outputs += cell;
+				}
+				
+				nodes.insert(std::make_pair(GANV_NODE(port), node));
 			}
+
+			const unsigned n_cols = std::max(n_inputs, n_outputs);
+			
+			std::string html = "<TABLE CELLPADDING=\"0\" CELLSPACING=\"0\">";
+
+			// Input row (down flow only)
+			if (!inputs.empty()) {
+				for (unsigned i = n_inputs; i < n_cols + 1; ++i) {
+					inputs += "<TD BORDER=\"0\"></TD>";
+				}
+				html += std::string("<TR>") + inputs + "</TR>";
+			}
+
+			// Label row
+			std::stringstream colspan;
+			colspan << ((_gcanvas->direction == GANV_DIRECTION_RIGHT)
+			            ? 1 : (n_cols + 1));
+			html += std::string("<TR><TD BORDER=\"0\" CELLPADDING=\"2\" COLSPAN=\"")
+				+ colspan.str()
+				+ "\">";
+			const char* label = ganv_node_get_label(GANV_NODE(m));
+			if (label) {
+				html += label;
+			}
+			html += "</TD></TR>";
+
+			// Ports rows (right flow only)
+			if (!ports.empty()) {
+				html += ports;
+			}
+
+			// Output row (down flow only)
+			if (!outputs.empty()) {
+				for (unsigned i = n_outputs; i < n_cols + 1; ++i) {
+					outputs += "<TD BORDER=\"0\"></TD>";
+				}
+				html += std::string("<TR>") + outputs + "</TR>";
+			}
+			html += "</TABLE>";
+			
+			char* html_label_str = agstrdup_html((char*)html.c_str());
+
+			agsafeset(node, (char*)"label", (char*)html_label_str, NULL);
 		} else if (GANV_IS_CIRCLE(*i)) {
 			ss.str("");
 			ss << "n" << id++;
@@ -558,20 +597,24 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 	}
 
 	FOREACH_EDGE(_edges, i) {
-		const GanvEdge* const edge = *i;
-
-		GVNodes::iterator tail_i = nodes.find(edge->impl->tail);
-		GVNodes::iterator head_i = nodes.find(edge->impl->head);
+		const GanvEdge* const edge   = *i;
+		GVNodes::iterator     tail_i = nodes.find(edge->impl->tail);
+		GVNodes::iterator     head_i = nodes.find(edge->impl->head);
 
 		if (tail_i != nodes.end() && head_i != nodes.end()) {
-			agedge(G, tail_i->second, head_i->second);
+			Agedge_t* e = agedge(G, tail_i->second, head_i->second);
+			ss.str("");
+			ss << edge->impl->tail;
+			agsafeset(e, (char*)"tailport", (char*)ss.str().c_str(), NULL);
+			ss.str("");
+			ss << edge->impl->head;
+			agsafeset(e, (char*)"headport", (char*)ss.str().c_str(), NULL);
 		} else {
 			std::cerr << "Unable to find graphviz node" << std::endl;
 		}
 	}
 
-	// Add edges between partners to have them lined up as if they are
-	// connected
+	// Add edges between partners to have them lined up as if connected
 	for (GVNodes::iterator i = nodes.begin(); i != nodes.end(); ++i) {
 		GanvNode* partner = ganv_node_get_partner(i->first);
 		if (partner) {
@@ -2024,6 +2067,9 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 	char* locale = strdup(setlocale(LC_NUMERIC, NULL));
 	setlocale(LC_NUMERIC, "POSIX");
 
+	const double dpi = gdk_screen_get_resolution(gdk_screen_get_default());
+	const double dpp = dpi / 72.0;
+
 	// Arrange to graphviz coordinates
 	for (GVNodes::iterator i = nodes.begin(); i != nodes.end(); ++i) {
 		if (GANV_ITEM(i->first)->parent != GANV_ITEM(ganv_canvas_get_root(canvas))) {
@@ -2032,15 +2078,16 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 		const string pos   = agget(i->second, (char*)"pos");
 		const string x_str = pos.substr(0, pos.find(","));
 		const string y_str = pos.substr(pos.find(",") + 1);
-		const double cx    = lrint(strtod(x_str.c_str(), NULL) * 1.2);
-		const double cy    = lrint(strtod(y_str.c_str(), NULL) * 1.2);
+		const double cx    = lrint(strtod(x_str.c_str(), NULL) * dpp);
+		const double cy    = lrint(strtod(y_str.c_str(), NULL) * dpp);
 		const double w     = ganv_box_get_width(GANV_BOX(i->first));
+		const double h     = ganv_box_get_height(GANV_BOX(i->first));
 
 		/* Dot node positions are supposedly node centers, but things only
 		   match up if x is interpreted as center and y as top...
 		*/
 		const double x = cx - (w / 2.0);
-		const double y = -cy;
+		const double y = -cy - (h / 2.0);
 
 		ganv_node_move_to(i->first, x, y);
 
