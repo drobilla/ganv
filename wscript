@@ -136,13 +136,13 @@ def build(bld):
                   cflags       = [ '-fprofile-arcs', '-ftest-coverage' ])
 
         # Test program (C)
-        obj = bld(features     = 'c cprogram',
-                  source       = 'src/ganv_test.c',
-                  includes     = ['.', './src'],
-                  use          = 'libganv_profiled',
-                  lib          = ['gcov'],
-                  use_lib      = 'GTK',
-                  target       = 'src/ganv_test')
+        bld(features     = 'c cprogram',
+            source       = 'src/ganv_test.c',
+            includes     = ['.', './src'],
+            use          = 'libganv_profiled',
+            lib          = ['gcov'],
+            use_lib      = 'GTK',
+            target       = 'src/ganv_test')
 
     # Documentation
     autowaf.build_dox(bld, 'GANV', GANV_VERSION, top, out)
@@ -156,8 +156,7 @@ def build(bld):
 
         pc_path = os.path.abspath(os.path.join(bld_dir, 'ganv-1.pc'))
 
-        gir = bld(
-            name         = 'ganv-gir',
+        bld(name         = 'ganv-gir',
             source       = ganv_source + bld.path.ant_glob('ganv/*.h'),
             target       = 'Ganv-1.0.gir',
             install_path = '${LIBDIR}/girepository-1.0',
@@ -171,8 +170,7 @@ def build(bld):
             ' --include=GObject-2.0 --include=Gdk-2.0 --include Gtk-2.0'
             ' -o ${TGT} ${SRC}')
 
-        typelib = bld(
-            name         = 'ganv-typelib',
+        bld(name         = 'ganv-typelib',
             after        = 'ganv-gir',
             source       = 'Ganv-1.0.gir',
             target       = 'Ganv-1.0.typelib',
