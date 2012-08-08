@@ -39,9 +39,9 @@ def configure(conf):
     conf.load('compiler_c')
     conf.load('compiler_cxx')
     autowaf.configure(conf)
+    autowaf.set_c99_mode(conf)
     autowaf.display_header('Ganv Configuration')
 
-    conf.env.append_unique('CFLAGS', '-std=c99')
     conf.env.BUILD_TESTS = Options.options.build_tests
 
     autowaf.check_pkg(conf, 'gtk+-2.0', uselib_store='GTK',
