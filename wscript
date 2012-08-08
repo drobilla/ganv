@@ -26,14 +26,13 @@ def options(opt):
     opt.load('compiler_c')
     opt.load('compiler_cxx')
     autowaf.set_options(opt)
-    opt.add_option('--test', action='store_true', default=False, dest='build_tests',
-                   help="Build unit tests")
-    opt.add_option('--no-graphviz', action='store_true', default=False,
-                   dest='no_graphviz',
+    opt.add_option('--test', action='store_true', dest='build_tests',
+                   help='Build unit tests')
+    opt.add_option('--no-graphviz', action='store_true', dest='no_graphviz',
                    help='Do not compile with graphviz support')
-    opt.add_option('--no-nls', action='store_true', default=False, dest='no_nls',
+    opt.add_option('--no-nls', action='store_true', dest='no_nls',
                    help='Disable i18n (native language support)')
-    opt.add_option('--gir', action='store_true', default=False, dest='gir',
+    opt.add_option('--gir', action='store_true', dest='gir',
                    help='Build GObject introspection data')
 
 def configure(conf):
@@ -43,7 +42,7 @@ def configure(conf):
     autowaf.display_header('Ganv Configuration')
 
     conf.env.append_unique('CFLAGS', '-std=c99')
-    conf.env['BUILD_TESTS'] = Options.options.build_tests
+    conf.env.BUILD_TESTS = Options.options.build_tests
 
     autowaf.check_pkg(conf, 'gtk+-2.0', uselib_store='GTK',
                       atleast_version='2.0.0', mandatory=True)
@@ -61,14 +60,14 @@ def configure(conf):
     if not Options.options.no_nls:
         autowaf.check_header(conf, 'c', 'libintl.h', 'ENABLE_NLS', mandatory=False)
 
-    conf.env['LIB_GANV'] = ['ganv-%s' % GANV_MAJOR_VERSION]
+    conf.env.LIB_GANV = ['ganv-%s' % GANV_MAJOR_VERSION]
 
     conf.write_config_header('ganv_config.h', remove=False)
 
     autowaf.display_msg(conf, "Auto-arrange", conf.is_defined('HAVE_AGRAPH'))
     autowaf.display_msg(conf, "Native language support", conf.is_defined('ENABLE_NLS'))
     autowaf.display_msg(conf, "GObject introspection", conf.is_defined('HAVE_GIR'))
-    autowaf.display_msg(conf, "Unit tests", str(conf.env['BUILD_TESTS']))
+    autowaf.display_msg(conf, "Unit tests", str(conf.env.BUILD_TESTS))
     print('')
 
 ganv_source = [
@@ -124,7 +123,7 @@ def build(bld):
               use_lib      = 'GTKMM',
               target       = 'src/ganv_bench')
 
-    if bld.env['BUILD_TESTS']:
+    if bld.env.BUILD_TESTS:
         # Static library for test program
         obj = bld(features     = 'c cstlib',
                   source       = ganv_source,
