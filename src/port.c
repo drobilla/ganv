@@ -263,7 +263,7 @@ ganv_port_set_height(GanvBox* box,
 }
 
 static gboolean
-event(GanvItem* item, GdkEvent* event)
+ganv_port_event(GanvItem* item, GdkEvent* event)
 {
 	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
 
@@ -306,7 +306,7 @@ ganv_port_class_init(GanvPortClass* class)
 
 	object_class->destroy = ganv_port_destroy;
 
-	item_class->event = event;
+	item_class->event = ganv_port_event;
 	item_class->draw  = ganv_port_draw;
 
 	node_class->tail_vector = ganv_port_tail_vector;

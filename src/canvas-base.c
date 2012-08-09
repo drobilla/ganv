@@ -28,8 +28,9 @@
 #include "ganv/canvas-base.h"
 #include "ganv/group.h"
 
-#include "./gettext.h"
 #include "./ganv-marshal.h"
+#include "./ganv-private.h"
+#include "./gettext.h"
 
 /* We must run our idle update handler *before* GDK wants to redraw. */
 #define CANVAS_IDLE_PRIORITY (GDK_PRIORITY_REDRAW - 5)

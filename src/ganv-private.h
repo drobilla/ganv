@@ -200,9 +200,6 @@ ganv_canvas_port_event(GanvCanvas* canvas,
 void
 ganv_item_invoke_update(GanvItem* item, int flags);
 
-void
-ganv_canvas_base_request_update(GanvCanvasBase* canvas);
-
 #ifdef __cplusplus
 }  /* extern "C" */
 #endif
