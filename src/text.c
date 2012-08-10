@@ -310,15 +310,15 @@ ganv_text_draw(GanvItem* item,
 }
 
 static void
-ganv_text_class_init(GanvTextClass* class)
+ganv_text_class_init(GanvTextClass* klass)
 {
-	GObjectClass*   gobject_class = (GObjectClass*)class;
-	GtkObjectClass* object_class  = (GtkObjectClass*)class;
-	GanvItemClass*  item_class    = (GanvItemClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)klass;
+	GtkObjectClass* object_class  = (GtkObjectClass*)klass;
+	GanvItemClass*  item_class    = (GanvItemClass*)klass;
 
-	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(class));
+	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(class, sizeof(GanvTextImpl));
+	g_type_class_add_private(klass, sizeof(GanvTextImpl));
 
 	gobject_class->set_property = ganv_text_set_property;
 	gobject_class->get_property = ganv_text_get_property;

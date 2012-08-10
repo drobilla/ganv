@@ -150,14 +150,6 @@ struct _GanvTextImpl
 /* Canvas */
 
 void
-ganv_canvas_add_node(GanvCanvas* canvas,
-                     GanvNode*   node);
-
-void
-ganv_canvas_remove_node(GanvCanvas* canvas,
-                        GanvNode*   node);
-
-void
 ganv_canvas_move_selected_items(GanvCanvas* canvas,
                                 double      dx,
                                 double      dy);
@@ -188,9 +180,6 @@ ganv_canvas_select_edge(GanvCanvas* canvas,
 void
 ganv_canvas_unselect_edge(GanvCanvas* canvas,
                           GanvEdge*   edge);
-
-GdkCursor*
-ganv_canvas_get_move_cursor(const GanvCanvas* canvas);
 
 gboolean
 ganv_canvas_port_event(GanvCanvas* canvas,

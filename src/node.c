@@ -128,7 +128,6 @@ ganv_node_set_property(GObject*      object,
 
 	GanvNode*     node = GANV_NODE(object);
 	GanvNodeImpl* impl = node->impl;
-	GanvItem*     item = GANV_ITEM(object);
 
 	switch (prop_id) {
 		SET_CASE(PARTNER, object, impl->partner);
@@ -143,6 +142,7 @@ ganv_node_set_property(GObject*      object,
 		SET_CASE(DRAGGABLE, boolean, impl->draggable);
 	case PROP_SELECTED:
 		if (impl->selected != g_value_get_boolean(value)) {
+			GanvItem* item = GANV_ITEM(object);
 			impl->selected = g_value_get_boolean(value);
 			if (item->canvas) {
 				if (impl->selected) {
@@ -155,7 +155,7 @@ ganv_node_set_property(GObject*      object,
 		}
 		break;
 	case PROP_CANVAS:
-		if (!item->parent) {
+		if (!GANV_ITEM(object)->parent) {
 			GanvCanvasBase* canvas = GANV_CANVAS_BASE(g_value_get_object(value));
 			g_object_set(object, "parent", ganv_canvas_base_root(canvas), NULL);
 			ganv_canvas_add_node(GANV_CANVAS(canvas), node);
@@ -186,7 +186,6 @@ ganv_node_get_property(GObject*    object,
 
 	GanvNode*     node = GANV_NODE(object);
 	GanvNodeImpl* impl = node->impl;
-	GanvItem*     item = GANV_ITEM(object);
 
 	typedef char* gstring;
 
@@ -204,7 +203,7 @@ ganv_node_get_property(GObject*    object,
 		GET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
 		GET_CASE(DRAGGABLE, boolean, impl->draggable);
 	case PROP_CANVAS:
-		g_value_set_object(value, item->canvas);
+		g_value_set_object(value, GANV_ITEM(object)->canvas);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -519,15 +518,15 @@ ganv_node_default_event(GanvItem* item,
 }
 
 static void
-ganv_node_class_init(GanvNodeClass* class)
+ganv_node_class_init(GanvNodeClass* klass)
 {
-	GObjectClass*   gobject_class = (GObjectClass*)class;
-	GtkObjectClass* object_class  = (GtkObjectClass*)class;
-	GanvItemClass*  item_class    = (GanvItemClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)klass;
+	GtkObjectClass* object_class  = (GtkObjectClass*)klass;
+	GanvItemClass*  item_class    = (GanvItemClass*)klass;
 
-	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(class));
+	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(class, sizeof(GanvNodeImpl));
+	g_type_class_add_private(klass, sizeof(GanvNodeImpl));
 
 	gobject_class->set_property = ganv_node_set_property;
 	gobject_class->get_property = ganv_node_get_property;
@@ -671,14 +670,14 @@ ganv_node_class_init(GanvNodeClass* class)
 	item_class->event   = ganv_node_default_event;
 	item_class->draw    = ganv_node_draw;
 
-	class->disconnect  = ganv_node_default_disconnect;
-	class->move        = ganv_node_default_move;
-	class->move_to     = ganv_node_default_move_to;
-	class->resize      = ganv_node_default_resize;
-	class->redraw_text = ganv_node_default_redraw_text;
-	class->tick        = ganv_node_default_tick;
-	class->tail_vector = ganv_node_default_tail_vector;
-	class->head_vector = ganv_node_default_head_vector;
+	klass->disconnect  = ganv_node_default_disconnect;
+	klass->move        = ganv_node_default_move;
+	klass->move_to     = ganv_node_default_move_to;
+	klass->resize      = ganv_node_default_resize;
+	klass->redraw_text = ganv_node_default_redraw_text;
+	klass->tick        = ganv_node_default_tick;
+	klass->tail_vector = ganv_node_default_tail_vector;
+	klass->head_vector = ganv_node_default_head_vector;
 }
 
 gboolean

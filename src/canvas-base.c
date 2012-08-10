@@ -62,9 +62,7 @@ enum {
 	ITEM_LAST_SIGNAL
 };
 
-static void ganv_item_class_init(GanvItemClass* class);
-static void ganv_item_init(GanvItem* item);
-static int  emit_event(GanvCanvasBase* canvas, GdkEvent* event);
+static int emit_event(GanvCanvasBase* canvas, GdkEvent* event);
 
 static guint item_signals[ITEM_LAST_SIGNAL];
 
@@ -845,8 +843,6 @@ enum {
 	LAST_SIGNAL
 };
 
-static void ganv_canvas_base_class_init(GanvCanvasBaseClass* class);
-static void ganv_canvas_base_init(GanvCanvasBase* canvas);
 static void ganv_canvas_base_destroy(GtkObject* object);
 static void ganv_canvas_base_map(GtkWidget* widget);
 static void ganv_canvas_base_unmap(GtkWidget* widget);
@@ -2405,7 +2401,7 @@ ganv_canvas_base_request_redraw(GanvCanvasBase* canvas, int x1, int y1, int x2, 
 		return;
 	}
 
-	IRect* r = g_malloc(sizeof(IRect));
+	IRect* r = (IRect*)g_malloc(sizeof(IRect));
 	*r = rect;
 
 	canvas->redraw_region = g_slist_prepend(canvas->redraw_region, r);
@@ -2600,13 +2596,13 @@ boolean_handled_accumulator(GSignalInvocationHint* ihint,
 
 /* Class initialization function for GanvItemClass */
 static void
-ganv_item_class_init(GanvItemClass* class)
+ganv_item_class_init(GanvItemClass* klass)
 {
 	GObjectClass* gobject_class;
 
-	gobject_class = (GObjectClass*)class;
+	gobject_class = (GObjectClass*)klass;
 
-	item_parent_class = g_type_class_peek_parent(class);
+	item_parent_class = (GtkObjectClass*)g_type_class_peek_parent(klass);
 
 	gobject_class->set_property = ganv_item_set_property;
 	gobject_class->get_property = ganv_item_get_property;
@@ -2642,7 +2638,7 @@ ganv_item_class_init(GanvItemClass* class)
 
 	item_signals[ITEM_EVENT]
 	    = g_signal_new("event",
-	                   G_TYPE_FROM_CLASS(class),
+	                   G_TYPE_FROM_CLASS(klass),
 	                   G_SIGNAL_RUN_LAST,
 	                   G_STRUCT_OFFSET(GanvItemClass, event),
 	                   boolean_handled_accumulator, NULL,
@@ -2652,10 +2648,10 @@ ganv_item_class_init(GanvItemClass* class)
 
 	gobject_class->dispose = ganv_item_dispose;
 
-	class->realize   = ganv_item_realize;
-	class->unrealize = ganv_item_unrealize;
-	class->map       = ganv_item_map;
-	class->unmap     = ganv_item_unmap;
-	class->update    = ganv_item_update;
-	class->point     = ganv_item_point;
+	klass->realize   = ganv_item_realize;
+	klass->unrealize = ganv_item_unrealize;
+	klass->map       = ganv_item_map;
+	klass->unmap     = ganv_item_unmap;
+	klass->update    = ganv_item_update;
+	klass->point     = ganv_item_point;
 }

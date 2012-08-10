@@ -466,15 +466,15 @@ ganv_edge_is_within(const GanvEdge* edge,
 }
 
 static void
-ganv_edge_class_init(GanvEdgeClass* class)
+ganv_edge_class_init(GanvEdgeClass* klass)
 {
-	GObjectClass*   gobject_class = (GObjectClass*)class;
-	GtkObjectClass* object_class  = (GtkObjectClass*)class;
-	GanvItemClass*  item_class    = (GanvItemClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)klass;
+	GtkObjectClass* object_class  = (GtkObjectClass*)klass;
+	GanvItemClass*  item_class    = (GanvItemClass*)klass;
 
-	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(class));
+	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(class, sizeof(GanvEdgeImpl));
+	g_type_class_add_private(klass, sizeof(GanvEdgeImpl));
 
 	gobject_class->set_property = ganv_edge_set_property;
 	gobject_class->get_property = ganv_edge_get_property;

@@ -142,7 +142,7 @@ do_destroy(GtkObject* object, gpointer data)
 	GanvWidget* witem = GANV_WIDGET(data);
 
 	witem->in_destroy = TRUE;
-	gtk_object_destroy(data);
+	gtk_object_destroy(GTK_OBJECT(data));
 }
 
 static void
@@ -164,7 +164,7 @@ ganv_widget_set_property(GObject*      object,
 			gtk_container_remove(GTK_CONTAINER(item->canvas), witem->widget);
 		}
 
-		obj = g_value_get_object(value);
+		obj = (GObject*)g_value_get_object(value);
 		if (obj) {
 			witem->widget     = GTK_WIDGET(obj);
 			witem->destroy_id = g_signal_connect(obj, "destroy",
@@ -420,13 +420,13 @@ ganv_widget_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y
 }
 
 static void
-ganv_widget_class_init(GanvWidgetClass* class)
+ganv_widget_class_init(GanvWidgetClass* klass)
 {
-	GObjectClass*   gobject_class = (GObjectClass*)class;
-	GtkObjectClass* object_class  = (GtkObjectClass*)class;
-	GanvItemClass*  item_class    = (GanvItemClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)klass;
+	GtkObjectClass* object_class  = (GtkObjectClass*)klass;
+	GanvItemClass*  item_class    = (GanvItemClass*)klass;
 
-	parent_class = g_type_class_peek_parent(class);
+	parent_class = g_type_class_peek_parent(klass);
 
 	gobject_class->set_property = ganv_widget_set_property;
 	gobject_class->get_property = ganv_widget_get_property;

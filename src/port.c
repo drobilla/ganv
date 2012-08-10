@@ -271,17 +271,17 @@ ganv_port_event(GanvItem* item, GdkEvent* event)
 }
 
 static void
-ganv_port_class_init(GanvPortClass* class)
+ganv_port_class_init(GanvPortClass* klass)
 {
-	GObjectClass*   gobject_class = (GObjectClass*)class;
-	GtkObjectClass* object_class  = (GtkObjectClass*)class;
-	GanvItemClass*  item_class    = (GanvItemClass*)class;
-	GanvNodeClass*  node_class    = (GanvNodeClass*)class;
-	GanvBoxClass*   box_class     = (GanvBoxClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)klass;
+	GtkObjectClass* object_class  = (GtkObjectClass*)klass;
+	GanvItemClass*  item_class    = (GanvItemClass*)klass;
+	GanvNodeClass*  node_class    = (GanvNodeClass*)klass;
+	GanvBoxClass*   box_class     = (GanvBoxClass*)klass;
 
-	parent_class = GANV_BOX_CLASS(g_type_class_peek_parent(class));
+	parent_class = GANV_BOX_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(class, sizeof(GanvPortImpl));
+	g_type_class_add_private(klass, sizeof(GanvPortImpl));
 
 	gobject_class->set_property = ganv_port_set_property;
 	gobject_class->get_property = ganv_port_get_property;
@@ -296,7 +296,7 @@ ganv_port_class_init(GanvPortClass* class)
 
 	port_signals[PORT_VALUE_CHANGED]
 	    = g_signal_new("value-changed",
-	                   G_TYPE_FROM_CLASS(class),
+	                   G_TYPE_FROM_CLASS(klass),
 	                   G_SIGNAL_RUN_LAST,
 	                   0,
 	                   NULL, NULL,

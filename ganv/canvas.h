@@ -81,6 +81,10 @@ void
 ganv_canvas_add_node(GanvCanvas* canvas,
                      GanvNode*   node);
 
+void
+ganv_canvas_remove_node(GanvCanvas* canvas,
+                        GanvNode*   node);
+
 /**
  * ganv_canvas_get_edge:
  * Get the edge between two nodes, or NULL if none exists.

@@ -659,16 +659,16 @@ ganv_module_point(GanvItem* item,
 }
 
 static void
-ganv_module_class_init(GanvModuleClass* class)
+ganv_module_class_init(GanvModuleClass* klass)
 {
-	GObjectClass*   gobject_class = (GObjectClass*)class;
-	GtkObjectClass* object_class  = (GtkObjectClass*)class;
-	GanvItemClass*  item_class    = (GanvItemClass*)class;
-	GanvNodeClass*  node_class    = (GanvNodeClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)klass;
+	GtkObjectClass* object_class  = (GtkObjectClass*)klass;
+	GanvItemClass*  item_class    = (GanvItemClass*)klass;
+	GanvNodeClass*  node_class    = (GanvNodeClass*)klass;
 
-	parent_class = GANV_BOX_CLASS(g_type_class_peek_parent(class));
+	parent_class = GANV_BOX_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(class, sizeof(GanvModuleImpl));
+	g_type_class_add_private(klass, sizeof(GanvModuleImpl));
 
 	gobject_class->set_property = ganv_module_set_property;
 	gobject_class->get_property = ganv_module_get_property;
@@ -712,7 +712,7 @@ GanvPort*
 ganv_module_get_port(GanvModule* module,
                      guint       index)
 {
-	return g_ptr_array_index(module->impl->ports, index);
+	return (GanvPort*)g_ptr_array_index(module->impl->ports, index);
 }
 
 double

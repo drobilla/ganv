@@ -369,16 +369,16 @@ ganv_box_default_set_height(GanvBox* box,
 }
 
 static void
-ganv_box_class_init(GanvBoxClass* class)
+ganv_box_class_init(GanvBoxClass* klass)
 {
-	GObjectClass*   gobject_class = (GObjectClass*)class;
-	GtkObjectClass* object_class  = (GtkObjectClass*)class;
-	GanvItemClass*  item_class    = (GanvItemClass*)class;
-	GanvNodeClass*  node_class    = (GanvNodeClass*)class;
+	GObjectClass*   gobject_class = (GObjectClass*)klass;
+	GtkObjectClass* object_class  = (GtkObjectClass*)klass;
+	GanvItemClass*  item_class    = (GanvItemClass*)klass;
+	GanvNodeClass*  node_class    = (GanvNodeClass*)klass;
 
-	parent_class = GANV_NODE_CLASS(g_type_class_peek_parent(class));
+	parent_class = GANV_NODE_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(class, sizeof(GanvBoxImpl));
+	g_type_class_add_private(klass, sizeof(GanvBoxImpl));
 
 	gobject_class->set_property = ganv_box_set_property;
 	gobject_class->get_property = ganv_box_get_property;
@@ -472,8 +472,8 @@ ganv_box_class_init(GanvBoxClass* class)
 
 	node_class->is_within = ganv_box_is_within;
 
-	class->set_width  = ganv_box_default_set_width;
-	class->set_height = ganv_box_default_set_height;
+	klass->set_width  = ganv_box_default_set_width;
+	klass->set_height = ganv_box_default_set_height;
 }
 
 void

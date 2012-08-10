@@ -31,7 +31,7 @@ static const int MAX_NUM_PORTS = 16;
 vector<Node*> ins;
 vector<Node*> outs;
 
-Module*
+static Module*
 make_module(Canvas* canvas)
 {
 	char name[8];
@@ -62,7 +62,7 @@ make_module(Canvas* canvas)
 	return m;
 }
 
-Circle*
+static Circle*
 make_circle(Canvas* canvas)
 {
 	char name[8];
@@ -80,14 +80,14 @@ make_circle(Canvas* canvas)
 	return e;
 }
 
-bool
+static bool
 quit()
 {
 	Gtk::Main::quit();
 	return true;
 }
 
-int
+static int
 print_usage(const char* name)
 {
 	fprintf(stderr,

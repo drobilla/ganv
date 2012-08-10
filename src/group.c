@@ -100,7 +100,7 @@ ganv_group_update(GanvItem* item, int flags)
 	double max_y = 0.0;
 
 	for (list = group->item_list; list; list = list->next) {
-		i = list->data;
+		i = (GanvItem*)list->data;
 
 		ganv_item_invoke_update(i, flags);
 
@@ -125,7 +125,7 @@ ganv_group_realize(GanvItem* item)
 	group = GANV_GROUP(item);
 
 	for (list = group->item_list; list; list = list->next) {
-		i = list->data;
+		i = (GanvItem*)list->data;
 
 		if (!(i->object.flags & GANV_ITEM_REALIZED)) {
 			(*GANV_ITEM_GET_CLASS(i)->realize)(i);
@@ -145,7 +145,7 @@ ganv_group_unrealize(GanvItem* item)
 	group = GANV_GROUP(item);
 
 	for (list = group->item_list; list; list = list->next) {
-		i = list->data;
+		i = (GanvItem*)list->data;
 
 		if (i->object.flags & GANV_ITEM_REALIZED) {
 			(*GANV_ITEM_GET_CLASS(i)->unrealize)(i);
@@ -165,7 +165,7 @@ ganv_group_map(GanvItem* item)
 	group = GANV_GROUP(item);
 
 	for (list = group->item_list; list; list = list->next) {
-		i = list->data;
+		i = (GanvItem*)list->data;
 
 		if (!(i->object.flags & GANV_ITEM_MAPPED)) {
 			(*GANV_ITEM_GET_CLASS(i)->map)(i);
@@ -185,7 +185,7 @@ ganv_group_unmap(GanvItem* item)
 	group = GANV_GROUP(item);
 
 	for (list = group->item_list; list; list = list->next) {
-		i = list->data;
+		i = (GanvItem*)list->data;
 
 		if (i->object.flags & GANV_ITEM_MAPPED) {
 			(*GANV_ITEM_GET_CLASS(i)->unmap)(i);
@@ -211,7 +211,7 @@ ganv_group_draw(GanvItem* item, cairo_t* cr,
 	cairo_fill(cr);
 
 	for (list = group->item_list; list; list = list->next) {
-		child = list->data;
+		child = (GanvItem*)list->data;
 
 		if (((child->object.flags & GANV_ITEM_VISIBLE)
 		     && ((child->x1 < (x + width))
@@ -259,7 +259,7 @@ ganv_group_point(GanvItem* item, double x, double y, int cx, int cy,
 	dist = 0.0; /* keep gcc happy */
 
 	for (list = group->item_list; list; list = list->next) {
-		child = list->data;
+		child = (GanvItem*)list->data;
 
 		if ((child->x1 > x2) || (child->y1 > y2) || (child->x2 < x1) || (child->y2 < y1)) {
 			continue;
@@ -315,7 +315,7 @@ ganv_group_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2
 	set = FALSE;
 
 	for (list = group->item_list; list; list = list->next) {
-		child = list->data;
+		child = (GanvItem*)list->data;
 
 		if (child->object.flags & GANV_ITEM_VISIBLE) {
 			set = TRUE;
@@ -336,7 +336,7 @@ ganv_group_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2
 	list = list->next;
 
 	for (; list; list = list->next) {
-		child = list->data;
+		child = (GanvItem*)list->data;
 
 		if (!(child->object.flags & GANV_ITEM_VISIBLE)) {
 			continue;
@@ -429,17 +429,17 @@ ganv_group_remove(GanvItem* parent, GanvItem* item)
 }
 
 static void
-ganv_group_class_init(GanvGroupClass* class)
+ganv_group_class_init(GanvGroupClass* klass)
 {
 	GObjectClass*   gobject_class;
 	GtkObjectClass* object_class;
 	GanvItemClass*  item_class;
 
-	gobject_class = (GObjectClass*)class;
-	object_class  = (GtkObjectClass*)class;
-	item_class    = (GanvItemClass*)class;
+	gobject_class = (GObjectClass*)klass;
+	object_class  = (GtkObjectClass*)klass;
+	item_class    = (GanvItemClass*)klass;
 
-	group_parent_class = g_type_class_peek_parent(class);
+	group_parent_class = (GanvItemClass*)g_type_class_peek_parent(klass);
 
 	gobject_class->set_property = ganv_group_set_property;
 	gobject_class->get_property = ganv_group_get_property;
