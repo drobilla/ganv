@@ -433,7 +433,7 @@ ganv_port_set_control_value(GanvPort* port,
 	}
 
 	if (impl->control->is_toggle) {
-		if (value != 0.0) {
+		if (value != 0.0f) {
 			value = impl->control->max;
 		} else {
 			value = impl->control->min;
@@ -448,7 +448,7 @@ ganv_port_set_control_value(GanvPort* port,
 	}
 
 	if (impl->control->max == impl->control->min) {
-		impl->control->max = impl->control->min + 1.0;
+		impl->control->max = impl->control->min + 1.0f;
 	}
 
 	const int inf = isinf(value);
