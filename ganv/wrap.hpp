@@ -95,16 +95,6 @@ private: \
 			return NULL; \
 		} \
 	} \
-	static inline const Ganv::Name* \
-	wrap(const Ganv##Name* gobj) \
-	{ \
-		if (gobj) { \
-			GQuark key = g_quark_from_string("ganvmm"); \
-			return (const Ganv::Name*)g_object_get_qdata(G_OBJECT(gobj), key); \
-		} else { \
-			return NULL; \
-		} \
-	} \
 	}
 
 #endif  // GANV_WRAP_HPP
