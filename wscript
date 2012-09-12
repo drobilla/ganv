@@ -1,26 +1,20 @@
 #!/usr/bin/env python
 import os
 import waflib.Options as Options
-from waflib.extras import autowaf as autowaf
+import waflib.extras.autowaf as autowaf
 
-# Version of this package (even if built as a child)
-GANV_VERSION       = '1.2.0'
-GANV_MAJOR_VERSION = '1'
-
-# Library version (UNIX style major, minor, micro)
+# Library and package version (UNIX style major, minor, micro)
 # major increment <=> incompatible changes
 # minor increment <=> compatible changes (additions)
 # micro increment <=> no interface changes
-# Ganv as of 1.0.0 uses the same version number for both library and package
-GANV_LIB_VERSION = GANV_VERSION
+GANV_VERSION       = '1.2.0'
+GANV_MAJOR_VERSION = '1'
 
-# Variables for 'waf dist'
-APPNAME = 'ganv'
-VERSION = GANV_VERSION
-
-# Mandatory variables
-top = '.'
-out = 'build'
+# Mandatory waf variables
+APPNAME = 'ganv'        # Package name for waf dist
+VERSION = GANV_VERSION  # Package version for waf dist
+top     = '.'           # Source directory
+out     = 'build'       # Build directory
 
 def options(opt):
     opt.load('compiler_c')
@@ -105,34 +99,34 @@ def build(bld):
         target = 'src/ganv-marshal.c')
 
     # Library
-    obj = bld(features        = 'c cshlib cxx cxxshlib',
-              export_includes = ['.'],
-              source          = ganv_source,
-              includes        = ['.', './src'],
-              name            = 'libganv',
-              target          = 'ganv-%s' % GANV_MAJOR_VERSION,
-              uselib          = 'GTKMM AGRAPH ART',
-              vnum            = GANV_LIB_VERSION,
-              install_path    = '${LIBDIR}')
+    bld(features        = 'c cshlib cxx cxxshlib',
+        export_includes = ['.'],
+        source          = ganv_source,
+        includes        = ['.', './src'],
+        name            = 'libganv',
+        target          = 'ganv-%s' % GANV_MAJOR_VERSION,
+        uselib          = 'GTKMM AGRAPH ART',
+        vnum            = GANV_VERSION,
+        install_path    = '${LIBDIR}')
 
     # Benchmark program (C++)
-    obj = bld(features     = 'cxx cxxprogram',
-              source       = 'src/ganv_bench.cpp',
-              includes     = ['.', './src'],
-              use          = 'libganv',
-              use_lib      = 'GTKMM',
-              target       = 'src/ganv_bench')
+    bld(features     = 'cxx cxxprogram',
+        source       = 'src/ganv_bench.cpp',
+        includes     = ['.', './src'],
+        use          = 'libganv',
+        use_lib      = 'GTKMM',
+        target       = 'src/ganv_bench')
 
     if bld.env.BUILD_TESTS:
         # Static library for test program
-        obj = bld(features     = 'c cstlib',
-                  source       = ganv_source,
-                  includes     = ['.', './src'],
-                  name         = 'libganv_profiled',
-                  target       = 'ganv_profiled',
-                  uselib       = 'GTKMM AGRAPH ART',
-                  install_path = '',
-                  cflags       = [ '-fprofile-arcs', '-ftest-coverage' ])
+        bld(features     = 'c cstlib',
+            source       = ganv_source,
+            includes     = ['.', './src'],
+            name         = 'libganv_profiled',
+            target       = 'ganv_profiled',
+            uselib       = 'GTKMM AGRAPH ART',
+            install_path = '',
+            cflags       = [ '-fprofile-arcs', '-ftest-coverage' ])
 
         # Test program (C)
         bld(features     = 'c cprogram',
