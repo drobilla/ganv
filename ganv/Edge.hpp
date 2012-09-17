@@ -77,6 +77,7 @@ public:
 	RW_PROPERTY(gboolean, selected)
 	RW_PROPERTY(gboolean, highlighted)
 	RW_PROPERTY(guint,    color)
+	RW_PROPERTY(gdouble,  handle_radius)
 
 	METHODRETWRAP0(ganv_edge, Node*, get_tail);
 	METHODRETWRAP0(ganv_edge, Node*, get_head);

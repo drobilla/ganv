@@ -99,6 +99,8 @@ public:
 	/** Delete the edge from @c tail to @c head. */
 	void remove_edge(Node* tail, Node* head);
 
+	void remove_edge(Edge* edge);
+
 	typedef void (*EdgePtrFunc)(GanvEdge* edge, void* data);
 
 	void for_each_edge(EdgePtrFunc f, void* data);

@@ -207,11 +207,13 @@ request_redraw(GanvCanvasBase*       canvas,
 		                                x2 + w, y2 + w);
 	}
 
-	ganv_canvas_base_request_redraw(canvas,
-	                                coords->handle_x - coords->handle_radius,
-	                                coords->handle_y - coords->handle_radius,
-	                                coords->handle_x + coords->handle_radius,
-	                                coords->handle_y + coords->handle_radius);
+	if (coords->handle_radius > 0.0) {
+		ganv_canvas_base_request_redraw(canvas,
+		                                coords->handle_x - coords->handle_radius,
+		                                coords->handle_y - coords->handle_radius,
+		                                coords->handle_x + coords->handle_radius,
+		                                coords->handle_y + coords->handle_radius);
+	}
 
 	if (coords->arrowhead) {
 		ganv_canvas_base_request_redraw(
@@ -420,9 +422,11 @@ ganv_edge_draw(GanvItem* item,
 
 	cairo_stroke(cr);
 
-	cairo_move_to(cr, join_x, join_y);
-	cairo_arc(cr, join_x, join_y, impl->coords.handle_radius, 0, 2 * G_PI);
-	cairo_fill(cr);
+	if (impl->coords.handle_radius > 0.0) {
+		cairo_move_to(cr, join_x, join_y);
+		cairo_arc(cr, join_x, join_y, impl->coords.handle_radius, 0, 2 * G_PI);
+		cairo_fill(cr);
+	}
 }
 
 static double

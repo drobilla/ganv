@@ -1487,6 +1487,12 @@ Canvas::remove_edge(Node* item1, Node* item2)
 	}
 }
 
+void
+Canvas::remove_edge(Edge* edge)
+{
+	impl()->remove_edge(edge->gobj());
+}
+
 Edge*
 Canvas::get_edge(Node* tail, Node* head) const
 {
@@ -1501,8 +1507,14 @@ Canvas::get_edge(Node* tail, Node* head) const
 void
 Canvas::for_each_edge(EdgePtrFunc f, void* data)
 {
-	FOREACH_EDGE(impl()->_edges, i) {
+	for (GanvCanvasImpl::Edges::iterator i = impl()->_edges.begin();
+	     i != impl()->_edges.end();) {
+		GanvCanvasImpl::Edges::iterator next = i;
+		++next;
+
 		f((*i), data);
+
+		i = next;
 	}
 }
 
@@ -1802,7 +1814,7 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 	double bottom = DBL_MAX;
 
 	FOREACH_ITEM(canvas->impl->_items, i) {
-		double x, y, w, h;
+		double x = 0.0, y = 0.0, w = 0.0, h = 0.0;
 		g_object_get(G_OBJECT(*i), "x", &x, "y", &y, "w", &w, "h", &h, NULL);
 		if (x < left)
 			left = x;
