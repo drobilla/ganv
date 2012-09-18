@@ -1814,16 +1814,22 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 	double bottom = DBL_MAX;
 
 	FOREACH_ITEM(canvas->impl->_items, i) {
-		double x = 0.0, y = 0.0, w = 0.0, h = 0.0;
-		g_object_get(G_OBJECT(*i), "x", &x, "y", &y, "w", &w, "h", &h, NULL);
-		if (x < left)
-			left = x;
-		if (x + w > right)
-			right = x + w;
-		if (y < bottom)
-			bottom = y;
-		if (y + h > top)
-			top = y + h;
+		GObject* const obj = G_OBJECT(*i);
+		if (GANV_IS_CIRCLE(*i)) {
+			double x = 0.0, y = 0.0, r = 0.0;
+			g_object_get(obj, "x", &x, "y", &y, "radius", &r, NULL);
+			left   = MIN(left, x - r);
+			right  = MAX(right, x + r);
+			bottom = MIN(bottom, y - r);
+			top    = MAX(top, y + r);
+		} else {
+			double x = 0.0, y = 0.0, w = 0.0, h = 0.0;
+			g_object_get(obj, "x", &x, "y", &y, "w", &w, "h", &h, NULL);
+			left   = MIN(left, x);
+			right  = MAX(right, x + w);
+			bottom = MIN(bottom, y);
+			top    = MAX(top, y + h);
+		}
 	}
 
 	static const double pad = 8.0;
