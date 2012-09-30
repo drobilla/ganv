@@ -163,9 +163,9 @@ ganv_edge_get_property(GObject*    object,
 	}
 }
 
-static void
-request_redraw(GanvCanvasBase*       canvas,
-               const GanvEdgeCoords* coords)
+void
+ganv_edge_request_redraw(GanvCanvasBase*       canvas,
+                         const GanvEdgeCoords* coords)
 {
 	const double w = coords->width;
 	if (coords->curved) {
@@ -259,7 +259,7 @@ ganv_edge_update(GanvItem* item, int flags)
 	}
 
 	// Request redraw of old location
-	request_redraw(item->canvas, &impl->old_coords);
+	ganv_edge_request_redraw(item->canvas, &impl->old_coords);
 
 	// Calculate new coordinates from tail and head
 	GanvEdgeCoords* coords = &impl->coords;
@@ -300,7 +300,7 @@ ganv_edge_update(GanvItem* item, int flags)
 	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
-	request_redraw(item->canvas, &impl->coords);
+	ganv_edge_request_redraw(item->canvas, &impl->coords);
 }
 
 static void

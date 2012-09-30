@@ -648,6 +648,7 @@ GanvCanvasImpl::remove_edge(GanvEdge* edge)
 		_selected_edges.erase(edge);
 		_edges.erase(edge);
 		_dst_edges.erase(edge);
+		ganv_edge_request_redraw(GANV_ITEM(edge)->canvas, &edge->impl->coords);
 		gtk_object_destroy(GTK_OBJECT(edge));
 	}
 }

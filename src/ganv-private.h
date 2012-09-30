@@ -189,6 +189,12 @@ ganv_canvas_port_event(GanvCanvas* canvas,
 void
 ganv_item_invoke_update(GanvItem* item, int flags);
 
+/* Edge */
+
+void
+ganv_edge_request_redraw(GanvCanvasBase*       canvas,
+                         const GanvEdgeCoords* coords);
+
 #ifdef __cplusplus
 }  /* extern "C" */
 #endif
