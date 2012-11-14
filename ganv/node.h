@@ -157,6 +157,9 @@ ganv_node_redraw_text(GanvNode* node);
 void
 ganv_node_disconnect(GanvNode* node);
 
+gboolean
+ganv_node_is_selected(GanvNode* node);
+
 G_END_DECLS
 
 #endif  /* GANV_NODE_H */

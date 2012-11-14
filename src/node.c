@@ -352,7 +352,8 @@ ganv_node_default_disconnect(GanvNode* node)
 {
 	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
 	if (canvas) {
-		ganv_canvas_for_each_edge_on(canvas, node, ganv_edge_disconnect);
+		ganv_canvas_for_each_edge_on(
+			canvas, node, (GanvEdgeFunc)ganv_edge_disconnect, NULL);
 	}
 }
 
@@ -363,8 +364,8 @@ ganv_node_default_move(GanvNode* node,
 {
 	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
 	ganv_item_move(GANV_ITEM(node), dx, dy);
-	ganv_canvas_for_each_edge_on(canvas, node,
-	                             ganv_edge_update_location);
+	ganv_canvas_for_each_edge_on(
+		canvas, node, (GanvEdgeFunc)ganv_edge_update_location, NULL);
 
 }
 
@@ -380,10 +381,10 @@ ganv_node_default_move_to(GanvNode* node,
 	              NULL);
 	if (node->impl->can_tail) {
 		ganv_canvas_for_each_edge_from(
-			canvas, node, ganv_edge_update_location);
+			canvas, node, (GanvEdgeFunc)ganv_edge_update_location, NULL);
 	} else if (node->impl->can_head) {
 		ganv_canvas_for_each_edge_to(
-			canvas, node, ganv_edge_update_location);
+			canvas, node, (GanvEdgeFunc)ganv_edge_update_location, NULL);
 	}
 }
 
@@ -781,4 +782,12 @@ void
 ganv_node_disconnect(GanvNode* node)
 {
 	GANV_NODE_GET_CLASS(node)->disconnect(node);
+}
+
+gboolean
+ganv_node_is_selected(GanvNode* node)
+{
+	gboolean selected = FALSE;
+	g_object_get(node, "selected", &selected, NULL);
+	return selected;
 }

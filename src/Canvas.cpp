@@ -167,9 +167,9 @@ struct GanvCanvasImpl {
 	void set_zoom_and_font_size(double zoom, double points);
 
 	void for_each_node(GanvNodeFunc f, void* data);
-	void for_each_edge_from(const GanvNode* tail, GanvEdgeFunc f);
-	void for_each_edge_to(const GanvNode* head, GanvEdgeFunc f);
-	void for_each_edge_on(const GanvNode* node, GanvEdgeFunc f);
+	void for_each_edge_from(const GanvNode* tail, GanvEdgeFunc f, void* data);
+	void for_each_edge_to(const GanvNode* head, GanvEdgeFunc f, void* data);
+	void for_each_edge_on(const GanvNode* node, GanvEdgeFunc f, void* data);
 
 	void add_item(GanvNode* i);
 	bool remove_item(GanvNode* i);
@@ -322,7 +322,7 @@ GanvCanvasImpl::selection_move_finished()
 }
 
 static void
-select_if_tail_is_selected(GanvEdge* edge)
+select_if_tail_is_selected(GanvEdge* edge, void* data)
 {
 	GanvNode* tail = edge->impl->tail;
 	gboolean  selected;
@@ -338,7 +338,7 @@ select_if_tail_is_selected(GanvEdge* edge)
 }
 
 static void
-select_if_head_is_selected(GanvEdge* edge)
+select_if_head_is_selected(GanvEdge* edge, void* data)
 {
 	GanvNode* head = edge->impl->head;
 	gboolean  selected;
@@ -359,10 +359,12 @@ select_edges(GanvPort* port, void* data)
 	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
 	if (port->impl->is_input) {
 		impl->for_each_edge_to(GANV_NODE(port),
-		                       select_if_tail_is_selected);
+		                       select_if_tail_is_selected,
+		                       NULL);
 	} else {
 		impl->for_each_edge_from(GANV_NODE(port),
-		                         select_if_head_is_selected);
+		                         select_if_head_is_selected,
+		                         NULL);
 	}
 }
 
@@ -400,6 +402,15 @@ GanvCanvasImpl::remove_item(GanvNode* item)
 	return ret;
 }
 
+static void
+select_if_ends_are_selected(GanvEdge* edge, void* data)
+{
+	if (ganv_node_is_selected(ganv_edge_get_tail(edge)) &&
+	    ganv_node_is_selected(ganv_edge_get_head(edge))) {
+		ganv_edge_select(edge);
+	}
+}
+	    
 void
 GanvCanvasImpl::select_item(GanvNode* m)
 {
@@ -409,7 +420,7 @@ GanvCanvasImpl::select_item(GanvNode* m)
 	if (GANV_IS_MODULE(m)) {
 		ganv_module_for_each_port(GANV_MODULE(m), select_edges, this);
 	} else {
-		for_each_edge_on(m, ganv_edge_select);
+		for_each_edge_on(m, select_if_ends_are_selected, this);
 	}
 
 	g_object_set(m, "selected", TRUE, NULL);
@@ -421,10 +432,12 @@ unselect_edges(GanvPort* port, void* data)
 	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
 	if (port->impl->is_input) {
 		impl->for_each_edge_to(GANV_NODE(port),
-		                       ganv_edge_unselect);
+		                       (GanvEdgeFunc)ganv_edge_unselect,
+		                       NULL);
 	} else {
 		impl->for_each_edge_from(GANV_NODE(port),
-		                         ganv_edge_unselect);
+		                         (GanvEdgeFunc)ganv_edge_unselect,
+		                         NULL);
 	}
 }
 
@@ -435,7 +448,7 @@ GanvCanvasImpl::unselect_item(GanvNode* m)
 	if (GANV_IS_MODULE(m)) {
 		ganv_module_for_each_port(GANV_MODULE(m), unselect_edges, this);
 	} else {
-		for_each_edge_on(m, ganv_edge_unselect);
+		for_each_edge_on(m, (GanvEdgeFunc)ganv_edge_unselect, NULL);
 	}
 
 	// Unselect item
@@ -1341,36 +1354,39 @@ GanvCanvasImpl::for_each_node(GanvNodeFunc f,
 
 void
 GanvCanvasImpl::for_each_edge_from(const GanvNode* tail,
-                                   GanvEdgeFunc    f)
+                                   GanvEdgeFunc    f,
+                                   void*           data)
 {
 	for (GanvCanvasImpl::Edges::const_iterator i = first_edge_from(tail);
 	     i != _edges.end() && (*i)->impl->tail == tail;) {
 		GanvCanvasImpl::Edges::const_iterator next = i;
 		++next;
-		f((*i));
+		f((*i), data);
 		i = next;
 	}
 }
 
 void
 GanvCanvasImpl::for_each_edge_to(const GanvNode* head,
-                                 GanvEdgeFunc    f)
+                                 GanvEdgeFunc    f,
+                                 void*           data)
 {
 	for (GanvCanvasImpl::Edges::const_iterator i = first_edge_to(head);
 	     i != _dst_edges.end() && (*i)->impl->head == head;) {
 		GanvCanvasImpl::Edges::const_iterator next = i;
 		++next;
-		f((*i));
+		f((*i), data);
 		i = next;
 	}
 }
 
 void
 GanvCanvasImpl::for_each_edge_on(const GanvNode* node,
-                                 GanvEdgeFunc    f)
+                                 GanvEdgeFunc    f,
+                                 void*           data)
 {
-	for_each_edge_from(node, f);
-	for_each_edge_to(node, f);
+	for_each_edge_from(node, f, data);
+	for_each_edge_to(node, f, data);
 }
 
 void
@@ -1506,7 +1522,7 @@ Canvas::get_edge(Node* tail, Node* head) const
 }
 
 void
-Canvas::for_each_edge(EdgePtrFunc f, void* data)
+Canvas::for_each_edge(GanvEdgeFunc f, void* data)
 {
 	for (GanvCanvasImpl::Edges::iterator i = impl()->_edges.begin();
 	     i != impl()->_edges.end();) {
@@ -1520,7 +1536,7 @@ Canvas::for_each_edge(EdgePtrFunc f, void* data)
 }
 
 void
-Canvas::for_each_selected_edge(EdgePtrFunc f, void* data)
+Canvas::for_each_selected_edge(GanvEdgeFunc f, void* data)
 {
 	FOREACH_EDGE(impl()->_selected_edges, i) {
 		f((*i), data);
@@ -1989,25 +2005,28 @@ ganv_canvas_for_each_selected_node(GanvCanvas*  canvas,
 void
 ganv_canvas_for_each_edge_from(GanvCanvas*     canvas,
                                const GanvNode* tail,
-                               GanvEdgeFunc    f)
+                               GanvEdgeFunc    f,
+                               void*           data)
 {
-	canvas->impl->for_each_edge_from(tail, f);
+	canvas->impl->for_each_edge_from(tail, f, data);
 }
 
 void
 ganv_canvas_for_each_edge_to(GanvCanvas*     canvas,
                              const GanvNode* head,
-                             GanvEdgeFunc    f)
+                             GanvEdgeFunc    f,
+                             void*           data)
 {
-	canvas->impl->for_each_edge_to(head, f);
+	canvas->impl->for_each_edge_to(head, f, data);
 }
 
 void
 ganv_canvas_for_each_edge_on(GanvCanvas*     canvas,
                              const GanvNode* node,
-                             GanvEdgeFunc    f)
+                             GanvEdgeFunc    f,
+                             void*           data)
 {
-	canvas->impl->for_each_edge_on(node, f);
+	canvas->impl->for_each_edge_on(node, f, data);
 }
 
 GdkCursor*

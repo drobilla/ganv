@@ -70,6 +70,11 @@
 		prefix##_##name(gobj(), a1, a2); \
 	}
 
+#define METHOD3(prefix, name, t1, a1, t2, a2, t3, a3) \
+	virtual void name(t1 a1, t2 a2, t3 a3) { \
+		prefix##_##name(gobj(), a1, a2, a3); \
+	}
+
 #define SIGNAL1(name, argtype) \
 public: \
 	virtual bool on_##name(argtype arg) { \

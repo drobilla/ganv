@@ -121,9 +121,23 @@ ganv_canvas_arrange(GanvCanvas* canvas);
 void
 ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename);
 
-typedef void (*GanvNodeFunc)(GanvNode* node, void* data);
+/**
+ * A node function that takes a user data argument (for callbacks).
+ *
+ * Note that in the Gtk world it is considered safe to cast a function to a
+ * function with more arguments and call the resulting pointer, so functions
+ * like ganv_edge_select can safely be used where a GanvEdgeFunc is expected.
+ */
+typedef void (*GanvEdgeFunc)(GanvEdge* edge, void* data);
 
-typedef void (*GanvEdgeFunc)(GanvEdge* edge);
+/**
+ * A node function that takes a user data argument (for callbacks).
+ *
+ * Note that in the Gtk world it is considered safe to cast a function to a
+ * function with more arguments and call the resulting pointer, so functions
+ * like ganv_node_select can safely be used where a GanvNodeFunc is expected.
+ */
+typedef void (*GanvNodeFunc)(GanvNode* node, void* data);
 
 /**
  * ganv_canvas_for_each_node:
@@ -167,7 +181,8 @@ ganv_canvas_for_each_edge(GanvCanvas*  canvas,
 void
 ganv_canvas_for_each_edge_from(GanvCanvas*     canvas,
                                const GanvNode* tail,
-                               GanvEdgeFunc    f);
+                               GanvEdgeFunc    f,
+                               void*           data);
 
 /**
  * ganv_canvas_for_each_edge_to:
@@ -178,7 +193,8 @@ ganv_canvas_for_each_edge_from(GanvCanvas*     canvas,
 void
 ganv_canvas_for_each_edge_to(GanvCanvas*     canvas,
                              const GanvNode* head,
-                             GanvEdgeFunc    f);
+                             GanvEdgeFunc    f,
+                             void*           data);
 
 /**
  * ganv_canvas_for_each_edge_on:
@@ -189,7 +205,8 @@ ganv_canvas_for_each_edge_to(GanvCanvas*     canvas,
 void
 ganv_canvas_for_each_edge_on(GanvCanvas*     canvas,
                              const GanvNode* node,
-                             GanvEdgeFunc    f);
+                             GanvEdgeFunc    f,
+                             void*           data);
 
 /**
  * ganv_canvas_destroy:

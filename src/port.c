@@ -64,13 +64,11 @@ ganv_port_destroy(GtkObject* object)
 	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
 	if (canvas) {
 		if (port->impl->is_input) {
-			ganv_canvas_for_each_edge_to(canvas,
-			                             &port->box.node,
-			                             ganv_edge_remove);
+			ganv_canvas_for_each_edge_to(
+				canvas, &port->box.node, (GanvEdgeFunc)ganv_edge_remove, NULL);
 		} else {
-			ganv_canvas_for_each_edge_from(canvas,
-			                               &port->box.node,
-			                               ganv_edge_remove);
+			ganv_canvas_for_each_edge_from(
+				canvas, &port->box.node, (GanvEdgeFunc)ganv_edge_remove, NULL);
 		}
 		item->canvas = NULL;
 	}

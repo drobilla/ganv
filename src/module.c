@@ -296,7 +296,8 @@ resize_right(GanvModule* module)
 			last_was_input = TRUE;
 
 			ganv_canvas_for_each_edge_to(
-				canvas, pnode, ganv_edge_update_location);
+				canvas, pnode,
+				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		} else {
 			if (!m.horiz || !last_was_input) {
 				y = header_height + 2.0 + (i * (h + 2.0));
@@ -307,7 +308,8 @@ resize_right(GanvModule* module)
 			last_was_input = FALSE;
 
 			ganv_canvas_for_each_edge_from(
-				canvas, pnode, ganv_edge_update_location);
+				canvas, pnode,
+				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		}
 	}
 
@@ -365,13 +367,15 @@ resize_down(GanvModule* module)
 		if (p->impl->is_input) {
 			in_x = PAD + (in_count++ * (port_breadth + PAD));
 			ganv_node_move_to(pnode, in_x, 0);
-			ganv_canvas_for_each_edge_to(canvas, pnode,
-			                             ganv_edge_update_location);
+			ganv_canvas_for_each_edge_to(
+				canvas, pnode,
+				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		} else {
 			out_x = PAD + (out_count++ * (port_breadth + PAD));
 			ganv_node_move_to(pnode, out_x, height - ganv_box_get_height(pbox));
-			ganv_canvas_for_each_edge_from(canvas, pnode,
-			                               ganv_edge_update_location);
+			ganv_canvas_for_each_edge_from(
+				canvas, pnode,
+				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		}
 	}
 

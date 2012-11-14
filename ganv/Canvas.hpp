@@ -72,17 +72,20 @@ public:
 	METHOD2(ganv_canvas, for_each_node, GanvNodeFunc, f, void*, data)
 	METHOD2(ganv_canvas, for_each_selected_node, GanvNodeFunc, f, void*, data)
 
-	METHOD2(ganv_canvas, for_each_edge_from,
+	METHOD3(ganv_canvas, for_each_edge_from,
 	        const GanvNode*, tail,
-	        GanvEdgeFunc, f);
+	        GanvEdgeFunc, f,
+	        void*, data);
 
-	METHOD2(ganv_canvas, for_each_edge_to,
+	METHOD3(ganv_canvas, for_each_edge_to,
 	        const GanvNode*, head,
-	        GanvEdgeFunc, f);
+	        GanvEdgeFunc, f,
+	        void*, data);
 
-	METHOD2(ganv_canvas, for_each_edge_on,
+	METHOD3(ganv_canvas, for_each_edge_on,
 	        const GanvNode*, node,
-	        GanvEdgeFunc, f);
+	        GanvEdgeFunc, f,
+	        void*, data);
 
 	METHOD0(ganv_canvas, get_move_cursor);
 
@@ -101,10 +104,8 @@ public:
 
 	void remove_edge(Edge* edge);
 
-	typedef void (*EdgePtrFunc)(GanvEdge* edge, void* data);
-
-	void for_each_edge(EdgePtrFunc f, void* data);
-	void for_each_selected_edge(EdgePtrFunc f, void* data);
+	void for_each_edge(GanvEdgeFunc f, void* data);
+	void for_each_selected_edge(GanvEdgeFunc f, void* data);
 
 	void get_scroll_offsets(int& cx, int& cy) const;
 	void scroll_to(int x, int y);
