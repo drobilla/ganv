@@ -128,6 +128,8 @@ private:
 	inline       GanvCanvasImpl* impl()       { return _gobj->impl; }
 	inline const GanvCanvasImpl* impl() const { return _gobj->impl; }
 
+	sigc::connection _animate_connection;
+
 	GanvCanvas* const _gobj;
 };
 

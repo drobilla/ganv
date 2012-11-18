@@ -1485,12 +1485,13 @@ Canvas::Canvas(double width, double height)
 	g_signal_connect(gobj(), "disconnect",
 	                 G_CALLBACK(on_disconnect), this);
 
-	Glib::signal_timeout().connect(
+	_animate_connection = Glib::signal_timeout().connect(
 		sigc::mem_fun(impl(), &GanvCanvasImpl::animate_selected), 120);
 }
 
 Canvas::~Canvas()
 {
+	_animate_connection.disconnect();
 	destroy();
 	delete impl();
 }
