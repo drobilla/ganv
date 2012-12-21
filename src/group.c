@@ -202,7 +202,7 @@ item_layer_cmp(const void* a, const void* b, void* user_data)
 	GanvItem* ib = (GanvItem*)b;
 	if (ia->layer == ib->layer) {
 		// Same layer, order in a quasi-cascade
-		return (ia->x - ib->x);
+		return (ia->x1 - ib->x1) + (ia->y1 - ib->y1);
 	} else {
 		return ia->layer - ib->layer;
 	}
