@@ -216,6 +216,7 @@ ganv_item_construct(GanvItem* item, GanvItem* parent,
 
 	item->parent = parent;
 	item->canvas = item->parent->canvas;
+	item->layer = 0;
 
 	g_object_set_valist(G_OBJECT(item), first_arg_name, args);
 
@@ -402,6 +403,18 @@ ganv_item_set_valist(GanvItem* item, const gchar* first_arg_name, va_list args)
 	item->canvas->need_repick = TRUE;
 }
 
+void
+ganv_item_raise(GanvItem* item)
+{
+	++item->layer;
+}
+
+void
+ganv_item_lower(GanvItem* item)
+{
+	--item->layer;
+}
+
 /**
  * ganv_item_move:
  * @item: A canvas item.
@@ -419,90 +432,6 @@ ganv_item_move(GanvItem* item, double dx, double dy)
 
 	ganv_item_request_update(item);
 	item->canvas->need_repick = TRUE;
-}
-
-/* Convenience function to reorder items in a group's child list.  This puts the
- * specified link after the "before" link. Returns TRUE if the list was changed.
- */
-#if 0
-static gboolean
-put_item_after(GList* link, GList* before)
-{
-	GanvGroup* parent;
-	GList*     old_before, * old_after;
-	GList*     after;
-
-	parent = GANV_GROUP(GANV_ITEM(link->data)->parent);
-
-	if (before) {
-		after = before->next;
-	} else {
-		after = parent->item_list;
-	}
-
-	if (( before == link) || ( after == link) ) {
-		return FALSE;
-	}
-
-	/* Unlink */
-
-	old_before = link->prev;
-	old_after  = link->next;
-
-	if (old_before) {
-		old_before->next = old_after;
-	} else {
-		parent->item_list = old_after;
-	}
-
-	if (old_after) {
-		old_after->prev = old_before;
-	} else {
-		parent->item_list_end = old_before;
-	}
-
-	/* Relink */
-
-	link->prev = before;
-	if (before) {
-		before->next = link;
-	} else {
-		parent->item_list = link;
-	}
-
-	link->next = after;
-	if (after) {
-		after->prev = link;
-	} else {
-		parent->item_list_end = link;
-	}
-
-	return TRUE;
-}
-#endif
-
-/**
- * ganv_item_raise_to_top:
- * @item: A canvas item.
- *
- * Raises an item to the top of its parent's stack.
- **/
-void
-ganv_item_raise_to_top(GanvItem* item)
-{
-	fprintf(stderr, "FIXME: ganv_item_raise_to_top\n");
-}
-
-/**
- * ganv_item_lower_to_bottom:
- * @item: A canvas item.
- *
- * Lowers an item to the bottom of its parent's stack.
- **/
-void
-ganv_item_lower_to_bottom(GanvItem* item)
-{
-	fprintf(stderr, "FIXME: ganv_item_lower_to_bottom\n");
 }
 
 /**

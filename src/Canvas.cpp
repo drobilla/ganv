@@ -960,7 +960,6 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 				"fill-color", SELECT_RECT_FILL_COLOUR,
 				"border-color", SELECT_RECT_BORDER_COLOUR,
 				NULL));
-		ganv_item_lower_to_bottom(GANV_ITEM(_select_rect));
 		ganv_item_grab(
 			GANV_ITEM(root()), GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 			NULL, event->button.time);

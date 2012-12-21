@@ -84,7 +84,6 @@ main(int argc, char** argv)
 	ganv_port_set_control_is_toggle(tport, TRUE);
 
 	ganv_item_show(GANV_ITEM(module));
-	ganv_item_raise_to_top(GANV_ITEM(module));
 
 	GanvModule* module2 = ganv_module_new(canvas,
 	                                      "x", 200.0,
@@ -104,7 +103,6 @@ main(int argc, char** argv)
 	                 G_CALLBACK(on_disconnect), canvas);
 
 	ganv_item_show(GANV_ITEM(module2));
-	ganv_item_raise_to_top(GANV_ITEM(module2));
 
 	gtk_widget_show_all(GTK_WIDGET(win));
 	gtk_window_present(win);

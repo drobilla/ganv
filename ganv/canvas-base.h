@@ -83,6 +83,9 @@ struct _GanvItem {
 	/* Parent for this item */
 	GanvItem* parent;
 
+	/* Layer (z order), higher values are on top */
+	guint layer;
+
 	/* Position in parent-relative coordinates. */
 	double x, y;
 
@@ -172,14 +175,12 @@ void ganv_item_set(GanvItem* item, const gchar* first_arg_name, ...);
 void ganv_item_set_valist(GanvItem* item,
                           const gchar* first_arg_name, va_list args);
 
+void ganv_item_raise(GanvItem* item);
+
+void ganv_item_lower(GanvItem* item);
+
 /* Move an item by the specified amount */
 void ganv_item_move(GanvItem* item, double dx, double dy);
-
-/* Raise an item to the top of its parent's z-order. */
-void ganv_item_raise_to_top(GanvItem* item);
-
-/* Lower an item to the bottom of its parent's z-order */
-void ganv_item_lower_to_bottom(GanvItem* item);
 
 /* Show an item (make it visible).  If the item is already shown, it has no
  * effect.

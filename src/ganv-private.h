@@ -104,6 +104,7 @@ struct _GanvNodeImpl {
 	double            border_width;
 	guint             fill_color;
 	guint             border_color;
+	guint             layer;
 	gboolean          can_tail;
 	gboolean          can_head;
 	gboolean          selected;

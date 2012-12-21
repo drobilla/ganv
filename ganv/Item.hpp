@@ -55,7 +55,6 @@ public:
 
 	METHOD0(ganv_item, show);
 	METHOD0(ganv_item, hide);
-	METHOD0(ganv_item, raise_to_top);
 	METHOD2(ganv_item, move, double, dx, double, dy);
 
 	GanvItem* property_parent() const {

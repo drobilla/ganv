@@ -426,11 +426,13 @@ ganv_node_default_event(GanvItem* item,
 
 	switch (event->type) {
 	case GDK_ENTER_NOTIFY:
+		ganv_item_raise(GANV_ITEM(node));
 		ganv_item_set(GANV_ITEM(node),
 		              "highlighted", TRUE, NULL);
 		return TRUE;
 
 	case GDK_LEAVE_NOTIFY:
+		ganv_item_lower(GANV_ITEM(node));
 		ganv_item_set(GANV_ITEM(node),
 		              "highlighted", FALSE, NULL);
 		return TRUE;

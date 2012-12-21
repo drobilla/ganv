@@ -798,7 +798,6 @@ ganv_module_embed(GanvModule* module,
 	on_embed_size_request(widget, &r, module);
 
 	ganv_item_show(impl->embed_item);
-	ganv_item_raise_to_top(impl->embed_item);
 
 	g_signal_connect(widget, "size-request",
 	                 G_CALLBACK(on_embed_size_request), module);
