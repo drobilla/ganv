@@ -81,7 +81,7 @@ private:
 	              GdkEvent* ev,
 	              void*     item)
 	{
-		return ((Item*)item)->on_event(ev);
+		return ((Item*)item)->signal_event().emit(ev);
 	}
 };
 

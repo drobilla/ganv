@@ -17,6 +17,19 @@
 #define GANV_WRAP_HPP
 
 #include <glib.h>
+
+#define CONNECT_PROP_SIGNAL(gobj, name, notify, handler) \
+	g_signal_connect(gobj, "notify::" #name, \
+	                 G_CALLBACK(notify), &_signal_##name); \
+	_signal_##name.connect(sigc::mem_fun(this, handler));
+
+#define SIGNAL1(name, argtype) \
+public: \
+	virtual bool on_##name(argtype arg) { return true; } \
+	sigc::signal<bool, argtype>& signal_##name() { return _signal_##name; } \
+private: \
+	sigc::signal<bool, argtype> _signal_##name;
+
 #define RW_PROPERTY(type, name) \
 	virtual type get_##name() const { \
 		type value; \
@@ -25,7 +38,9 @@
 	} \
 	virtual void set_##name(type value) { \
 		g_object_set(G_OBJECT(_gobj), #name, value, NULL); \
-	}
+	} \
+	SIGNAL1(name, type) \
+	public:
 
 #define RW_OBJECT_PROPERTY(type, name) \
 	type get_##name() const { \
@@ -74,15 +89,6 @@
 	virtual void name(t1 a1, t2 a2, t3 a3) { \
 		prefix##_##name(gobj(), a1, a2, a3); \
 	}
-
-#define SIGNAL1(name, argtype) \
-public: \
-	virtual bool on_##name(argtype arg) { \
-		return _signal_##name.emit(arg); \
-	} \
-	sigc::signal<bool, argtype>& signal_##name() { return _signal_##name; } \
-private: \
-	sigc::signal<bool, argtype> _signal_##name;
 
 #define GANV_GLIB_WRAP(Name) \
 	namespace Ganv { \
