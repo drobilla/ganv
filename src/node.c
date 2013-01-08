@@ -287,7 +287,6 @@ ganv_node_get_draw_properties(const GanvNode* node,
 	}
 
 	if (impl->highlighted) {
-		*fill_color   = highlight_color(impl->fill_color, 0x20);
 		*border_color = highlight_color(impl->border_color, 0x20);
 	}
 }
