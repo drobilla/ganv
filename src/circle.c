@@ -133,54 +133,36 @@ ganv_circle_is_within(const GanvNode* self,
 }
 
 static void
-ganv_circle_tail_vector(const GanvNode* self,
-                        const GanvNode* head,
-                        double*         x,
-                        double*         y,
-                        double*         dx,
-                        double*         dy)
-{
-	g_object_get(G_OBJECT(self), "x", x, "y", y, NULL);
-	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
-	*dx = 0.0;
-	*dy = 0.0;
-}
-
-static void
-ganv_circle_head_vector(const GanvNode* self,
-                        const GanvNode* tail,
-                        double*         x,
-                        double*         y,
-                        double*         dx,
-                        double*         dy)
+ganv_circle_vector(const GanvNode* self,
+                   const GanvNode* other,
+                   double*         x,
+                   double*         y,
+                   double*         dx,
+                   double*         dy)
 {
 	GanvCircle* circle = GANV_CIRCLE(self);
 
 	double cx, cy;
-	g_object_get(G_OBJECT(self), "x", &cx, "y", &cy, NULL);
+	g_object_get(G_OBJECT(circle), "x", &cx, "y", &cy, NULL);
 
-	// FIXME: Not quite right, should be the connect point
-	double tail_x, tail_y;
-	g_object_get(G_OBJECT(tail),
-	             "x", &tail_x,
-	             "y", &tail_y,
-	             NULL);
+	double other_x, other_y;
+	g_object_get(G_OBJECT(other), "x", &other_x, "y", &other_y, NULL);
 
-	const double xdist = tail_x - cx;
-	const double ydist = tail_y - cy;
+	const double xdist = other_x - cx;
+	const double ydist = other_y - cy;
 	const double h     = sqrt((xdist * xdist) + (ydist * ydist));
 	const double theta = asin(xdist / (h + DBL_EPSILON));
-	const double y_mod = (cy < tail_y) ? 1 : -1;
+	const double y_mod = (cy < other_y) ? 1 : -1;
 	const double ret_h = h - circle->impl->coords.radius;
-	const double ret_x = tail_x - sin(theta) * ret_h;
-	const double ret_y = tail_y - cos(theta) * ret_h * y_mod;
+	const double ret_x = other_x - sin(theta) * ret_h;
+	const double ret_y = other_y - cos(theta) * ret_h * y_mod;
 
 	*x  = ret_x;
 	*y  = ret_y;
 	*dx = 0.0;
 	*dy = 0.0;
 
-	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
+	ganv_item_i2w(GANV_ITEM(circle)->parent, x, y);
 }
 
 static void
@@ -370,8 +352,8 @@ ganv_circle_class_init(GanvCircleClass* klass)
 
 	node_class->resize      = ganv_circle_resize;
 	node_class->is_within   = ganv_circle_is_within;
-	node_class->tail_vector = ganv_circle_tail_vector;
-	node_class->head_vector = ganv_circle_head_vector;
+	node_class->tail_vector = ganv_circle_vector;
+	node_class->head_vector = ganv_circle_vector;
 
 	item_class->update = ganv_circle_update;
 	item_class->bounds = ganv_circle_bounds;
