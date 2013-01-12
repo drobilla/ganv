@@ -600,9 +600,10 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 			agsafeset(node, (char*)"width", (char*)"1.0", NULL);
 			agsafeset(node, (char*)"height", (char*)"1.0", NULL);
 			agsafeset(node, (char*)"shape", (char*)"ellipse", NULL);
-			agsafeset(node, (char*)"label",
-			          (char*)ganv_node_get_label(GANV_NODE(*i)),
-			          NULL);
+			const char* label = ganv_node_get_label(GANV_NODE(*i));
+			if (label) {
+				agsafeset(node, (char*)"label", (char*)label, NULL);
+			}
 			nodes.insert(std::make_pair(*i, node));
 		} else {
 			std::cerr << "Unable to arrange item of unknown type" << std::endl;
@@ -2123,8 +2124,14 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 		const string y_str = pos.substr(pos.find(",") + 1);
 		const double cx    = lrint(strtod(x_str.c_str(), NULL) * dpp);
 		const double cy    = lrint(strtod(y_str.c_str(), NULL) * dpp);
-		const double w     = ganv_box_get_width(GANV_BOX(i->first));
-		const double h     = ganv_box_get_height(GANV_BOX(i->first));
+
+		double w, h;
+		if (GANV_IS_BOX(i->first)) {
+			w = ganv_box_get_width(GANV_BOX(i->first));
+			h = ganv_box_get_height(GANV_BOX(i->first));
+		} else {
+			w = h = ganv_circle_get_radius(GANV_CIRCLE(i->first));
+		}
 
 		/* Dot node positions are supposedly node centers, but things only
 		   match up if x is interpreted as center and y as top...

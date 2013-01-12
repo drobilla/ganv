@@ -52,6 +52,9 @@ GanvCircle*
 ganv_circle_new(GanvCanvas* canvas,
                 const char* first_prop_name, ...);
 
+double
+ganv_circle_get_radius(const GanvCircle* circle);
+
 G_END_DECLS
 
 #endif  /* GANV_CIRCLE_H */

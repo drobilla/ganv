@@ -391,3 +391,9 @@ ganv_circle_new(GanvCanvas* canvas,
 
 	return circle;
 }
+
+double
+ganv_circle_get_radius(const GanvCircle* circle)
+{
+	return circle->impl->coords.radius;
+}
