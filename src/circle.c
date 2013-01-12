@@ -94,6 +94,28 @@ ganv_circle_get_property(GObject*    object,
 	}
 }
 
+static void
+ganv_circle_resize(GanvNode* self)
+{
+	GanvNode* node = GANV_NODE(self);
+
+	if (node->impl->label) {
+		if (node->impl->label->impl->needs_layout) {
+			ganv_text_layout(node->impl->label);
+		}
+
+		// Center label
+		ganv_item_set(GANV_ITEM(node->impl->label),
+		              "x", node->impl->label->impl->coords.width / -2.0,
+		              "y", node->impl->label->impl->coords.height / -2.0,
+		              NULL);
+	}
+
+	if (parent_class->resize) {
+		parent_class->resize(self);
+	}
+}
+
 static gboolean
 ganv_circle_is_within(const GanvNode* self,
                       double          x1,
@@ -249,6 +271,7 @@ ganv_circle_draw(GanvItem* item,
                  int x, int y,
                  int width, int height)
 {
+	GanvNode*       node   = GANV_NODE(item);
 	GanvCircle*     circle = GANV_CIRCLE(item);
 	GanvCircleImpl* impl   = circle->impl;
 
@@ -281,6 +304,16 @@ ganv_circle_draw(GanvItem* item,
 		cairo_set_dash(cr, &dash_length, 1, circle->node.impl->dash_offset);
 	}
 	cairo_stroke(cr);
+
+	// Draw label
+	if (node->impl->label) {
+		GanvItem* label_item = GANV_ITEM(node->impl->label);
+
+		if (label_item->object.flags & GANV_ITEM_VISIBLE) {
+			GANV_ITEM_GET_CLASS(label_item)->draw(
+				label_item, cr, cx, cy, width, height);
+		}
+	}
 }
 
 static double
@@ -333,6 +366,7 @@ ganv_circle_class_init(GanvCircleClass* klass)
 
 	object_class->destroy = ganv_circle_destroy;
 
+	node_class->resize      = ganv_circle_resize;
 	node_class->is_within   = ganv_circle_is_within;
 	node_class->tail_vector = ganv_circle_tail_vector;
 	node_class->head_vector = ganv_circle_head_vector;
@@ -341,4 +375,19 @@ ganv_circle_class_init(GanvCircleClass* klass)
 	item_class->bounds = ganv_circle_bounds;
 	item_class->point  = ganv_circle_point;
 	item_class->draw   = ganv_circle_draw;
+}
+
+GanvCircle*
+ganv_circle_new(GanvCanvas* canvas,
+                const char* first_property_name, ...)
+{
+	GanvCircle* circle = GANV_CIRCLE(
+		g_object_new(ganv_circle_get_type(), "canvas", canvas, NULL));
+
+	va_list args;
+	va_start(args, first_property_name);
+	g_object_set_valist(G_OBJECT(circle), first_property_name, args);
+	va_end(args);
+
+	return circle;
 }

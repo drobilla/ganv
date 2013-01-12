@@ -48,6 +48,10 @@ struct _GanvCircleClass {
 
 GType ganv_circle_get_type(void);
 
+GanvCircle*
+ganv_circle_new(GanvCanvas* canvas,
+                const char* first_prop_name, ...);
+
 G_END_DECLS
 
 #endif  /* GANV_CIRCLE_H */

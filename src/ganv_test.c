@@ -56,6 +56,15 @@ main(int argc, char** argv)
 	GanvCanvas* canvas = ganv_canvas_new(1024, 768);
 	gtk_container_add(GTK_CONTAINER(win), GTK_WIDGET(canvas));
 
+	GanvCircle* circle = ganv_circle_new(canvas,
+	                                     "x", 400.0,
+	                                     "y", 400.0,
+	                                     "draggable", TRUE,
+	                                     "label", "state",
+	                                     "radius", 32.0,
+	                                     NULL);
+	ganv_item_show(GANV_ITEM(circle));
+
 	GanvModule* module = ganv_module_new(canvas,
 	                                     "x", 10.0,
 	                                     "y", 10.0,

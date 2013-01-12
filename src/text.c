@@ -301,6 +301,10 @@ ganv_text_draw(GanvItem* item,
 	double wy = impl->coords.y;
 	ganv_item_i2w(item, &wx, &wy);
 
+	if (impl->needs_layout) {
+		ganv_text_layout(text);
+	}
+
 	// Round to the nearest pixel so text isn't blurry
 	wx = lrint(wx);
 	wy = lrint(wy);

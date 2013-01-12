@@ -124,6 +124,7 @@ ganv_port_draw(GanvItem* item,
 {
 	GanvPort* port = GANV_PORT(item);
 
+	// Draw Box
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	item_class->draw(item, cr, cx, cy, width, height);
 
