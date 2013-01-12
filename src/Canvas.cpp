@@ -981,7 +981,8 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 		// Select all modules within rect
 		FOREACH_ITEM(_items, i) {
 			GanvNode* node = *i;
-			if (ganv_node_is_within(
+			if ((void*)node != (void*)_select_rect &&
+			    ganv_node_is_within(
 				    node,
 				    ganv_box_get_x1(_select_rect),
 				    ganv_box_get_y1(_select_rect),

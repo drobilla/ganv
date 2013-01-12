@@ -302,6 +302,8 @@ ganv_circle_draw(GanvItem* item,
 	cairo_set_line_width(cr, impl->coords.width);
 	if (dash_length > 0) {
 		cairo_set_dash(cr, &dash_length, 1, circle->node.impl->dash_offset);
+	} else {
+		cairo_set_dash(cr, &dash_length, 0, 0);
 	}
 	cairo_stroke(cr);
 
