@@ -478,7 +478,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 	agsafeset(G, (char*)"compound", (char*)"true", NULL);
 	agsafeset(G, (char*)"remincross", (char*)"true", NULL);
 	agsafeset(G, (char*)"overlap", (char*)"scale", NULL);
-	agsafeset(G, (char*)"nodesep", (char*)"0.0", NULL);
+	agsafeset(G, (char*)"nodesep", (char*)"0.05", NULL);
 	gv_set(G, "fontsize", ganv_canvas_get_font_size(_gcanvas));
 	gv_set(G, "dpi", dpi);
 
@@ -597,12 +597,26 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 			ss.str("");
 			ss << "n" << id++;
 			Agnode_t* node = agnode(G, strdup(ss.str().c_str()));
-			agsafeset(node, (char*)"width", (char*)"1.0", NULL);
-			agsafeset(node, (char*)"height", (char*)"1.0", NULL);
-			agsafeset(node, (char*)"shape", (char*)"ellipse", NULL);
+			agsafeset(node, (char*)"shape", (char*)"circle", NULL);
+			agsafeset(node, (char*)"fixedsize", (char*)"true", NULL);
+			agsafeset(node, (char*)"margin", (char*)"0.0,0.0", NULL);
+
+			const double radius   = ganv_circle_get_radius(GANV_CIRCLE(*i));
+			const double penwidth = ganv_node_get_border_width(GANV_NODE(*i));
+			const double span     = (radius + penwidth) * 2.3 / dpi;
+			gv_set(node, (char*)"width", span);
+			gv_set(node, (char*)"height", span);
+			gv_set(node, (char*)"penwidth", penwidth);
+
+			if (ganv_node_get_dash_length(GANV_NODE(*i)) > 0.0) {
+				agsafeset(node, (char*)"style", (char*)"dashed", NULL);
+			}
+				
 			const char* label = ganv_node_get_label(GANV_NODE(*i));
 			if (label) {
 				agsafeset(node, (char*)"label", (char*)label, NULL);
+			} else {
+				agsafeset(node, (char*)"label", (char*)"", NULL);
 			}
 			nodes.insert(std::make_pair(*i, node));
 		} else {
@@ -617,12 +631,16 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 
 		if (tail_i != nodes.end() && head_i != nodes.end()) {
 			Agedge_t* e = agedge(G, tail_i->second, head_i->second);
-			ss.str("");
-			ss << edge->impl->tail << (flow_right ? ":e" : ":s");
-			agsafeset(e, (char*)"tailport", (char*)ss.str().c_str(), NULL);
-			ss.str("");
-			ss << edge->impl->head << (flow_right ? ":w" : ":n");
-			agsafeset(e, (char*)"headport", (char*)ss.str().c_str(), NULL);
+			if (GANV_IS_PORT(edge->impl->tail)) {
+				ss.str("");
+				ss << edge->impl->tail << (flow_right ? ":e" : ":s");
+				agsafeset(e, (char*)"tailport", (char*)ss.str().c_str(), NULL);
+			}
+			if (GANV_IS_PORT(edge->impl->head)) {
+				ss.str("");
+				ss << edge->impl->head << (flow_right ? ":w" : ":n");
+				agsafeset(e, (char*)"headport", (char*)ss.str().c_str(), NULL);
+			}
 		} else {
 			std::cerr << "Unable to find graphviz node" << std::endl;
 		}
@@ -2131,7 +2149,7 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 			w = ganv_box_get_width(GANV_BOX(i->first));
 			h = ganv_box_get_height(GANV_BOX(i->first));
 		} else {
-			w = h = ganv_circle_get_radius(GANV_CIRCLE(i->first));
+			w = h = ganv_circle_get_radius(GANV_CIRCLE(i->first)) * 2.3;
 		}
 
 		/* Dot node positions are supposedly node centers, but things only
@@ -2171,7 +2189,7 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 	}
 	nodes.cleanup();
 
-	static const double border_width = canvas->impl->_font_size;
+	static const double border_width = canvas->impl->_font_size * 2.0;
 	canvas->impl->move_contents_to_internal(border_width, border_width, least_x, least_y);
 	ganv_canvas_base_scroll_to(GANV_CANVAS_BASE(canvas->impl->_gcanvas), 0, 0);
 

@@ -745,6 +745,18 @@ ganv_node_get_label(const GanvNode* node)
 	return node->impl->label ? node->impl->label->impl->text : NULL;
 }
 
+double
+ganv_node_get_border_width(const GanvNode* node)
+{
+	return node->impl->border_width;
+}
+
+double
+ganv_node_get_dash_length(const GanvNode* node)
+{
+	return node->impl->dash_length;
+}
+
 GanvNode*
 ganv_node_get_partner(const GanvNode* node)
 {
