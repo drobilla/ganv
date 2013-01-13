@@ -208,11 +208,12 @@ ganv_edge_request_redraw(GanvCanvasBase*       canvas,
 	}
 
 	if (coords->handle_radius > 0.0) {
-		ganv_canvas_base_request_redraw(canvas,
-		                                coords->handle_x - coords->handle_radius,
-		                                coords->handle_y - coords->handle_radius,
-		                                coords->handle_x + coords->handle_radius,
-		                                coords->handle_y + coords->handle_radius);
+		ganv_canvas_base_request_redraw(
+			canvas,
+			coords->handle_x - coords->handle_radius - w,
+			coords->handle_y - coords->handle_radius - w,
+			coords->handle_x + coords->handle_radius + w,
+			coords->handle_y + coords->handle_radius + w);
 	}
 
 	if (coords->arrowhead) {
