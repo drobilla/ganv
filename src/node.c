@@ -476,7 +476,6 @@ ganv_node_default_event(GanvItem* item,
 					}
 					ganv_canvas_select_node(canvas, node);
 				}
-
 			}
 			return TRUE;
 		}

@@ -41,8 +41,8 @@ public:
 		GQuark wrapper_key = g_quark_from_string("ganvmm");
 		if (gobj && gobj->parent) {
 			g_object_set_qdata(G_OBJECT(_gobj), wrapper_key, this);
-			g_signal_connect(G_OBJECT(_gobj),
-			                 "event", G_CALLBACK(on_item_event), this);
+			g_signal_connect(
+				G_OBJECT(_gobj), "event", G_CALLBACK(on_item_event), this);
 		}
 	}
 
