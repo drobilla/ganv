@@ -209,11 +209,11 @@ ganv_canvas_for_each_edge_on(GanvCanvas*     canvas,
                              void*           data);
 
 /**
- * ganv_canvas_destroy:
+ * ganv_canvas_clear:
  * Remove all items from the canvas.
  */
 void
-ganv_canvas_destroy(GanvCanvas* canvas);
+ganv_canvas_clear(GanvCanvas* canvas);
 
 /**
  * ganv_canvas_select_all:

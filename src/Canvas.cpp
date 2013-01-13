@@ -1498,7 +1498,7 @@ Canvas::Canvas(double width, double height)
 Canvas::~Canvas()
 {
 	_animate_connection.disconnect();
-	destroy();
+	clear();
 	delete impl();
 }
 
@@ -2051,7 +2051,7 @@ ganv_canvas_port_event(GanvCanvas* canvas,
 }
 
 void
-ganv_canvas_destroy(GanvCanvas* canvas)
+ganv_canvas_clear(GanvCanvas* canvas)
 {
 	canvas->impl->_selected_items.clear();
 	canvas->impl->_selected_edges.clear();

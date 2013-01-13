@@ -55,7 +55,7 @@ public:
 	Canvas(double width, double height);
 	virtual	~Canvas();
 
-	METHOD0(ganv_canvas, destroy);
+	METHOD0(ganv_canvas, clear);
 	METHOD0(ganv_canvas, clear_selection);
 	METHOD0(ganv_canvas, select_all);
 	METHOD0(ganv_canvas, get_zoom);
