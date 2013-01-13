@@ -16,6 +16,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "ganv/canvas.h"
 #include "ganv/canvas-base.h"
 #include "ganv/circle.h"
 
@@ -30,7 +31,9 @@ static GanvNodeClass* parent_class;
 
 enum {
 	PROP_0,
-	PROP_RADIUS
+	PROP_RADIUS,
+	PROP_RADIUS_EMS,
+	PROP_FIT_LABEL
 };
 
 static void
@@ -40,9 +43,11 @@ ganv_circle_init(GanvCircle* circle)
 		circle, GANV_TYPE_CIRCLE, GanvCircleImpl);
 
 	memset(&circle->impl->coords, '\0', sizeof(GanvCircleCoords));
-	circle->impl->coords.radius = 8.0;
-	circle->impl->coords.width  = 2.0;
-	circle->impl->old_coords    = circle->impl->coords;
+	circle->impl->coords.radius     = 0.0;
+	circle->impl->coords.radius_ems = 1.0;
+	circle->impl->coords.width      = 2.0;
+	circle->impl->old_coords        = circle->impl->coords;
+	circle->impl->fit_label         = TRUE;
 }
 
 static void
@@ -54,6 +59,15 @@ ganv_circle_destroy(GtkObject* object)
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {
 		(*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
 	}
+}
+
+static void
+set_radius_ems(GanvCircle* circle,
+               double      ems)
+{
+	GanvCanvas*  canvas = GANV_CANVAS(GANV_ITEM(circle)->canvas);
+	const double points = ganv_canvas_get_font_size(canvas);
+	circle->impl->coords.radius = points * ems;
 }
 
 static void
@@ -69,9 +83,15 @@ ganv_circle_set_property(GObject*      object,
 
 	switch (prop_id) {
 		SET_CASE(RADIUS, double, circle->impl->coords.radius);
+		SET_CASE(RADIUS_EMS, double, circle->impl->coords.radius_ems);
+		SET_CASE(FIT_LABEL, boolean, circle->impl->fit_label);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
+	}
+
+	if (prop_id == PROP_RADIUS_EMS) {
+		set_radius_ems(circle, circle->impl->coords.radius_ems);
 	}
 }
 
@@ -88,6 +108,8 @@ ganv_circle_get_property(GObject*    object,
 
 	switch (prop_id) {
 		GET_CASE(RADIUS, double, circle->impl->coords.radius);
+		GET_CASE(RADIUS_EMS, double, circle->impl->coords.radius_ems);
+		GET_CASE(FIT_LABEL, boolean, circle->impl->fit_label);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -97,22 +119,52 @@ ganv_circle_get_property(GObject*    object,
 static void
 ganv_circle_resize(GanvNode* self)
 {
-	GanvNode* node = GANV_NODE(self);
+	GanvNode*   node   = GANV_NODE(self);
+	GanvCircle* circle = GANV_CIRCLE(self);
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
 
 	if (node->impl->label) {
 		if (node->impl->label->impl->needs_layout) {
 			ganv_text_layout(node->impl->label);
 		}
 
+		const double label_w = node->impl->label->impl->coords.width;
+		const double label_h = node->impl->label->impl->coords.height;
+		if (circle->impl->fit_label) {
+			// Resize to fit text
+			const double radius = MAX(label_w, label_h) / 2.0 + 3.0;
+			if (radius != circle->impl->coords.radius) {
+				ganv_item_set(GANV_ITEM(self),
+				              "radius", radius,
+				              NULL);
+			}
+		}
+
 		// Center label
 		ganv_item_set(GANV_ITEM(node->impl->label),
-		              "x", node->impl->label->impl->coords.width / -2.0,
-		              "y", node->impl->label->impl->coords.height / -2.0,
+		              "x", label_w / -2.0,
+		              "y", label_h / -2.0,
 		              NULL);
 	}
 
 	if (parent_class->resize) {
 		parent_class->resize(self);
+	}
+
+	ganv_canvas_for_each_edge_on(
+		canvas, node, (GanvEdgeFunc)ganv_edge_update_location, NULL);
+}
+
+static void
+ganv_circle_redraw_text(GanvNode* self)
+{
+	GanvCircle* circle = GANV_CIRCLE(self);
+	if (circle->impl->coords.radius_ems) {
+		set_radius_ems(circle, circle->impl->coords.radius_ems);
+	}
+
+	if (parent_class->redraw_text) {
+		parent_class->redraw_text(self);
 	}
 }
 
@@ -349,12 +401,30 @@ ganv_circle_class_init(GanvCircleClass* klass)
 			0.0,
 			G_PARAM_READWRITE));
 
+	g_object_class_install_property(
+		gobject_class, PROP_RADIUS_EMS, g_param_spec_double(
+			"radius-ems",
+			_("Radius in ems"),
+			_("The radius of the circle in ems."),
+			0, G_MAXDOUBLE,
+			1.0,
+			G_PARAM_READWRITE));
+
+	g_object_class_install_property(
+		gobject_class, PROP_FIT_LABEL, g_param_spec_boolean(
+			"fit-label",
+			_("Fit label"),
+			_("If true, expand circle to fit its label"),
+			TRUE,
+			(GParamFlags)G_PARAM_READWRITE));
+
 	object_class->destroy = ganv_circle_destroy;
 
 	node_class->resize      = ganv_circle_resize;
 	node_class->is_within   = ganv_circle_is_within;
 	node_class->tail_vector = ganv_circle_vector;
 	node_class->head_vector = ganv_circle_vector;
+	node_class->redraw_text = ganv_circle_redraw_text;
 
 	item_class->update = ganv_circle_update;
 	item_class->bounds = ganv_circle_bounds;

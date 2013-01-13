@@ -365,7 +365,6 @@ ganv_node_default_move(GanvNode* node,
 	ganv_item_move(GANV_ITEM(node), dx, dy);
 	ganv_canvas_for_each_edge_on(
 		canvas, node, (GanvEdgeFunc)ganv_edge_update_location, NULL);
-
 }
 
 static void

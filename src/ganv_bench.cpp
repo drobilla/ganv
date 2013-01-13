@@ -70,9 +70,7 @@ make_circle(Canvas* canvas)
 	snprintf(name, 8, "%d", rand() % 10000);
 	Circle* e(new Circle(*canvas, name,
 	                     rand() % (int)canvas->get_width(),
-	                     rand() % (int)canvas->get_height(),
-	                     32.0,
-	                     32.0));
+	                     rand() % (int)canvas->get_height()));
 
 	ins.push_back(e);
 	outs.push_back(e);

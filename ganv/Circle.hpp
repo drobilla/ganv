@@ -49,9 +49,7 @@ public:
 	Circle(Canvas&            canvas,
 	       const std::string& name,
 	       double             x,
-	       double             y,
-	       double             radius,
-	       bool               show_title)
+	       double             y)
 		: Node(&canvas,
 		       GANV_NODE(
 			       ganv_item_new(
@@ -61,7 +59,6 @@ public:
 				       "y", y,
 				       "can-tail", TRUE,
 				       "can-head", TRUE,
-				       "radius", radius,
 				       "fill-color", FILL_COLOUR,
 				       "border-color", BORDER_COLOUR,
 				       "label", name.c_str(),
@@ -70,6 +67,8 @@ public:
 	{}
 
 	RW_PROPERTY(double, radius);
+	RW_PROPERTY(double, radius_ems);
+	RW_PROPERTY(gboolean, fit_label);
 
 	GanvCircle*       gobj()       { return GANV_CIRCLE(_gobj); }
 	const GanvCircle* gobj() const { return GANV_CIRCLE(_gobj); }

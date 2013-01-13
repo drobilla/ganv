@@ -47,13 +47,14 @@ struct _GanvBoxImpl {
 /* Circle */
 
 typedef struct {
-	double x, y, radius;
+	double x, y, radius, radius_ems;
 	double width;
 } GanvCircleCoords;
 
 struct _GanvCircleImpl {
 	GanvCircleCoords coords;
 	GanvCircleCoords old_coords;
+	gboolean         fit_label;
 };
 
 /* Edge */

@@ -728,8 +728,7 @@ ganv_module_get_empty_port_breadth(const GanvModule* module)
 double
 ganv_module_get_empty_port_depth(const GanvModule* module)
 {
-	GanvCanvas* canvas = GANV_CANVAS(
-		GANV_ITEM(module)->canvas);
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
 
 	return ganv_canvas_get_font_size(canvas);
 }
