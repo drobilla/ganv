@@ -170,7 +170,7 @@ request_redraw(GanvItem*               item,
                const GanvCircleCoords* coords,
                gboolean                world)
 {
-	const double w  = coords->width;
+	const double w = coords->width;
 
 	double x1 = coords->x - coords->radius - w;
 	double y1 = coords->y - coords->radius - w;
@@ -221,6 +221,7 @@ ganv_circle_update(GanvItem* item, int flags)
 {
 	GanvCircle*     circle = GANV_CIRCLE(item);
 	GanvCircleImpl* impl   = circle->impl;
+	impl->coords.width = circle->node.impl->border_width;
 
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	if (item_class->update) {
