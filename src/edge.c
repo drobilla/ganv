@@ -335,6 +335,8 @@ ganv_edge_draw(GanvItem* item,
 	if (dash_length > 0.0) {
 		double dashed[2] = { dash_length, dash_length };
 		cairo_set_dash(cr, dashed, 2, impl->dash_offset);
+	} else {
+		cairo_set_dash(cr, &dash_length, 0, 0);
 	}
 
 	const double join_x = (src_x + dst_x) / 2.0;
