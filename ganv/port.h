@@ -67,6 +67,10 @@ ganv_port_set_control_is_toggle(GanvPort* port,
                                 gboolean  is_toggle);
 
 void
+ganv_port_set_control_is_integer(GanvPort* port,
+                                 gboolean  is_integer);
+
+void
 ganv_port_set_control_value(GanvPort* port,
                             float     value);
 

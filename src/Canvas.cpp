@@ -1297,7 +1297,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 	return false;
 }
 
-/** Called when two ports are 'toggled' (connected or disconnected)
+/** Called when two ports are 'joined' (connected or disconnected)
  */
 void
 GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)

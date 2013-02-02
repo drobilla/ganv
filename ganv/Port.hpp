@@ -56,6 +56,7 @@ public:
 	METHOD0(ganv_port, show_control)
 	METHOD0(ganv_port, hide_control)
 	METHOD1(ganv_port, set_control_is_toggle, gboolean, is_toggle)
+	METHOD1(ganv_port, set_control_is_integer, gboolean, is_integer)
 	METHOD1(ganv_port, set_control_value, float, value)
 	METHOD1(ganv_port, set_control_min, float, min)
 	METHOD1(ganv_port, set_control_max, float, max)

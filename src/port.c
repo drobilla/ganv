@@ -439,12 +439,13 @@ ganv_port_show_control(GanvPort* port)
 
 	guint control_col = highlight_color(GANV_NODE(port)->impl->fill_color, 0x40);
 
-	control->value     = 0.0f;
-	control->min       = 0.0f;
-	control->max       = 0.0f;
-	control->is_toggle = FALSE;
-	control->label     = NULL;
-	control->rect      = GANV_BOX(
+	control->value      = 0.0f;
+	control->min        = 0.0f;
+	control->max        = 0.0f;
+	control->is_toggle  = FALSE;
+	control->is_integer = FALSE;
+	control->label      = NULL;
+	control->rect       = GANV_BOX(
 		ganv_item_new(GANV_ITEM(port),
 		              ganv_box_get_type(),
 		              "x1", 0.0,
@@ -506,6 +507,16 @@ ganv_port_set_control_is_toggle(GanvPort* port,
 	}
 }
 
+void
+ganv_port_set_control_is_integer(GanvPort* port,
+                                 gboolean  is_integer)
+{
+	if (port->impl->control) {
+		port->impl->control->is_integer = is_integer;
+		ganv_port_set_control_value(port, lrintf(port->impl->control->value));
+	}
+}
+
 static void
 ganv_port_update_control_slider(GanvPort* port,
                                 float     value)
@@ -521,6 +532,8 @@ ganv_port_update_control_slider(GanvPort* port,
 		} else {
 			value = impl->control->min;
 		}
+	} else if (impl->control->is_integer) {
+		value = lrintf(value);
 	}
 
 	if (value < impl->control->min) {

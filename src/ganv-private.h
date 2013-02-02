@@ -123,6 +123,7 @@ typedef struct {
 	float     min;
 	float     max;
 	gboolean  is_toggle;
+	gboolean  is_integer;
 } GanvPortControl;
 
 struct _GanvPortImpl {
