@@ -1269,6 +1269,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 		g_object_get(G_OBJECT(port), "selected", &selected, NULL);
 		if (!control_dragging && !selected) {
 			g_object_set(G_OBJECT(port), "highlighted", TRUE, NULL);
+			return true;
 		}
 		break;
 
@@ -1285,6 +1286,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			return true;
 		} else if (!control_dragging) {
 			g_object_set(G_OBJECT(port), "highlighted", FALSE, NULL);
+			return true;
 		}
 		break;
 
