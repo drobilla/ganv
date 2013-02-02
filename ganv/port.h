@@ -53,6 +53,10 @@ ganv_port_set_direction(GanvPort*     port,
                         GanvDirection direction);
 
 void
+ganv_port_set_value_label(GanvPort*   port,
+                          const char* str);
+
+void
 ganv_port_show_control(GanvPort* port);
 
 void

@@ -59,6 +59,7 @@ public:
 	METHOD1(ganv_port, set_control_value, float, value)
 	METHOD1(ganv_port, set_control_min, float, min)
 	METHOD1(ganv_port, set_control_max, float, max)
+	METHOD1(ganv_port, set_value_label, const char*, str);
 
 	sigc::signal<void, GVariant*> signal_value_changed;
 

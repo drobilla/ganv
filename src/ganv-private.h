@@ -117,11 +117,12 @@ struct _GanvNodeImpl {
 /* Port */
 
 typedef struct {
-	GanvBox* rect;
-	float    value;
-	float    min;
-	float    max;
-	gboolean is_toggle;
+	GanvBox*  rect;
+	GanvText* label;
+	float     value;
+	float     min;
+	float     max;
+	gboolean  is_toggle;
 } GanvPortControl;
 
 struct _GanvPortImpl {

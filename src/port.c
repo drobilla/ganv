@@ -28,6 +28,12 @@
 static const double PORT_LABEL_HPAD = 4.0;
 static const double PORT_LABEL_VPAD = 1.0;
 
+static const guchar check_off[] = { 0xE2, 0x98, 0x90, 0 };
+static const guchar check_on[]  = { 0xE2, 0x98, 0x91, 0 };
+
+static void
+ganv_port_update_control_slider(GanvPort* port, float value);
+
 G_DEFINE_TYPE(GanvPort, ganv_port, GANV_TYPE_BOX)
 
 static GanvBoxClass* parent_class;
@@ -132,12 +138,14 @@ ganv_port_draw(GanvItem* item,
 		GANV_ITEM_GET_CLASS(rect)->draw(rect, cr, cx, cy, width, height);
 	}
 
-	GanvNode* node = GANV_NODE(item);
-	if (node->impl->label) {
-		GanvItem* label_item = GANV_ITEM(node->impl->label);
-		if (label_item->object.flags & GANV_ITEM_VISIBLE) {
-			GANV_ITEM_GET_CLASS(label_item)->draw(
-				label_item, cr, cx, cy, width, height);
+	GanvItem* labels[2] = {
+		GANV_ITEM(GANV_NODE(item)->impl->label),
+		port->impl->control ? GANV_ITEM(port->impl->control->label) : NULL
+	};
+	for (int i = 0; i < 2; ++i) {
+		if (labels[i] && (labels[i]->object.flags & GANV_ITEM_VISIBLE)) {
+			GANV_ITEM_GET_CLASS(labels[i])->draw(
+				labels[i], cr, cx, cy, width, height);
 		}
 	}
 }
@@ -207,22 +215,53 @@ ganv_port_head_vector(const GanvNode* self,
 }
 
 static void
+ganv_port_place_value_label(GanvPort* port)
+{
+	GanvPortControl* control = port->impl->control;
+	if (control && control->label) {
+		GanvCanvas*  canvas  = GANV_CANVAS(GANV_ITEM(port)->canvas);
+		const double port_w  = ganv_box_get_width(&port->box);
+		const double label_w = control->label->impl->coords.width;
+		if (canvas->direction == GANV_DIRECTION_RIGHT) {
+			ganv_item_set(GANV_ITEM(control->label),
+			              "x", port_w - label_w - PORT_LABEL_HPAD,
+			              "y", PORT_LABEL_VPAD,
+			              NULL);
+		} else {
+			const double port_h  = ganv_box_get_height(&port->box);
+			const double label_h = control->label->impl->coords.height;
+			ganv_item_set(GANV_ITEM(control->label),
+			              "x", (port_w - label_w) / 2.0,
+			              "y", (port_h - label_h) / 2.0,
+			              NULL);
+		}
+	}
+}
+
+static void
 ganv_port_resize(GanvNode* self)
 {
-	GanvPort* port  = GANV_PORT(self);
-	GanvNode* node  = GANV_NODE(self);
-	GanvText* label = node->impl->label;
+	GanvPort* port   = GANV_PORT(self);
+	GanvNode* node   = GANV_NODE(self);
+	GanvText* label  = node->impl->label;
+	GanvText* vlabel = port->impl->control ? port->impl->control->label : NULL;
 
-	if (label && GANV_ITEM(label)->object.flags & GANV_ITEM_VISIBLE) {
-		double label_w, label_h;
-		g_object_get(node->impl->label,
-		             "width", &label_w,
-		             "height", &label_h,
-		             NULL);
+	double label_w  = 0.0;
+	double label_h  = 0.0;
+	double vlabel_w = 0.0;
+	double vlabel_h = 0.0;
+	if (label && (GANV_ITEM(label)->object.flags & GANV_ITEM_VISIBLE)) {
+		g_object_get(label, "width", &label_w, "height", &label_h, NULL);
+	}
+	if (vlabel && (GANV_ITEM(vlabel)->object.flags & GANV_ITEM_VISIBLE)) {
+		g_object_get(vlabel, "width", &vlabel_w, "height", &vlabel_h, NULL);
+	}
 
-		ganv_box_set_width(&port->box, label_w + (PORT_LABEL_HPAD * 2.0));
-		ganv_box_set_height(&port->box, label_h + (PORT_LABEL_VPAD * 2.0));
-
+	if (label || vlabel) {
+		ganv_box_set_width(&port->box,
+		                   label_w + vlabel_w + (PORT_LABEL_HPAD * 2.0));
+		ganv_box_set_height(&port->box,
+		                    MAX(label_h, vlabel_h) + (PORT_LABEL_VPAD * 2.0));
 		ganv_item_set(GANV_ITEM(node->impl->label),
 		              "x", PORT_LABEL_HPAD,
 		              "y", PORT_LABEL_VPAD,
@@ -235,13 +274,27 @@ ganv_port_resize(GanvNode* self)
 }
 
 static void
+ganv_port_redraw_text(GanvNode* node)
+{
+	GanvPort* port = GANV_PORT(node);
+	if (port->impl->control && port->impl->control->label) {
+		ganv_text_layout(port->impl->control->label);
+		ganv_port_place_value_label(port);
+	}
+	if (GANV_NODE_CLASS(parent_class)->redraw_text) {
+		(*GANV_NODE_CLASS(parent_class)->redraw_text)(node);
+	}
+}
+
+static void
 ganv_port_set_width(GanvBox* box,
                     double   width)
 {
 	GanvPort* port = GANV_PORT(box);
 	parent_class->set_width(box, width);
 	if (port->impl->control) {
-		ganv_port_set_control_value(port, port->impl->control->value);
+		ganv_port_update_control_slider(port, port->impl->control->value);
+		ganv_port_place_value_label(port);
 	}
 }
 
@@ -257,6 +310,7 @@ ganv_port_set_height(GanvBox* box,
 		ganv_item_set(GANV_ITEM(port->impl->control->rect),
 		              "y2", control_y1 + height,
 		              NULL);
+		ganv_port_place_value_label(port);
 	}
 }
 
@@ -310,6 +364,7 @@ ganv_port_class_init(GanvPortClass* klass)
 	node_class->tail_vector = ganv_port_tail_vector;
 	node_class->head_vector = ganv_port_head_vector;
 	node_class->resize      = ganv_port_resize;
+	node_class->redraw_text = ganv_port_redraw_text;
 
 	box_class->set_width  = ganv_port_set_width;
 	box_class->set_height = ganv_port_set_height;
@@ -388,18 +443,19 @@ ganv_port_show_control(GanvPort* port)
 	control->min       = 0.0f;
 	control->max       = 0.0f;
 	control->is_toggle = FALSE;
-	control->rect      = GANV_BOX(ganv_item_new(
-		                              GANV_ITEM(port),
-		                              ganv_box_get_type(),
-		                              "x1", 0.0,
-		                              "y1", 0.0,
-		                              "x2", 0.0,
-		                              "y2", ganv_box_get_height(&port->box),
-		                              "fill-color", control_col,
-		                              "border-color", control_col,
-		                              "border-width", 0.0,
-		                              "managed", TRUE,
-		                              NULL));
+	control->label     = NULL;
+	control->rect      = GANV_BOX(
+		ganv_item_new(GANV_ITEM(port),
+		              ganv_box_get_type(),
+		              "x1", 0.0,
+		              "y1", 0.0,
+		              "x2", 0.0,
+		              "y2", ganv_box_get_height(&port->box),
+		              "fill-color", control_col,
+		              "border-color", control_col,
+		              "border-width", 0.0,
+		              "managed", TRUE,
+		              NULL));
 	ganv_item_show(GANV_ITEM(control->rect));
 }
 
@@ -412,6 +468,35 @@ ganv_port_hide_control(GanvPort* port)
 }
 
 void
+ganv_port_set_value_label(GanvPort*   port,
+                          const char* str)
+{
+	GanvPortImpl* impl = port->impl;
+	if (!impl->control) {
+		return;
+	}
+
+	if (!str || str[0] == '\0') {
+		if (impl->control->label) {
+			gtk_object_destroy(GTK_OBJECT(impl->control->label));
+			impl->control->label = NULL;
+		}
+	} else if (impl->control->label) {
+		ganv_item_set(GANV_ITEM(impl->control->label),
+		              "text", str,
+		              NULL);
+	} else {
+		impl->control->label = GANV_TEXT(ganv_item_new(GANV_ITEM(port),
+		                                               ganv_text_get_type(),
+		                                               "text", str,
+		                                               "color", 0xFFFFFFFF,
+		                                               "managed", TRUE,
+		                                               NULL));
+		ganv_port_resize(GANV_NODE(port));
+	}
+}
+
+void
 ganv_port_set_control_is_toggle(GanvPort* port,
                                 gboolean  is_toggle)
 {
@@ -421,9 +506,9 @@ ganv_port_set_control_is_toggle(GanvPort* port,
 	}
 }
 
-void
-ganv_port_set_control_value(GanvPort* port,
-                            float     value)
+static void
+ganv_port_update_control_slider(GanvPort* port,
+                                float     value)
 {
 	GanvPortImpl* impl = port->impl;
 	if (!impl->control) {
@@ -478,12 +563,26 @@ ganv_port_set_control_value(GanvPort* port,
 }
 
 void
+ganv_port_set_control_value(GanvPort* port,
+                            float     value)
+{
+	GanvPortImpl* impl = port->impl;
+
+	if (impl->control && impl->control->is_toggle) {
+		ganv_port_set_value_label(
+			port, (const char*)((value == 0.0f) ? check_off : check_on));
+	}
+
+	ganv_port_update_control_slider(port, value);
+}
+
+void
 ganv_port_set_control_min(GanvPort* port,
                           float     min)
 {
 	if (port->impl->control) {
 		port->impl->control->min = min;
-		ganv_port_set_control_value(port, port->impl->control->value);
+		ganv_port_update_control_slider(port, port->impl->control->value);
 	}
 }
 
@@ -493,7 +592,7 @@ ganv_port_set_control_max(GanvPort* port,
 {
 	if (port->impl->control) {
 		port->impl->control->max = max;
-		ganv_port_set_control_value(port, port->impl->control->value);
+		ganv_port_update_control_slider(port, port->impl->control->value);
 	}
 }
 
