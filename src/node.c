@@ -95,14 +95,14 @@ ganv_node_destroy(GtkObject* object)
 	ganv_node_disconnect(node);
 	if (item->canvas) {
 		ganv_canvas_remove_node(GANV_CANVAS(item->canvas), node);
-		item->canvas = NULL;
 	}
-
-	impl->partner = NULL;
 
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {
 		(*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
 	}
+
+	impl->partner = NULL;
+	item->canvas  = NULL;
 }
 
 static void
@@ -425,14 +425,12 @@ ganv_node_default_event(GanvItem* item,
 	switch (event->type) {
 	case GDK_ENTER_NOTIFY:
 		ganv_item_raise(GANV_ITEM(node));
-		ganv_item_set(GANV_ITEM(node),
-		              "highlighted", TRUE, NULL);
+		ganv_item_set(GANV_ITEM(node), "highlighted", TRUE, NULL);
 		return TRUE;
 
 	case GDK_LEAVE_NOTIFY:
 		ganv_item_lower(GANV_ITEM(node));
-		ganv_item_set(GANV_ITEM(node),
-		              "highlighted", FALSE, NULL);
+		ganv_item_set(GANV_ITEM(node), "highlighted", FALSE, NULL);
 		return TRUE;
 
 	case GDK_BUTTON_PRESS:

@@ -70,7 +70,6 @@ ganv_port_destroy(GtkObject* object)
 			ganv_canvas_for_each_edge_from(
 				canvas, &port->box.node, (GanvEdgeFunc)ganv_edge_remove, NULL);
 		}
-		item->canvas = NULL;
 	}
 
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {

@@ -249,22 +249,22 @@ ganv_item_dispose(GObject* object)
 
 	/* Make the canvas forget about us */
 
-	if (item->canvas && ( item == item->canvas->current_item) ) {
+	if (item->canvas && item == item->canvas->current_item) {
 		item->canvas->current_item = NULL;
 		item->canvas->need_repick  = TRUE;
 	}
 
-	if (item->canvas && ( item == item->canvas->new_current_item) ) {
+	if (item->canvas && item == item->canvas->new_current_item) {
 		item->canvas->new_current_item = NULL;
 		item->canvas->need_repick      = TRUE;
 	}
 
-	if (item->canvas && ( item == item->canvas->grabbed_item) ) {
+	if (item->canvas && item == item->canvas->grabbed_item) {
 		item->canvas->grabbed_item = NULL;
 		gdk_pointer_ungrab(GDK_CURRENT_TIME);
 	}
 
-	if (item->canvas && ( item == item->canvas->focused_item) ) {
+	if (item->canvas && item == item->canvas->focused_item) {
 		item->canvas->focused_item = NULL;
 	}
 
@@ -750,9 +750,13 @@ ganv_item_get_bounds(GanvItem* item, double* x1, double* y1, double* x2, double*
 void
 ganv_item_request_update(GanvItem* item)
 {
+	/* FIXME: For some reason, if this short-circuit is enabled, the canvas
+	   stops updating items entirely when connected modules are removed. */
+	/*
 	if (item->object.flags & GANV_ITEM_NEED_UPDATE) {
 		return;
 	}
+	*/
 
 	item->object.flags |= GANV_ITEM_NEED_UPDATE;
 
