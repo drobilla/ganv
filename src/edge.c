@@ -647,16 +647,14 @@ void
 ganv_edge_highlight(GanvEdge* edge)
 {
 	edge->impl->highlighted = TRUE;
-	ganv_item_raise(GANV_ITEM(edge));
-	ganv_item_request_update(GANV_ITEM(edge));
+	ganv_edge_request_redraw(GANV_ITEM(edge)->canvas, &edge->impl->coords);
 }
 
 void
 ganv_edge_unhighlight(GanvEdge* edge)
 {
 	edge->impl->highlighted = FALSE;
-	ganv_item_lower(GANV_ITEM(edge));
-	ganv_item_request_update(GANV_ITEM(edge));
+	ganv_edge_request_redraw(GANV_ITEM(edge)->canvas, &edge->impl->coords);
 }
 
 void

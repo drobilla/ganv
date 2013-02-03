@@ -1163,9 +1163,9 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			if (module && port->impl->is_input && port->impl->control) {
 				if (port->impl->control->is_toggle) {
 					if (port->impl->control->value >= 0.5) {
-						ganv_port_set_control_value(port, 0.0);
+						ganv_port_set_control_value_internal(port, 0.0);
 					} else {
-						ganv_port_set_control_value(port, 1.0);
+						ganv_port_set_control_value_internal(port, 1.0);
 					}
 				} else {
 					control_dragging    = port_pressed = true;
@@ -1231,7 +1231,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			} else if (value > port->impl->control->max) {
 				value = port->impl->control->max;
 			}
-			ganv_port_set_control_value(port, value);
+			ganv_port_set_control_value_internal(port, value);
 			return true;
 		}
 		break;

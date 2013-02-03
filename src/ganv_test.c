@@ -36,11 +36,9 @@ on_disconnect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
 }
 
 static void
-on_value_changed(GanvPort* port, GVariant* value, void* data)
+on_value_changed(GanvPort* port, double value, void* data)
 {
-	char* str = g_variant_print(value, TRUE);
-	fprintf(stderr, "Value changed: port %p = %s\n", (void*)port, str);
-	g_free(str);
+	fprintf(stderr, "Value changed: port %p = %lf\n", (void*)port, value);
 }
 
 int

@@ -354,7 +354,7 @@ ganv_port_class_init(GanvPortClass* klass)
 	                   NULL, NULL,
 	                   NULL,
 	                   G_TYPE_NONE, 1,
-	                   G_TYPE_VARIANT);
+	                   G_TYPE_DOUBLE);
 
 	object_class->destroy = ganv_port_destroy;
 
@@ -497,26 +497,6 @@ ganv_port_set_value_label(GanvPort*   port,
 	}
 }
 
-void
-ganv_port_set_control_is_toggle(GanvPort* port,
-                                gboolean  is_toggle)
-{
-	if (port->impl->control) {
-		port->impl->control->is_toggle = is_toggle;
-		ganv_port_set_control_value(port, port->impl->control->value);
-	}
-}
-
-void
-ganv_port_set_control_is_integer(GanvPort* port,
-                                 gboolean  is_integer)
-{
-	if (port->impl->control) {
-		port->impl->control->is_integer = is_integer;
-		ganv_port_set_control_value(port, lrintf(port->impl->control->value));
-	}
-}
-
 static void
 ganv_port_update_control_slider(GanvPort* port,
                                 float     value)
@@ -526,6 +506,7 @@ ganv_port_update_control_slider(GanvPort* port,
 		return;
 	}
 
+	// Clamp to toggle or integer value if applicable
 	if (impl->control->is_toggle) {
 		if (value != 0.0f) {
 			value = impl->control->max;
@@ -536,22 +517,16 @@ ganv_port_update_control_slider(GanvPort* port,
 		value = lrintf(value);
 	}
 
+	// Clamp to range
 	if (value < impl->control->min) {
-		impl->control->min = value;
+		value = impl->control->min;
 	}
 	if (value > impl->control->max) {
-		impl->control->max = value;
-	}
-
-	if (impl->control->max == impl->control->min) {
-		impl->control->max = impl->control->min + 1.0f;
-	}
-
-	const int inf = isinf(value);
-	if (inf == -1) {
-		value = impl->control->min;
-	} else if (inf == 1) {
 		value = impl->control->max;
+	}
+	
+	if (value == impl->control->value) {
+		return;  // No change, do nothing
 	}
 
 	const double w = (value - impl->control->min)
@@ -559,20 +534,34 @@ ganv_port_update_control_slider(GanvPort* port,
 		* ganv_box_get_width(&port->box);
 
 	if (isnan(w)) {
-		return;
+		return;  // Shouldn't happen, but ignore crazy values
 	}
 
-	ganv_box_set_width(impl->control->rect, MAX(0.0, w - 1.0));
-
-	if (impl->control->value != value) {
-		GVariant* gvar = g_variant_ref_sink(g_variant_new_double(value));
-		g_signal_emit(port, port_signals[PORT_VALUE_CHANGED], 0, gvar, NULL);
-		g_variant_unref(gvar);
-	}
-
+	// Redraw port
 	impl->control->value = value;
+	ganv_box_set_width(impl->control->rect, MAX(0.0, w - 1.0));
+	ganv_box_request_redraw(
+		GANV_ITEM(port), &GANV_BOX(port)->impl->coords, FALSE);
+}
 
-	ganv_item_request_update(GANV_ITEM(port));
+void
+ganv_port_set_control_is_toggle(GanvPort* port,
+                                gboolean  is_toggle)
+{
+	if (port->impl->control) {
+		port->impl->control->is_toggle = is_toggle;
+		ganv_port_update_control_slider(port, port->impl->control->value);
+	}
+}
+
+void
+ganv_port_set_control_is_integer(GanvPort* port,
+                                 gboolean  is_integer)
+{
+	if (port->impl->control) {
+		port->impl->control->is_integer = is_integer;
+		ganv_port_update_control_slider(port, lrintf(port->impl->control->value));
+	}
 }
 
 void
@@ -585,8 +574,19 @@ ganv_port_set_control_value(GanvPort* port,
 		ganv_port_set_value_label(
 			port, (const char*)((value == 0.0f) ? check_off : check_on));
 	}
-
 	ganv_port_update_control_slider(port, value);
+}
+
+void
+ganv_port_set_control_value_internal(GanvPort* port,
+                                     float     value)
+{
+	// Update slider
+	ganv_port_set_control_value(port, value);
+
+	// Fire signal to notify user value has changed
+	const double dvalue = value;
+	g_signal_emit(port, port_signals[PORT_VALUE_CHANGED], 0, dvalue, NULL);
 }
 
 void
@@ -595,6 +595,9 @@ ganv_port_set_control_min(GanvPort* port,
 {
 	if (port->impl->control) {
 		port->impl->control->min = min;
+		if (port->impl->control->max < min) {
+			port->impl->control->max = min;
+		}
 		ganv_port_update_control_slider(port, port->impl->control->value);
 	}
 }
@@ -605,6 +608,9 @@ ganv_port_set_control_max(GanvPort* port,
 {
 	if (port->impl->control) {
 		port->impl->control->max = max;
+		if (port->impl->control->min > max) {
+			port->impl->control->min = max;
+		}
 		ganv_port_update_control_slider(port, port->impl->control->value);
 	}
 }

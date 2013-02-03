@@ -62,7 +62,7 @@ public:
 	METHOD1(ganv_port, set_control_max, float, max)
 	METHOD1(ganv_port, set_value_label, const char*, str);
 
-	sigc::signal<void, GVariant*> signal_value_changed;
+	sigc::signal<void, double> signal_value_changed;
 
 	Module* get_module() const;
 

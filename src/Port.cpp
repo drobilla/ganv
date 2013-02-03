@@ -26,7 +26,7 @@
 namespace Ganv {
 
 static void
-on_value_changed(GanvPort* port, GVariant* value, void* portmm)
+on_value_changed(GanvPort* port, double value, void* portmm)
 {
 	((Port*)portmm)->signal_value_changed.emit(value);
 }

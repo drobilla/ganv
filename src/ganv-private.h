@@ -199,6 +199,19 @@ void
 ganv_edge_request_redraw(GanvCanvasBase*       canvas,
                          const GanvEdgeCoords* coords);
 
+/* Box */
+
+void
+ganv_box_request_redraw(GanvItem*            item,
+                        const GanvBoxCoords* coords,
+                        gboolean             world);
+
+/* Port */
+
+void
+ganv_port_set_control_value_internal(GanvPort* port,
+                                     float     value);
+
 #ifdef __cplusplus
 }  /* extern "C" */
 #endif

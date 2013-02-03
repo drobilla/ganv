@@ -145,10 +145,10 @@ ganv_box_bounds_item(const GanvBoxCoords* coords,
 	}
 }
 
-static void
-request_redraw(GanvItem*            item,
-               const GanvBoxCoords* coords,
-               gboolean             world)
+void
+ganv_box_request_redraw(GanvItem*            item,
+                        const GanvBoxCoords* coords,
+                        gboolean             world)
 {
 	double x1, y1, x2, y2;
 	ganv_box_bounds_item(coords, &x1, &y1, &x2, &y2);
@@ -189,7 +189,7 @@ ganv_box_update(GanvItem* item, int flags)
 	impl->coords.border_width = box->node.impl->border_width;
 
 	// Request redraw of old location
-	request_redraw(item, &impl->old_coords, TRUE);
+	ganv_box_request_redraw(item, &impl->old_coords, TRUE);
 
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	item_class->update(item, flags);
@@ -208,7 +208,7 @@ ganv_box_update(GanvItem* item, int flags)
 	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
-	request_redraw(item, &impl->coords, FALSE);
+	ganv_box_request_redraw(item, &impl->coords, FALSE);
 }
 
 static void
