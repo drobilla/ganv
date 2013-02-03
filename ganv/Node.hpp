@@ -38,8 +38,7 @@ public:
 		: Item(GANV_ITEM(g_object_ref(gobj)))
 	{
 		g_signal_connect(gobj, "moved", G_CALLBACK(on_moved), this);
-		CONNECT_PROP_SIGNAL(gobj, selected,
-		                    on_notify<gboolean>, &Node::on_selected)
+		CONNECT_PROP_SIGNAL(gobj, selected, on_notify_bool, &Node::on_selected)
 	}
 
 	~Node() {
@@ -86,11 +85,20 @@ private:
 		Glib::wrap(node)->_signal_moved.emit(x, y);
 	}
 
+	/* GCC 4.6 can't handle this
 	template<typename T>
 	static void on_notify(GObject* gobj, GParamSpec* pspec, gpointer signal) {
 		T value;
 		g_object_get(gobj, g_param_spec_get_name(pspec), &value, NULL);
 		((sigc::signal<bool, T>*)signal)->emit(value);
+	}
+	*/
+	static void on_notify_bool(GObject*    gobj,
+	                           GParamSpec* pspec,
+	                           gpointer    signal) {
+		gboolean value;
+		g_object_get(gobj, g_param_spec_get_name(pspec), &value, NULL);
+		((sigc::signal<bool, gboolean>*)signal)->emit(value);
 	}
 };
 
