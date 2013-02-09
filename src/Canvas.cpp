@@ -132,6 +132,8 @@ struct GanvCanvasImpl {
 		, _layout(GTK_LAYOUT(_gcanvas))
 		, _connect_port(NULL)
 		, _last_selected_port(NULL)
+		, _drag_edge(NULL)
+		, _drag_node(NULL)
 		, _select_rect(NULL)
 		, _zoom(1.0)
 		, _font_size(0.0)
@@ -216,6 +218,7 @@ struct GanvCanvasImpl {
 	bool scroll_drag_handler(GdkEvent* event);
 	bool select_drag_handler(GdkEvent* event);
 	bool connect_drag_handler(GdkEvent* event);
+	void end_connect_drag();
 
 	/**
 	   Event handler for ports.
@@ -243,6 +246,8 @@ struct GanvCanvasImpl {
 	SelectedPorts _selected_ports; ///< Selected ports (hilited red)
 	GanvPort*     _connect_port; ///< Port for which a edge is being made
 	GanvPort*     _last_selected_port;
+	GanvEdge*     _drag_edge;
+	GanvNode*     _drag_node;
 
 	GanvBox*  _select_rect;  ///< Rectangle for drag selection
 
@@ -384,6 +389,14 @@ bool
 GanvCanvasImpl::remove_item(GanvNode* item)
 {
 	bool ret = false;
+
+	if (item == (GanvNode*)_connect_port) {
+		if (_drag_state == EDGE) {
+			ganv_item_ungrab(GANV_ITEM(root()), 0);
+			end_connect_drag();
+		}
+		_connect_port = NULL;
+	}
 
 	// Remove from selection
 	_selected_items.erase(item);
@@ -1041,9 +1054,7 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 bool
 GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 {
-	static GanvEdge* drag_edge = NULL;
-	static GanvNode* drag_node = NULL;
-	static bool      snapped   = false;
+	static bool snapped = false;
 
 	if (_drag_state != EDGE) {
 		return false;
@@ -1053,12 +1064,12 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 		double x, y;
 		get_motion_coords(&event->motion, &x, &y);
 
-		if (!drag_edge) {
+		if (!_drag_edge) {
 			// Create drag edge
-			assert(!drag_node);
+			assert(!_drag_node);
 			assert(_connect_port);
 
-			drag_node = GANV_NODE(
+			_drag_node = GANV_NODE(
 				ganv_item_new(
 					GANV_ITEM(ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas))),
 					ganv_node_get_type(),
@@ -1066,10 +1077,10 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 					"y", y,
 					NULL));
 
-			drag_edge = ganv_edge_new(
+			_drag_edge = ganv_edge_new(
 				_gcanvas,
 				GANV_NODE(_connect_port),
-				drag_node,
+				_drag_node,
 				"color", GANV_NODE(_connect_port)->impl->fill_color,
 				"curved", TRUE,
 				"ghost", TRUE,
@@ -1077,24 +1088,20 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 		}
 
 		GanvNode* joinee = get_node_at(x, y);
-		if (joinee && ganv_node_can_head(joinee) && joinee != drag_node) {
+		if (joinee && ganv_node_can_head(joinee) && joinee != _drag_node) {
 			// Snap to item
 			snapped = true;
-			ganv_item_set(&drag_edge->item,
-			              "head", joinee,
-			              NULL);
+			ganv_item_set(&_drag_edge->item, "head", joinee, NULL);
 		} else if (snapped) {
 			// Unsnap from item
 			snapped = false;
-			ganv_item_set(&drag_edge->item,
-			              "head", drag_node,
-			              NULL);
+			ganv_item_set(&_drag_edge->item, "head", _drag_node, NULL);
 		}
 
 		// Update drag edge for pointer position
-		ganv_node_move_to(drag_node, x, y);
-		ganv_item_request_update(GANV_ITEM(drag_node));
-		ganv_item_request_update(GANV_ITEM(drag_edge));
+		ganv_node_move_to(_drag_node, x, y);
+		ganv_item_request_update(GANV_ITEM(_drag_node));
+		ganv_item_request_update(GANV_ITEM(_drag_edge));
 
 		return true;
 
@@ -1125,25 +1132,26 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 			}
 		}
 
-		// Clean up dragging stuff
-
-		if (_connect_port) {
-			g_object_set(G_OBJECT(_connect_port), "highlighted", FALSE, NULL);
-		}
-
 		unselect_ports();
-		_drag_state   = NOT_DRAGGING;
-		_connect_port = NULL;
-
-		gtk_object_destroy(GTK_OBJECT(drag_edge));
-		gtk_object_destroy(GTK_OBJECT(drag_node));
-		drag_edge = NULL;
-		drag_node = NULL;
-
+		end_connect_drag();
 		return true;
 	}
 
 	return false;
+}
+
+void
+GanvCanvasImpl::end_connect_drag()
+{
+	if (_connect_port) {
+		g_object_set(G_OBJECT(_connect_port), "highlighted", FALSE, NULL);
+	}
+	gtk_object_destroy(GTK_OBJECT(_drag_edge));
+	gtk_object_destroy(GTK_OBJECT(_drag_node));
+	_drag_state   = NOT_DRAGGING;
+	_connect_port = NULL;
+	_drag_edge    = NULL;
+	_drag_node    = NULL;
 }
 
 bool
