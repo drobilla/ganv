@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import waflib.Options as Options
+import waflib.Utils as Utils
 import waflib.extras.autowaf as autowaf
 
 # Library and package version (UNIX style major, minor, micro)
@@ -46,6 +47,8 @@ def configure(conf):
     if Options.options.gir:
         autowaf.check_pkg(conf, 'gobject-introspection-1.0',
                           uselib_store='GIR', mandatory=False)
+        conf.find_program('g-ir-doc-tool', var='G_IR_DOC_TOOL', mandatory=False)
+        conf.find_program('yelp-build', var='YELP_BUILD', mandatory=False)
 
     if not Options.options.no_graphviz:
         autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH',
@@ -79,6 +82,12 @@ ganv_source = [
     'src/text.c',
     'src/widget.c'
 ]
+
+def declare_doc_files(task):    
+    bld  = task.generator.bld 
+    path = bld.path.get_bld().find_or_declare('doc-html')
+    for i in path.ant_glob('*', remove=False):
+        i.sig = Utils.h_file(i.abspath())
 
 def build(bld):
     # Headers
@@ -138,7 +147,7 @@ def build(bld):
             target       = 'src/ganv_test')
 
     # Documentation
-    autowaf.build_dox(bld, 'GANV', GANV_VERSION, top, out)
+    #autowaf.build_dox(bld, 'GANV', GANV_VERSION, top, out)
 
     if bld.is_defined('HAVE_GIR'):
         bld.add_group()
@@ -169,6 +178,25 @@ def build(bld):
             target       = 'Ganv-1.0.typelib',
             install_path = '${LIBDIR}/girepository-1.0',
             rule         = 'g-ir-compiler ${SRC} -o ${TGT}')
+
+        if bld.env.DOCS and bld.env['G_IR_DOC_TOOL'] and bld.env['YELP_BUILD']:
+            # The source and target files used here aren't exclusive,
+            # but are declared so waf can track dependencies
+            bld(rule   = '${G_IR_DOC_TOOL} --language C -o doc-xml ${SRC}',
+                source = 'Ganv-1.0.gir',
+                target = 'doc-xml/index.page')
+            bld(name   = 'yelp-build',
+                rule   = '${YELP_BUILD} html -o doc-html doc-xml',
+                source = 'doc-xml/index.page',
+                target = 'doc-html/index.html')
+            bld(name   = 'find-docs',
+                always = True,
+                rule   = declare_doc_files,
+                after  = 'yelp-build')
+
+            bld.install_files(
+                os.path.join('${DOCDIR}', 'ganv-0', 'html'),
+                bld.path.get_bld().ant_glob('doc-html/*'))
 
     bld.add_post_fun(autowaf.run_ldconfig)
 
