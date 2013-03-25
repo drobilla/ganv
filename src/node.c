@@ -691,23 +691,22 @@ ganv_node_can_head(const GanvNode* self)
 }
 
 gboolean
-ganv_node_is_within(const GanvNode* self,
+ganv_node_is_within(const GanvNode* node,
                     double          x1,
                     double          y1,
                     double          x2,
                     double          y2)
 {
-	return GANV_NODE_GET_CLASS(self)->is_within(
-		self, x1, y1, x2, y2);
+	return GANV_NODE_GET_CLASS(node)->is_within(node, x1, y1, x2, y2);
 }
 
 void
-ganv_node_tick(GanvNode* self,
+ganv_node_tick(GanvNode* node,
                double    seconds)
 {
-	GanvNodeClass* klass = GANV_NODE_GET_CLASS(self);
+	GanvNodeClass* klass = GANV_NODE_GET_CLASS(node);
 	if (klass->tick) {
-		klass->tick(self, seconds);
+		klass->tick(node, seconds);
 	}
 }
 

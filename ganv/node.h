@@ -80,14 +80,26 @@ struct _GanvNodeClass {
 
 GType ganv_node_get_type(void);
 
+/**
+ * ganv_node_can_tail:
+ * Return value: True iff node can act as the tail of an edge.
+ */
 gboolean
-ganv_node_can_tail(const GanvNode* self);
+ganv_node_can_tail(const GanvNode* node);
 
+/**
+ * ganv_node_can_head:
+ * Return value: True iff node can act as the head of an edge.
+ */
 gboolean
-ganv_node_can_head(const GanvNode* self);
+ganv_node_can_head(const GanvNode* node);
 
+/**
+ * ganv_node_is_within:
+ * Return value: True iff node is entirely within the given rectangle.
+ */
 gboolean
-ganv_node_is_within(const GanvNode* self,
+ganv_node_is_within(const GanvNode* node,
                     double          x1,
                     double          y1,
                     double          x2,
