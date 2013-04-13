@@ -758,6 +758,11 @@ ganv_item_request_update(GanvItem* item)
 	}
 	*/
 
+	if (!item->canvas) {
+		/* Item is being / has been destroyed, ignore */
+		return;
+	}
+
 	item->object.flags |= GANV_ITEM_NEED_UPDATE;
 
 	if (item->parent != NULL) {
