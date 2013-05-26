@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <glibmm.h>
 #include <gtkmm/main.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/window.h>
