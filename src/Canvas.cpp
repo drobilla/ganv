@@ -1875,12 +1875,12 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 			bottom = MIN(bottom, y - r);
 			top    = MAX(top, y + r);
 		} else {
-			double x = 0.0, y = 0.0, w = 0.0, h = 0.0;
-			g_object_get(obj, "x", &x, "y", &y, "w", &w, "h", &h, NULL);
+			double x = 0.0, y = 0.0;
+			g_object_get(obj, "x", &x, "y", &y, NULL);
 			left   = MIN(left, x);
-			right  = MAX(right, x + w);
+			right  = MAX(right, x + ganv_box_get_width(GANV_BOX(*i)));
 			bottom = MIN(bottom, y);
-			top    = MAX(top, y + h);
+			top    = MAX(top, y + ganv_box_get_height(GANV_BOX(*i)));
 		}
 	}
 
