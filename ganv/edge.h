@@ -94,6 +94,7 @@ ganv_edge_tick(GanvEdge* edge,
 
 /**
  * ganv_edge_get_tail:
+ *
  * Return value: (transfer none): The tail of @a edge.
  */
 GanvNode*
@@ -101,6 +102,7 @@ ganv_edge_get_tail(const GanvEdge* edge);
 
 /**
  * ganv_edge_get_head:
+ *
  * Return value: (transfer none): The head of @a edge.
  */
 GanvNode*

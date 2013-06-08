@@ -220,7 +220,7 @@ struct GanvCanvasImpl {
 	bool connect_drag_handler(GdkEvent* event);
 	void end_connect_drag();
 
-	/**
+	/*
 	   Event handler for ports.
 
 	   This must be implemented as a Canvas method since port event handling

@@ -741,7 +741,7 @@ ganv_item_get_bounds(GanvItem* item, double* x1, double* y1, double* x2, double*
 }
 
 /**
- * ganv_item_request_update
+ * ganv_item_request_update:
  * @item: A canvas item.
  *
  * To be used only by item implementations.  Requests that the canvas queue an

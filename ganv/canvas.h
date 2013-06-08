@@ -72,6 +72,7 @@ ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
 
 /**
  * ganv_canvas_get_root:
+ *
  * Return value: (transfer none): The root group of @canvas.
  */
 GanvItem*
@@ -88,6 +89,7 @@ ganv_canvas_remove_node(GanvCanvas* canvas,
 /**
  * ganv_canvas_get_edge:
  * Get the edge between two nodes, or NULL if none exists.
+ *
  * Return value: (transfer none): The root group of @canvas.
  */
 GanvEdge*
@@ -122,6 +124,7 @@ void
 ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename);
 
 /**
+ * GanvEdgeFunc:
  * A node function that takes a user data argument (for callbacks).
  *
  * Note that in the Gtk world it is considered safe to cast a function to a
@@ -131,6 +134,7 @@ ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename);
 typedef void (*GanvEdgeFunc)(GanvEdge* edge, void* data);
 
 /**
+ * GanvNodeFunc:
  * A node function that takes a user data argument (for callbacks).
  *
  * Note that in the Gtk world it is considered safe to cast a function to a
