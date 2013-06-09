@@ -2037,6 +2037,12 @@ ganv_canvas_for_each_selected_node(GanvCanvas*  canvas,
 	}
 }
 
+gboolean
+ganv_canvas_empty(const GanvCanvas* canvas)
+{
+	return canvas->impl->_items.empty();
+}
+
 void
 ganv_canvas_for_each_edge_from(GanvCanvas*     canvas,
                                const GanvNode* tail,

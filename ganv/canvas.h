@@ -166,6 +166,14 @@ ganv_canvas_for_each_selected_node(GanvCanvas*  canvas,
                                    void*        data);
 
 /**
+ * ganv_canvas_empty:
+
+ * Return value: True if there are no items on the canvas.
+ */
+gboolean
+ganv_canvas_empty(const GanvCanvas* canvas);
+
+/**
  * ganv_canvas_for_each_edge:
  * @canvas: The canvas.
  * @f: (scope call): A function to call on every edge on @canvas.

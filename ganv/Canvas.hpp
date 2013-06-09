@@ -71,6 +71,7 @@ public:
 	METHOD2(ganv_canvas, resize, double, width, double, height);
 	METHOD2(ganv_canvas, for_each_node, GanvNodeFunc, f, void*, data)
 	METHOD2(ganv_canvas, for_each_selected_node, GanvNodeFunc, f, void*, data)
+	METHODRET0(ganv_canvas, gboolean, empty)
 
 	METHOD3(ganv_canvas, for_each_edge_from,
 	        const GanvNode*, tail,
