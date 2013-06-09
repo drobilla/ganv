@@ -32,7 +32,7 @@ static const guchar check_off[] = { 0xE2, 0x98, 0x90, 0 };
 static const guchar check_on[]  = { 0xE2, 0x98, 0x91, 0 };
 
 static void
-ganv_port_update_control_slider(GanvPort* port, float value);
+ganv_port_update_control_slider(GanvPort* port, float value, gboolean force);
 
 G_DEFINE_TYPE(GanvPort, ganv_port, GANV_TYPE_BOX)
 
@@ -293,7 +293,7 @@ ganv_port_set_width(GanvBox* box,
 	GanvPort* port = GANV_PORT(box);
 	parent_class->set_width(box, width);
 	if (port->impl->control) {
-		ganv_port_update_control_slider(port, port->impl->control->value);
+		ganv_port_update_control_slider(port, port->impl->control->value, TRUE);
 		ganv_port_place_value_label(port);
 	}
 }
@@ -498,8 +498,7 @@ ganv_port_set_value_label(GanvPort*   port,
 }
 
 static void
-ganv_port_update_control_slider(GanvPort* port,
-                                float     value)
+ganv_port_update_control_slider(GanvPort* port, float value, gboolean force)
 {
 	GanvPortImpl* impl = port->impl;
 	if (!impl->control) {
@@ -525,7 +524,7 @@ ganv_port_update_control_slider(GanvPort* port,
 		value = impl->control->max;
 	}
 	
-	if (value == impl->control->value) {
+	if (!force && value == impl->control->value) {
 		return;  // No change, do nothing
 	}
 
@@ -550,7 +549,7 @@ ganv_port_set_control_is_toggle(GanvPort* port,
 {
 	if (port->impl->control) {
 		port->impl->control->is_toggle = is_toggle;
-		ganv_port_update_control_slider(port, port->impl->control->value);
+		ganv_port_update_control_slider(port, port->impl->control->value, TRUE);
 	}
 }
 
@@ -560,7 +559,8 @@ ganv_port_set_control_is_integer(GanvPort* port,
 {
 	if (port->impl->control) {
 		port->impl->control->is_integer = is_integer;
-		ganv_port_update_control_slider(port, lrintf(port->impl->control->value));
+		const float rounded = rintf(port->impl->control->value);
+		ganv_port_update_control_slider(port, rounded, TRUE);
 	}
 }
 
@@ -574,7 +574,7 @@ ganv_port_set_control_value(GanvPort* port,
 		ganv_port_set_value_label(
 			port, (const char*)((value == 0.0f) ? check_off : check_on));
 	}
-	ganv_port_update_control_slider(port, value);
+	ganv_port_update_control_slider(port, value, FALSE);
 }
 
 void
@@ -594,11 +594,12 @@ ganv_port_set_control_min(GanvPort* port,
                           float     min)
 {
 	if (port->impl->control) {
+		const gboolean force = port->impl->control->min != min;
 		port->impl->control->min = min;
 		if (port->impl->control->max < min) {
 			port->impl->control->max = min;
 		}
-		ganv_port_update_control_slider(port, port->impl->control->value);
+		ganv_port_update_control_slider(port, port->impl->control->value, force);
 	}
 }
 
@@ -607,11 +608,12 @@ ganv_port_set_control_max(GanvPort* port,
                           float     max)
 {
 	if (port->impl->control) {
+		const gboolean force = port->impl->control->max != max;
 		port->impl->control->max = max;
 		if (port->impl->control->min > max) {
 			port->impl->control->min = max;
 		}
-		ganv_port_update_control_slider(port, port->impl->control->value);
+		ganv_port_update_control_slider(port, port->impl->control->value, force);
 	}
 }
 
