@@ -187,8 +187,6 @@ ganv_node_get_property(GObject*    object,
 	GanvNode*     node = GANV_NODE(object);
 	GanvNodeImpl* impl = node->impl;
 
-	typedef char* gstring;
-
 	switch (prop_id) {
 		GET_CASE(PARTNER, object, impl->partner);
 		GET_CASE(LABEL, string, impl->label->impl->text);
