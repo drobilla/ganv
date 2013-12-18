@@ -70,9 +70,9 @@ main(int argc, char** argv)
 	                                     "label", "test",
 	                                     NULL);
 
-	GanvPort* port = ganv_port_new(module, FALSE,
-	                               "label", "Signal",
-	                               NULL);
+	ganv_port_new(module, FALSE,
+	              "label", "Signal",
+	              NULL);
 
 	GanvPort* cport = ganv_port_new(module, TRUE,
 	                                "label", "Control",
@@ -99,9 +99,9 @@ main(int argc, char** argv)
 	                                      "label", "test2",
 	                                      NULL);
 
-	GanvPort* port2 = ganv_port_new(module2, TRUE,
-	                                "label", "Signal",
-	                                NULL);
+	ganv_port_new(module2, TRUE,
+	              "label", "Signal",
+	              NULL);
 
 	g_signal_connect(canvas, "connect",
 	                 G_CALLBACK(on_connect), canvas);
