@@ -427,11 +427,25 @@ ganv_item_move(GanvItem* item, double dx, double dy)
 	g_return_if_fail(item != NULL);
 	g_return_if_fail(GANV_IS_ITEM(item));
 
+	const double old_x = item->x;
+	const double old_y = item->y;
+
 	item->x += dx;
 	item->y += dy;
 
-	ganv_item_request_update(item);
-	item->canvas->need_repick = TRUE;
+	static const double MIN_COORD = 4.0;
+	if (item->x < MIN_COORD) {
+		item->x = MIN_COORD;
+	}
+	if (item->y < MIN_COORD) {
+		item->y = MIN_COORD;
+	}
+
+	if (lrint(old_x) != lrint(item->x) ||
+	    lrint(old_y) != lrint(item->y)) {
+		ganv_item_request_update(item);
+		item->canvas->need_repick = TRUE;
+	}
 }
 
 /**
@@ -750,13 +764,11 @@ ganv_item_get_bounds(GanvItem* item, double* x1, double* y1, double* x2, double*
 void
 ganv_item_request_update(GanvItem* item)
 {
-	/* FIXME: For some reason, if this short-circuit is enabled, the canvas
-	   stops updating items entirely when connected modules are removed. */
-	/*
+	/* Note: At some point, if this short-circuit was enabled, the canvas stopped
+	   updating items entirely when connected modules are removed. */
 	if (item->object.flags & GANV_ITEM_NEED_UPDATE) {
 		return;
 	}
-	*/
 
 	if (!item->canvas) {
 		/* Item is being / has been destroyed, ignore */

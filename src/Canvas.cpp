@@ -797,16 +797,8 @@ GanvCanvasImpl::layout_iteration()
 
 			// Update position
 			const Vector dpos = vec_mult(node->impl->vel, dur);
-			if (fabs(dpos.x) > 1.0 || fabs(dpos.y) > 1.0) {
-				GanvItem* item = GANV_ITEM(node);
+			if (fabs(dpos.x) >= 1.0 || fabs(dpos.y) >= 1.0) {
 				ganv_item_move(GANV_ITEM(node), dpos.x, dpos.y);
-				static const float min_coord = 4.0;
-				if (item->x < min_coord) {
-					item->x = min_coord;
-				}
-				if (item->y < min_coord) {
-					item->y = min_coord;
-				}
 			}
 		}
 
