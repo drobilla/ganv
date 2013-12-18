@@ -68,6 +68,13 @@ ganv_node_init(GanvNode* node)
 	impl->highlighted  = FALSE;
 	impl->draggable    = FALSE;
 	impl->show_label   = TRUE;
+	impl->grabbed      = FALSE;
+#ifdef GANV_FDGL
+	impl->force.x      = 0.0;
+	impl->force.y      = 0.0;
+	impl->vel.x        = 0.0;
+	impl->vel.y        = 0.0;
+#endif
 }
 
 static void
@@ -442,6 +449,7 @@ ganv_node_default_event(GanvItem* item,
 				GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK|GDK_BUTTON_PRESS_MASK,
 				ganv_canvas_get_move_cursor(canvas),
 				event->button.time);
+			node->impl->grabbed = TRUE;
 			dragging = TRUE;
 			return TRUE;
 		}
@@ -452,6 +460,7 @@ ganv_node_default_event(GanvItem* item,
 			gboolean selected;
 			g_object_get(G_OBJECT(node), "selected", &selected, NULL);
 			ganv_item_ungrab(GANV_ITEM(node), event->button.time);
+			node->impl->grabbed = FALSE;
 			dragging = FALSE;
 			if (event->button.x != drag_start_x || event->button.y != drag_start_y) {
 				if (selected) {

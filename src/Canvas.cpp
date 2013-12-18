@@ -49,6 +49,9 @@
 #ifdef HAVE_AGRAPH
 #    include <gvc.h>
 #endif
+#ifdef GANV_FDGL
+#    include "./fdgl.hpp"
+#endif
 
 static guint signal_connect;
 static guint signal_disconnect;
@@ -145,6 +148,13 @@ struct GanvCanvasImpl {
 		g_signal_connect(G_OBJECT(ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas))),
 		                 "event", G_CALLBACK(on_canvas_event), this);
 
+#ifdef GANV_FDGL
+		g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE,
+		                   100,
+		                   on_timeout,
+		                   this,
+		                   NULL);
+#endif
 	}
 
 	~GanvCanvasImpl()
@@ -159,6 +169,16 @@ struct GanvCanvasImpl {
 	{
 		return ((GanvCanvasImpl*)impl)->on_event(ev);
 	}
+
+#ifdef GANV_FDGL
+	static gboolean
+	on_timeout(gpointer impl)
+	{
+		return ((GanvCanvasImpl*)impl)->layout_iteration();
+	}	
+
+	gboolean layout_iteration();
+#endif
 
 	GanvItem* root() {
 		return ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas));
@@ -685,6 +705,110 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 	return nodes;
 }
 #endif
+
+#ifdef GANV_FDGL
+
+static void
+get_pos_area(const GanvNode* node, Vector* pos, Vector* area)
+{
+	double x1, y1, x2, y2;
+	ganv_item_get_bounds(GANV_ITEM(node), &x1, &y1, &x2, &y2);
+
+	area->x = x2 - x1;
+	area->y = y2 - y1;
+	pos->x  = x1 + (area->x / 2.0);
+	pos->y  = y1 + (area->y / 2.0);
+
+	ganv_item_i2w(GANV_ITEM(node), &pos->x, &pos->y);
+}
+
+gboolean
+GanvCanvasImpl::layout_iteration()
+{
+	// Calculate repelling forces between nodes
+	FOREACH_ITEM(_items, i) {
+		if (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i)) {
+			continue;
+		}
+
+		GanvNode* const node = GANV_NODE(*i);
+		Vector          pos;
+		Vector          area;
+		get_pos_area(node, &pos, &area);
+
+		FOREACH_ITEM(_items, j) {
+			if (i == j || !GANV_IS_NODE(*j)) {
+				continue;
+			}
+
+			GanvNode* const node2 = GANV_NODE(*j);
+			Vector          pos2;
+			Vector          area2;
+			get_pos_area(node2, &pos2, &area2);
+
+			const Vector f = repel_force(pos, area, pos2, area2);
+
+			node->impl->force  = vec_add(node->impl->force, f);
+			node2->impl->force = vec_add(node2->impl->force, vec_mult(f, -1.0));
+		}
+	}
+
+	// Calculate attractive spring forces for edges
+	FOREACH_EDGE(_edges, i) {
+		const GanvEdge* const edge = *i;
+		GanvNode*             tail = ganv_edge_get_tail(edge);
+		GanvNode*             head = ganv_edge_get_head(edge);
+		if (GANV_IS_PORT(tail)) {
+			tail = GANV_NODE(ganv_port_get_module(GANV_PORT(tail)));
+		}
+		if (GANV_IS_PORT(head)) {
+			head = GANV_NODE(ganv_port_get_module(GANV_PORT(head)));
+		}
+		if (tail == head) {
+			continue;
+		}
+
+		const Vector tail_pos = { edge->impl->coords.x1, edge->impl->coords.y1 };
+		const Vector head_pos = { edge->impl->coords.x2, edge->impl->coords.y2 };
+		const Vector f        = spring_force(head_pos, tail_pos);
+
+		tail->impl->force = vec_add(tail->impl->force, f);
+		head->impl->force = vec_add(head->impl->force, vec_mult(f, -1.0));
+	}
+
+	// Update positions based on calculated forces
+	FOREACH_ITEM(_items, i) {
+		if (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i)) {
+			continue;
+		}
+
+		GanvNode* const node = GANV_NODE(*i);
+
+		static const float dur  = 0.1;  // Time duration
+		static const float damp = 0.5;  // Velocity damping (momentum loss)
+
+		if (node->impl->grabbed) {
+			node->impl->vel.x = 0.0;
+			node->impl->vel.y = 0.0;
+		} else {
+			node->impl->vel = vec_add(node->impl->vel,
+			                          vec_mult(node->impl->force, dur));
+			node->impl->vel = vec_mult(node->impl->vel, damp);
+
+			// Update position
+			const Vector dpos = vec_mult(node->impl->vel, dur);
+			ganv_node_move(node, dpos.x, dpos.y);
+		}
+
+		// Reset forces for next time
+		node->impl->force.x = 0.0;
+		node->impl->force.y = 0.0;
+	}
+
+	return TRUE;
+}
+
+#endif // GANV_FDGL
 
 void
 GanvCanvasImpl::remove_edge(GanvEdge* edge)

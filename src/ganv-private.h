@@ -112,6 +112,11 @@ struct _GanvNodeImpl {
 	gboolean          highlighted;
 	gboolean          draggable;
 	gboolean          show_label;
+	gboolean          grabbed;
+#ifdef GANV_FDGL
+	Vector            force;
+	Vector            vel;
+#endif
 };
 
 /* Port */

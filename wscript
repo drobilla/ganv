@@ -25,6 +25,8 @@ def options(opt):
                    help='Build unit tests')
     opt.add_option('--no-graphviz', action='store_true', dest='no_graphviz',
                    help='Do not compile with graphviz support')
+    opt.add_option('--fdgl', action='store_true', dest='fdgl',
+                   help='Use experimental force-directed graph layout')
     opt.add_option('--no-nls', action='store_true', dest='no_nls',
                    help='Disable i18n (native language support)')
     opt.add_option('--gir', action='store_true', dest='gir',
@@ -53,6 +55,9 @@ def configure(conf):
     if not Options.options.no_graphviz:
         autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH',
                           atleast_version='2.8', mandatory=False)
+
+    if Options.options.fdgl:
+        autowaf.define(conf, 'GANV_FDGL', 1)
 
     if not Options.options.no_nls:
         autowaf.check_header(conf, 'c', 'libintl.h', 'ENABLE_NLS', mandatory=False)
@@ -128,7 +133,7 @@ def build(bld):
 
     if bld.env.BUILD_TESTS:
         # Static library for test program
-        bld(features     = 'c cstlib',
+        bld(features     = 'c cstlib cxx cxxshlib',
             source       = ganv_source,
             includes     = ['.', './src'],
             name         = 'libganv_profiled',
@@ -138,7 +143,7 @@ def build(bld):
             cflags       = [ '-fprofile-arcs', '-ftest-coverage' ])
 
         # Test program (C)
-        bld(features     = 'c cprogram',
+        bld(features     = 'cxx cxxprogram',
             source       = 'src/ganv_test.c',
             includes     = ['.', './src'],
             use          = 'libganv_profiled',
