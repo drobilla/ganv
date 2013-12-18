@@ -20,6 +20,11 @@ static const double SPRING_K    = 12.0;
 static const double CHARGE_KE   = 80000.0;
 static const double AREA_WEIGHT = 0.4;
 
+struct Region {
+	Vector pos;
+	Vector area;
+};
+
 inline Vector
 vec_add(const Vector& a, const Vector& b)
 {
@@ -66,13 +71,12 @@ spring_force(const Vector& a, const Vector& b, const double length)
 
 /** Modified Coulomb's law */
 inline Vector
-repel_force(const Vector& a, const Vector& a_area,
-            const Vector& b, const Vector& b_area)
+repel_force(const Region& a, const Region& b)
 {
-	const Vector vec      = vec_mult(vec_sub(a, b), 4.0);
+	const Vector vec      = vec_mult(vec_sub(a.pos, b.pos), 4.0);
 	const double rmag     = vec_rmag(vec);
-	const Vector a_weight = vec_mult(a_area, AREA_WEIGHT);
-	const Vector b_weight = vec_mult(b_area, AREA_WEIGHT);
+	const Vector a_weight = vec_mult(a.area, AREA_WEIGHT);
+	const Vector b_weight = vec_mult(b.area, AREA_WEIGHT);
 	const Vector force    = vec_mult(vec, rmag * rmag * rmag * CHARGE_KE * 0.5);
 	return vec_mult(force, vec_mult(a_weight, b_weight));
 }

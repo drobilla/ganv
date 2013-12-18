@@ -708,18 +708,20 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 
 #ifdef GANV_FDGL
 
-static void
-get_pos_area(const GanvNode* node, Vector* pos, Vector* area)
+inline Region
+get_region(const GanvNode* node)
 {
 	double x1, y1, x2, y2;
 	ganv_item_get_bounds(GANV_ITEM(node), &x1, &y1, &x2, &y2);
 
-	area->x = x2 - x1;
-	area->y = y2 - y1;
-	pos->x  = x1 + (area->x / 2.0);
-	pos->y  = y1 + (area->y / 2.0);
+	Region reg;
+	reg.area.x = x2 - x1;
+	reg.area.y = y2 - y1;
+	reg.pos.x  = x1 + (reg.area.x / 2.0);
+	reg.pos.y  = y1 + (reg.area.y / 2.0);
 
-	ganv_item_i2w(GANV_ITEM(node), &pos->x, &pos->y);
+	ganv_item_i2w(GANV_ITEM(node), &reg.pos.x, &reg.pos.y);
+	return reg;
 }
 
 inline void
@@ -737,36 +739,24 @@ GanvCanvasImpl::layout_iteration()
 		if (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i)) {
 			continue;
 		}
-
 		GanvNode* const node = GANV_NODE(*i);
-		Vector          pos;
-		Vector          area;
-		get_pos_area(node, &pos, &area);
+		const Region    reg  = get_region(node);
 
 		FOREACH_ITEM(_items, j) {
-			if (i == j || !GANV_IS_NODE(*j)) {
+			if (i == j || (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i))) {
 				continue;
 			}
-
 			GanvNode* const node2 = GANV_NODE(*j);
-			Vector          pos2;
-			Vector          area2;
-			get_pos_area(node2, &pos2, &area2);
-
-			const Vector f = repel_force(pos, area, pos2, area2);
-
-			apply_force(node, node2, f);
+			const Region    reg2  = get_region(node2);
+			apply_force(node, node2, repel_force(reg, reg2));
 		}
 
 		// Add fake long spring to partner to line up as if connected
 		GanvNode* partner = ganv_node_get_partner(node);
 		if (partner) {
-			Vector ppos;
-			Vector parea;
-			get_pos_area(partner, &ppos, &parea);
-
-			const Vector f = spring_force(ppos, pos, parea.x);
-			apply_force(node, partner, f);
+			const Region preg = get_region(partner);
+			apply_force(node, partner,
+			            spring_force(preg.pos, reg.pos, preg.area.x));
 		}
 	}
 
