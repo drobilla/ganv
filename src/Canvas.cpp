@@ -775,9 +775,17 @@ GanvCanvasImpl::layout_iteration()
 			continue;
 		}
 
-		const Vector tail_pos = { edge->impl->coords.x1, edge->impl->coords.y1 };
-		const Vector head_pos = { edge->impl->coords.x2, edge->impl->coords.y2 };
-		const Vector f        = spring_force(head_pos, tail_pos, 1.0);
+		// Add slight directional force to push sinks to the right/down
+		static const double DIR_MAGNITUDE = -400.0;
+		Vector              dir           = { 0.0, 0.0 };
+		switch (_gcanvas->direction) {
+		case GANV_DIRECTION_RIGHT: dir.x = DIR_MAGNITUDE; break;
+		case GANV_DIRECTION_DOWN:  dir.y = DIR_MAGNITUDE; break;
+		}
+
+		const Vector tpos = { edge->impl->coords.x1, edge->impl->coords.y1 };
+		const Vector hpos = { edge->impl->coords.x2, edge->impl->coords.y2 };
+		const Vector f    = vec_add(dir, spring_force(hpos, tpos, 1.0));
 
 		apply_force(tail, head, f);
 	}
