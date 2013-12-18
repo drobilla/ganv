@@ -141,20 +141,13 @@ struct GanvCanvasImpl {
 		, _zoom(1.0)
 		, _font_size(0.0)
 		, _drag_state(NOT_DRAGGING)
+		, _layout_idle_id(0)
 	{
 		_wrapper_key = g_quark_from_string("ganvmm");
 		_move_cursor = gdk_cursor_new(GDK_FLEUR);
 
 		g_signal_connect(G_OBJECT(ganv_canvas_base_root(GANV_CANVAS_BASE(_gcanvas))),
 		                 "event", G_CALLBACK(on_canvas_event), this);
-
-#ifdef GANV_FDGL
-		g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE,
-		                   40,
-		                   on_timeout,
-		                   this,
-		                   NULL);
-#endif
 	}
 
 	~GanvCanvasImpl()
@@ -171,11 +164,13 @@ struct GanvCanvasImpl {
 	}
 
 #ifdef GANV_FDGL
-	static gboolean
-	on_timeout(gpointer impl)
-	{
+	static gboolean on_layout_timeout(gpointer impl) {
 		return ((GanvCanvasImpl*)impl)->layout_iteration();
-	}	
+	}
+
+	static void on_layout_done(gpointer impl) {
+		((GanvCanvasImpl*)impl)->_layout_idle_id = 0;
+	}
 
 	gboolean layout_iteration();
 #endif
@@ -185,6 +180,7 @@ struct GanvCanvasImpl {
 	}
 
 	void resize(double width, double height);
+	void contents_changed();
 
 	void set_zoom_and_font_size(double zoom, double points);
 
@@ -279,6 +275,7 @@ struct GanvCanvasImpl {
 
 	GQuark     _wrapper_key;
 	GdkCursor* _move_cursor;
+	guint      _layout_idle_id;
 };
 
 typedef struct {
@@ -785,12 +782,13 @@ GanvCanvasImpl::layout_iteration()
 
 		const Vector tpos = { edge->impl->coords.x1, edge->impl->coords.y1 };
 		const Vector hpos = { edge->impl->coords.x2, edge->impl->coords.y2 };
-		const Vector f    = vec_add(dir, spring_force(hpos, tpos, 1.0));
+		const Vector f    = vec_add(dir, spring_force(hpos, tpos, 0.5));
 
 		apply_force(tail, head, f);
 	}
 
 	// Update positions based on calculated forces
+	size_t n_moved = 0;
 	FOREACH_ITEM(_items, i) {
 		if (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i)) {
 			continue;
@@ -813,12 +811,17 @@ GanvCanvasImpl::layout_iteration()
 			const Vector dpos = vec_mult(node->impl->vel, dur);
 			if (fabs(dpos.x) >= 1.0 || fabs(dpos.y) >= 1.0) {
 				ganv_item_move(GANV_ITEM(node), dpos.x, dpos.y);
+				++n_moved;
 			}
 		}
 
 		// Reset forces for next time
 		node->impl->force.x = 0.0;
 		node->impl->force.y = 0.0;
+	}
+
+	if (n_moved == 0) {
+		return FALSE;  // Stabilized, we're done
 	}
 
 	// Now update edge positions to reflect new node positions
@@ -841,6 +844,7 @@ GanvCanvasImpl::remove_edge(GanvEdge* edge)
 		_dst_edges.erase(edge);
 		ganv_edge_request_redraw(GANV_ITEM(edge)->canvas, &edge->impl->coords);
 		gtk_object_destroy(GTK_OBJECT(edge));
+		contents_changed();
 	}
 }
 
@@ -1609,6 +1613,21 @@ GanvCanvasImpl::resize(double width, double height)
 }
 
 void
+GanvCanvasImpl::contents_changed()
+{
+#ifdef GANV_FDGL
+	if (!_layout_idle_id) {
+		_layout_idle_id = g_timeout_add_full(
+			G_PRIORITY_DEFAULT_IDLE,
+			40,
+			on_layout_timeout,
+			this,
+			on_layout_done);
+	}
+#endif
+}
+
+void
 GanvCanvasImpl::set_zoom_and_font_size(double zoom, double points)
 {
 	points = std::max(points, 1.0);
@@ -1956,6 +1975,12 @@ ganv_canvas_resize(GanvCanvas* canvas, double width, double height)
 	canvas->impl->resize(width, height);
 }
 
+void
+ganv_canvas_contents_changed(GanvCanvas* canvas)
+{
+	canvas->impl->contents_changed();
+}
+
 GanvItem*
 ganv_canvas_get_root(const GanvCanvas* canvas)
 {
@@ -2142,6 +2167,7 @@ ganv_canvas_add_edge(GanvCanvas* canvas,
 {
 	canvas->impl->_edges.insert(edge);
 	canvas->impl->_dst_edges.insert(edge);
+	canvas->impl->contents_changed();
 }
 
 void

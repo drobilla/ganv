@@ -16,9 +16,9 @@
 #include <float.h>
 #include <math.h>
 
-static const double SPRING_K    = 12.0;
-static const double CHARGE_KE   = 80000.0;
-static const double AREA_WEIGHT = 0.4;
+static const double SPRING_K    = 14.0;
+static const double CHARGE_KE   = 60000.0;
+static const double AREA_WEIGHT = 0.5;
 
 struct Region {
 	Vector pos;

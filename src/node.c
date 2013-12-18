@@ -461,6 +461,7 @@ ganv_node_default_event(GanvItem* item,
 			g_object_get(G_OBJECT(node), "selected", &selected, NULL);
 			ganv_item_ungrab(GANV_ITEM(node), event->button.time);
 			node->impl->grabbed = FALSE;
+			ganv_canvas_contents_changed(canvas);
 			dragging = FALSE;
 			if (event->button.x != drag_start_x || event->button.y != drag_start_y) {
 				if (selected) {
