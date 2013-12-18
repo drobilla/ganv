@@ -150,7 +150,7 @@ struct GanvCanvasImpl {
 
 #ifdef GANV_FDGL
 		g_timeout_add_full(G_PRIORITY_DEFAULT_IDLE,
-		                   100,
+		                   40,
 		                   on_timeout,
 		                   this,
 		                   NULL);
@@ -785,7 +785,7 @@ GanvCanvasImpl::layout_iteration()
 		GanvNode* const node = GANV_NODE(*i);
 
 		static const float dur  = 0.1;  // Time duration
-		static const float damp = 0.5;  // Velocity damping (momentum loss)
+		static const float damp = 0.7;  // Velocity damping (momentum loss)
 
 		if (node->impl->grabbed) {
 			node->impl->vel.x = 0.0;
@@ -797,12 +797,28 @@ GanvCanvasImpl::layout_iteration()
 
 			// Update position
 			const Vector dpos = vec_mult(node->impl->vel, dur);
-			ganv_node_move(node, dpos.x, dpos.y);
+			if (fabs(dpos.x) > 1.0 || fabs(dpos.y) > 1.0) {
+				GanvItem* item = GANV_ITEM(node);
+				ganv_item_move(GANV_ITEM(node), dpos.x, dpos.y);
+				static const float min_coord = 4.0;
+				if (item->x < min_coord) {
+					item->x = min_coord;
+				}
+				if (item->y < min_coord) {
+					item->y = min_coord;
+				}
+			}
 		}
 
 		// Reset forces for next time
 		node->impl->force.x = 0.0;
 		node->impl->force.y = 0.0;
+	}
+
+	// Now update edge positions to reflect new node positions
+	FOREACH_EDGE(_edges, i) {
+		GanvEdge* const edge = *i;
+		ganv_edge_update_location(edge);
 	}
 
 	return TRUE;

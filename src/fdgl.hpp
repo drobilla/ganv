@@ -16,10 +16,10 @@
 #include <float.h>
 #include <math.h>
 
-static const double SPRING_K    = 50.0;
-static const double SPRING_LEN  = 1.0;
-static const double CHARGE_KE   = 50000.0;
-static const double AREA_WEIGHT = 0.25;
+static const double SPRING_K    = 12.0;
+static const double SPRING_LEN  = 0.1;
+static const double CHARGE_KE   = 80000.0;
+static const double AREA_WEIGHT = 0.4;
 
 inline Vector
 vec_add(const Vector& a, const Vector& b)
@@ -70,7 +70,7 @@ inline Vector
 repel_force(const Vector& a, const Vector& a_area,
             const Vector& b, const Vector& b_area)
 {
-	const Vector vec      = vec_sub(a, b);
+	const Vector vec      = vec_mult(vec_sub(a, b), 4.0);
 	const double rmag     = vec_rmag(vec);
 	const Vector a_weight = vec_mult(a_area, AREA_WEIGHT);
 	const Vector b_weight = vec_mult(b_area, AREA_WEIGHT);
