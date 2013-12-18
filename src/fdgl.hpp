@@ -17,7 +17,6 @@
 #include <math.h>
 
 static const double SPRING_K    = 12.0;
-static const double SPRING_LEN  = 0.1;
 static const double CHARGE_KE   = 80000.0;
 static const double AREA_WEIGHT = 0.4;
 
@@ -57,11 +56,11 @@ vec_rmag(const Vector& vec)
 
 /** Hooke's law */
 inline Vector
-spring_force(const Vector& a, const Vector& b)
+spring_force(const Vector& a, const Vector& b, const double length)
 {
 	const Vector vec          = vec_sub(b, a);
 	const double rmag         = vec_rmag(vec);
-	const double displacement = SPRING_LEN - (1.0 / rmag);
+	const double displacement = length - (1.0 / rmag);
 	return vec_mult(vec, rmag * SPRING_K * displacement * 0.5);
 }
 

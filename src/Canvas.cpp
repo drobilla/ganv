@@ -722,6 +722,13 @@ get_pos_area(const GanvNode* node, Vector* pos, Vector* area)
 	ganv_item_i2w(GANV_ITEM(node), &pos->x, &pos->y);
 }
 
+inline void
+apply_force(GanvNode* a, GanvNode* b, const Vector& f)
+{
+	a->impl->force = vec_add(a->impl->force, f);
+	b->impl->force = vec_sub(b->impl->force, f);
+}
+
 gboolean
 GanvCanvasImpl::layout_iteration()
 {
@@ -748,8 +755,18 @@ GanvCanvasImpl::layout_iteration()
 
 			const Vector f = repel_force(pos, area, pos2, area2);
 
-			node->impl->force  = vec_add(node->impl->force, f);
-			node2->impl->force = vec_add(node2->impl->force, vec_mult(f, -1.0));
+			apply_force(node, node2, f);
+		}
+
+		// Add fake long spring to partner to line up as if connected
+		GanvNode* partner = ganv_node_get_partner(node);
+		if (partner) {
+			Vector ppos;
+			Vector parea;
+			get_pos_area(partner, &ppos, &parea);
+
+			const Vector f = spring_force(ppos, pos, parea.x);
+			apply_force(node, partner, f);
 		}
 	}
 
@@ -770,10 +787,9 @@ GanvCanvasImpl::layout_iteration()
 
 		const Vector tail_pos = { edge->impl->coords.x1, edge->impl->coords.y1 };
 		const Vector head_pos = { edge->impl->coords.x2, edge->impl->coords.y2 };
-		const Vector f        = spring_force(head_pos, tail_pos);
+		const Vector f        = spring_force(head_pos, tail_pos, 1.0);
 
-		tail->impl->force = vec_add(tail->impl->force, f);
-		head->impl->force = vec_add(head->impl->force, vec_mult(f, -1.0));
+		apply_force(tail, head, f);
 	}
 
 	// Update positions based on calculated forces
