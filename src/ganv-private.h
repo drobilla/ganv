@@ -108,6 +108,7 @@ struct _GanvNodeImpl {
 	guint             layer;
 	gboolean          can_tail;
 	gboolean          can_head;
+	gboolean          is_source;
 	gboolean          selected;
 	gboolean          highlighted;
 	gboolean          draggable;
@@ -116,6 +117,8 @@ struct _GanvNodeImpl {
 #ifdef GANV_FDGL
 	Vector            force;
 	Vector            vel;
+	gboolean          has_in_edges;
+	gboolean          has_out_edges;
 #endif
 };
 

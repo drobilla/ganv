@@ -16,8 +16,8 @@
 #include <float.h>
 #include <math.h>
 
-static const double SPRING_K    = 14.0;
-static const double CHARGE_KE   = 60000.0;
+static const double SPRING_K    = 16.0;
+static const double CHARGE_KE   = 40000.0;
 static const double AREA_WEIGHT = 0.5;
 
 struct Region {
@@ -61,12 +61,23 @@ vec_rmag(const Vector& vec)
 
 /** Hooke's law */
 inline Vector
-spring_force(const Vector& a, const Vector& b, const double length)
+spring_force(const Vector& a, const Vector& b, double length, double k)
 {
 	const Vector vec          = vec_sub(b, a);
 	const double rmag         = vec_rmag(vec);
 	const double displacement = length - (1.0 / rmag);
-	return vec_mult(vec, rmag * SPRING_K * displacement * 0.5);
+	return vec_mult(vec, rmag * k * displacement * 0.5);
+}
+
+/** Spring force with a directional force to align with flow direction. */
+static const Vector
+edge_force(const Vector& dir,
+           const Vector& hpos,
+           const Vector& tpos,
+           double        length,
+           double        k)
+{
+	return vec_add(dir, spring_force(hpos, tpos, length, k));
 }
 
 /** Modified Coulomb's law */

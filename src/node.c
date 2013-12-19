@@ -42,6 +42,7 @@ enum {
 	PROP_BORDER_COLOR,
 	PROP_CAN_TAIL,
 	PROP_CAN_HEAD,
+	PROP_IS_SOURCE,
 	PROP_SELECTED,
 	PROP_HIGHLIGHTED,
 	PROP_DRAGGABLE
@@ -64,16 +65,19 @@ ganv_node_init(GanvNode* node)
 	impl->border_color = DEFAULT_BORDER_COLOR;
 	impl->can_tail     = FALSE;
 	impl->can_head     = FALSE;
+	impl->is_source    = FALSE;
 	impl->selected     = FALSE;
 	impl->highlighted  = FALSE;
 	impl->draggable    = FALSE;
 	impl->show_label   = TRUE;
 	impl->grabbed      = FALSE;
 #ifdef GANV_FDGL
-	impl->force.x      = 0.0;
-	impl->force.y      = 0.0;
-	impl->vel.x        = 0.0;
-	impl->vel.y        = 0.0;
+	impl->force.x       = 0.0;
+	impl->force.y       = 0.0;
+	impl->vel.x         = 0.0;
+	impl->vel.y         = 0.0;
+	impl->has_in_edges  = FALSE;
+	impl->has_out_edges = FALSE;
 #endif
 }
 
@@ -145,6 +149,7 @@ ganv_node_set_property(GObject*      object,
 		SET_CASE(BORDER_COLOR, uint, impl->border_color);
 		SET_CASE(CAN_TAIL, boolean, impl->can_tail);
 		SET_CASE(CAN_HEAD, boolean, impl->can_head);
+		SET_CASE(IS_SOURCE, boolean, impl->is_source);
 		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
 		SET_CASE(DRAGGABLE, boolean, impl->draggable);
 	case PROP_SELECTED:
@@ -204,6 +209,7 @@ ganv_node_get_property(GObject*    object,
 		GET_CASE(BORDER_COLOR, uint, impl->border_color);
 		GET_CASE(CAN_TAIL, boolean, impl->can_tail);
 		GET_CASE(CAN_HEAD, boolean, impl->can_head);
+		GET_CASE(IS_SOURCE, boolean, impl->is_source);
 		GET_CASE(SELECTED, boolean, impl->selected);
 		GET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
 		GET_CASE(DRAGGABLE, boolean, impl->draggable);
@@ -636,6 +642,14 @@ ganv_node_class_init(GanvNodeClass* klass)
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
+		gobject_class, PROP_IS_SOURCE, g_param_spec_boolean(
+			"is-source",
+			_("Is source"),
+			_("Whether this object should be positioned at the start of signal flow."),
+			0,
+			G_PARAM_READWRITE));
+
+	g_object_class_install_property(
 		gobject_class, PROP_SELECTED, g_param_spec_boolean(
 			"selected",
 			_("Selected"),
@@ -696,6 +710,12 @@ gboolean
 ganv_node_can_head(const GanvNode* self)
 {
 	return self->impl->can_head;
+}
+
+void
+ganv_node_set_is_source(const GanvNode* node, gboolean is_source)
+{
+	node->impl->is_source = is_source;
 }
 
 gboolean

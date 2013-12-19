@@ -832,4 +832,3 @@ ganv_module_for_each_port(GanvModule*  module,
 
 	free(copy);
 }
-

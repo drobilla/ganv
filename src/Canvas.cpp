@@ -731,30 +731,14 @@ apply_force(GanvNode* a, GanvNode* b, const Vector& f)
 gboolean
 GanvCanvasImpl::layout_iteration()
 {
-	// Calculate repelling forces between nodes
-	FOREACH_ITEM(_items, i) {
-		if (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i)) {
-			continue;
-		}
-		GanvNode* const node = GANV_NODE(*i);
-		const Region    reg  = get_region(node);
+	static const double SPRING_K = 14.0;
 
-		FOREACH_ITEM(_items, j) {
-			if (i == j || (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i))) {
-				continue;
-			}
-			GanvNode* const node2 = GANV_NODE(*j);
-			const Region    reg2  = get_region(node2);
-			apply_force(node, node2, repel_force(reg, reg2));
-		}
-
-		// Add fake long spring to partner to line up as if connected
-		GanvNode* partner = ganv_node_get_partner(node);
-		if (partner) {
-			const Region preg = get_region(partner);
-			apply_force(node, partner,
-			            spring_force(preg.pos, reg.pos, preg.area.x));
-		}
+	// A light directional force to push sources to the top left
+	static const double DIR_MAGNITUDE = -300.0;
+	Vector              dir           = { 0.0, 0.0 };
+	switch (_gcanvas->direction) {
+	case GANV_DIRECTION_RIGHT: dir.x = DIR_MAGNITUDE; break;
+	case GANV_DIRECTION_DOWN:  dir.y = DIR_MAGNITUDE; break;
 	}
 
 	// Calculate attractive spring forces for edges
@@ -772,19 +756,57 @@ GanvCanvasImpl::layout_iteration()
 			continue;
 		}
 
-		// Add slight directional force to push sinks to the right/down
-		static const double DIR_MAGNITUDE = -400.0;
-		Vector              dir           = { 0.0, 0.0 };
-		switch (_gcanvas->direction) {
-		case GANV_DIRECTION_RIGHT: dir.x = DIR_MAGNITUDE; break;
-		case GANV_DIRECTION_DOWN:  dir.y = DIR_MAGNITUDE; break;
-		}
+		head->impl->has_in_edges  = TRUE;
+		tail->impl->has_out_edges = TRUE;
 
 		const Vector tpos = { edge->impl->coords.x1, edge->impl->coords.y1 };
 		const Vector hpos = { edge->impl->coords.x2, edge->impl->coords.y2 };
-		const Vector f    = vec_add(dir, spring_force(hpos, tpos, 0.5));
 
-		apply_force(tail, head, f);
+		apply_force(tail, head, edge_force(dir, hpos, tpos, 0.0001, SPRING_K));
+	}
+
+	// Calculate repelling forces between nodes
+	FOREACH_ITEM(_items, i) {
+		if (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i)) {
+			continue;
+		}
+		GanvNode* const node = GANV_NODE(*i);
+		const Region    reg  = get_region(node);
+
+		GanvNode* partner = ganv_node_get_partner(node);
+		if (partner) {
+			// Add fake long spring to partner to line up as if connected
+			const Region preg = get_region(partner);
+			apply_force(node, partner,
+			            edge_force(dir, preg.pos, reg.pos,
+			                       preg.area.x, SPRING_K));
+		}
+
+		if (node->impl->is_source) {
+			// Add fake weak spring from origin to sources to anchor graph layout
+			const Vector anchor = { 16.0, 16.0 };
+			node->impl->force = vec_add(
+				node->impl->force,
+				spring_force(anchor, reg.pos, 12.0, SPRING_K / 6.0));
+		} else if (!node->impl->partner &&
+		           !node->impl->has_in_edges &&
+		           !node->impl->has_out_edges) {
+			// Not a source and disconnected, don't repel other nodes
+			continue;
+		}
+
+		FOREACH_ITEM(_items, j) {
+			if (i == j || (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i))) {
+				continue;
+			}
+			GanvNode* const node2 = GANV_NODE(*j);
+			if ((!node2->impl->has_in_edges && !node2->impl->has_out_edges) &&
+			    !node2->impl->is_source) {
+				continue;
+			}
+
+			apply_force(node, node2, repel_force(reg, get_region(node2)));
+		}
 	}
 
 	// Update positions based on calculated forces
@@ -796,10 +818,12 @@ GanvCanvasImpl::layout_iteration()
 
 		GanvNode* const node = GANV_NODE(*i);
 
-		static const float dur  = 0.1;  // Time duration
+		static const float dur  = 0.15;  // Time duration
 		static const float damp = 0.7;  // Velocity damping (momentum loss)
 
-		if (node->impl->grabbed) {
+		const bool has_edges = (node->impl->has_in_edges ||
+		                        node->impl->has_out_edges);
+		if (node->impl->grabbed || (!has_edges && !node->impl->is_source)) {
 			node->impl->vel.x = 0.0;
 			node->impl->vel.y = 0.0;
 		} else {
@@ -816,8 +840,10 @@ GanvCanvasImpl::layout_iteration()
 		}
 
 		// Reset forces for next time
-		node->impl->force.x = 0.0;
-		node->impl->force.y = 0.0;
+		node->impl->force.x       = 0.0;
+		node->impl->force.y       = 0.0;
+		node->impl->has_in_edges  = FALSE;
+		node->impl->has_out_edges = FALSE;
 	}
 
 	if (n_moved == 0) {
