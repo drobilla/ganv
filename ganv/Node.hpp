@@ -53,6 +53,7 @@ public:
 	RW_PROPERTY(guint, border_color)
 	RW_PROPERTY(gboolean, can_tail)
 	RW_PROPERTY(gboolean, can_head)
+	RW_PROPERTY(gboolean, is_source)
 	RW_PROPERTY(gboolean, selected)
 	RW_PROPERTY(gboolean, highlighted)
 	RW_PROPERTY(gboolean, draggable)

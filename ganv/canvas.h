@@ -53,6 +53,9 @@ struct _GanvCanvas {
 	double                 width;
 	double                 height;
 	gboolean               locked;
+#ifdef GANV_FDGL
+	guint                  layout_idle_id;
+#endif
 };
 
 struct _GanvCanvasClass {
@@ -69,6 +72,9 @@ GanvCanvas* ganv_canvas_new(double width, double height);
  */
 void
 ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
+
+void
+ganv_canvas_contents_changed(GanvCanvas* canvas);
 
 /**
  * ganv_canvas_get_root:

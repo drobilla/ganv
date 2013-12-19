@@ -97,6 +97,14 @@ gboolean
 ganv_node_can_head(const GanvNode* node);
 
 /**
+ * ganv_node_set_is_source:
+ *
+ * Flag a node as a source.  This information is used to influence layout.
+ */
+void
+ganv_node_set_is_source(const GanvNode* node, gboolean is_source);
+
+/**
  * ganv_node_is_within:
  *
  * Return value: True iff node is entirely within the given rectangle.
