@@ -16,9 +16,8 @@
 #include <float.h>
 #include <math.h>
 
-static const double SPRING_K    = 16.0;
-static const double CHARGE_KE   = 40000.0;
-static const double AREA_WEIGHT = 0.5;
+static const double SPRING_K  = 10.0;
+static const double CHARGE_KE = 50000000.0;
 
 struct Region {
 	Vector pos;
@@ -52,6 +51,13 @@ vec_mult(const Vector& a, const Vector& b)
 	return a.x * b.x + a.y * b.y;
 }
 
+/** Magnitude. */
+inline double
+vec_mag(const Vector& vec)
+{
+	return sqrt(vec.x * vec.x + vec.y * vec.y);
+}
+
 /** Reciprocal of magnitude. */
 inline double
 vec_rmag(const Vector& vec)
@@ -64,9 +70,9 @@ inline Vector
 spring_force(const Vector& a, const Vector& b, double length, double k)
 {
 	const Vector vec          = vec_sub(b, a);
-	const double rmag         = vec_rmag(vec);
-	const double displacement = length - (1.0 / rmag);
-	return vec_mult(vec, rmag * k * displacement * 0.5);
+	const double mag          = vec_mag(vec);
+	const double displacement = length - mag;
+	return vec_mult(vec, k * displacement * 0.5 / mag);
 }
 
 /** Spring force with a directional force to align with flow direction. */
@@ -80,14 +86,29 @@ edge_force(const Vector& dir,
 	return vec_add(dir, spring_force(hpos, tpos, length, k));
 }
 
-/** Modified Coulomb's law */
+/** Constant tide force, does not vary with distance. */
+inline Vector
+tide_force(const Vector& a, const Vector& b, double power)
+{
+	static const double G   = 0.0000000000667;
+	const Vector        vec = vec_sub(a, b);
+	const double        mag = vec_mag(vec);
+	return vec_mult(vec, G * power / mag);
+}
+
+/**
+   Repelling charge force.
+
+   Many FDGL algorithms use charge according to Coulomb's law, but here we use
+   an inverse cube (not squared) law so influence drops off more rapidly with
+   distance.  This, in conjunction with a tide, keeps the layout compact.
+*/
 inline Vector
 repel_force(const Region& a, const Region& b)
 {
-	const Vector vec      = vec_mult(vec_sub(a.pos, b.pos), 4.0);
-	const double rmag     = vec_rmag(vec);
-	const Vector a_weight = vec_mult(a.area, AREA_WEIGHT);
-	const Vector b_weight = vec_mult(b.area, AREA_WEIGHT);
-	const Vector force    = vec_mult(vec, rmag * rmag * rmag * CHARGE_KE * 0.5);
-	return vec_mult(force, vec_mult(a_weight, b_weight));
+	const Vector vec   = vec_sub(a.pos, b.pos);
+	const double mag   = vec_mag(vec);
+	const Vector force = vec_mult(
+		vec, (CHARGE_KE * 0.5 / (mag * mag * mag * mag * mag)));
+	return vec_mult(force, vec_mult(a.area, b.area));
 }

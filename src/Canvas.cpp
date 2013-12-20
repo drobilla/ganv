@@ -734,7 +734,7 @@ GanvCanvasImpl::layout_iteration()
 	static const double SPRING_K = 14.0;
 
 	// A light directional force to push sources to the top left
-	static const double DIR_MAGNITUDE = -300.0;
+	static const double DIR_MAGNITUDE = -600.0;
 	Vector              dir           = { 0.0, 0.0 };
 	switch (_gcanvas->direction) {
 	case GANV_DIRECTION_RIGHT: dir.x = DIR_MAGNITUDE; break;
@@ -795,6 +795,15 @@ GanvCanvasImpl::layout_iteration()
 			continue;
 		}
 
+		/* Add tide force which pulls all objects as if the layout is happening
+		   on a flowing river surface.  This prevents disconnected components
+		   from being ejected, since at some point the tide force will be
+		   greater than distant repelling charges. */
+		const Vector mouth = { -10000.0, -10000.0 };
+		node->impl->force = vec_add(
+			node->impl->force,
+			tide_force(mouth, reg.pos, 4000000000000.0));
+
 		FOREACH_ITEM(_items, j) {
 			if (i == j || (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i))) {
 				continue;
@@ -818,8 +827,8 @@ GanvCanvasImpl::layout_iteration()
 
 		GanvNode* const node = GANV_NODE(*i);
 
-		static const float dur  = 0.15;  // Time duration
-		static const float damp = 0.7;  // Velocity damping (momentum loss)
+		static const float dur  = 0.1; // Time duration
+		static const float damp = 0.5; // Velocity damping
 
 		const bool has_edges = (node->impl->has_in_edges ||
 		                        node->impl->has_out_edges);
@@ -827,10 +836,19 @@ GanvCanvasImpl::layout_iteration()
 			node->impl->vel.x = 0.0;
 			node->impl->vel.y = 0.0;
 		} else {
+			node->impl->vel = vec_mult(node->impl->vel, damp);
 			node->impl->vel = vec_add(node->impl->vel,
 			                          vec_mult(node->impl->force, dur));
-			node->impl->vel = vec_mult(node->impl->vel, damp);
 
+			// Clamp velocity
+			const double        vel_mag = vec_mag(node->impl->vel);
+			static const double MAX_VEL = 4000.0;
+			if (vel_mag > MAX_VEL) {
+				node->impl->vel = vec_mult(
+					vec_mult(node->impl->vel, 1.0 / vel_mag),
+					MAX_VEL);
+			}
+				                           
 			// Update position
 			const Vector dpos = vec_mult(node->impl->vel, dur);
 			if (fabs(dpos.x) >= 1.0 || fabs(dpos.y) >= 1.0) {
