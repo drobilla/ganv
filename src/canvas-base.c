@@ -421,11 +421,12 @@ ganv_item_lower(GanvItem* item)
  * @dx: Horizontal offset.
  * @dy: Vertical offset.
  **/
-void
+gboolean
 ganv_item_move(GanvItem* item, double dx, double dy)
 {
-	g_return_if_fail(item != NULL);
-	g_return_if_fail(GANV_IS_ITEM(item));
+	if (item == NULL || !GANV_IS_ITEM(item)) {
+		return FALSE;
+	}
 
 	const double old_x = item->x;
 	const double old_y = item->y;
@@ -445,7 +446,10 @@ ganv_item_move(GanvItem* item, double dx, double dy)
 	    lrint(old_y) != lrint(item->y)) {
 		ganv_item_request_update(item);
 		item->canvas->need_repick = TRUE;
+		return TRUE;
 	}
+
+	return FALSE;
 }
 
 /**

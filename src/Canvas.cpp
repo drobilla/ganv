@@ -799,10 +799,10 @@ GanvCanvasImpl::layout_iteration()
 		   on a flowing river surface.  This prevents disconnected components
 		   from being ejected, since at some point the tide force will be
 		   greater than distant repelling charges. */
-		const Vector mouth = { -10000.0, -10000.0 };
+		const Vector mouth = { -100000.0, -100000.0 };
 		node->impl->force = vec_add(
 			node->impl->force,
-			tide_force(mouth, reg.pos, 4000000000000.0));
+			tide_force(mouth, reg.pos, 10000000000000.0));
 
 		FOREACH_ITEM(_items, j) {
 			if (i == j || (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i))) {
@@ -827,8 +827,8 @@ GanvCanvasImpl::layout_iteration()
 
 		GanvNode* const node = GANV_NODE(*i);
 
-		static const float dur  = 0.1; // Time duration
-		static const float damp = 0.5; // Velocity damping
+		static const float dur  = 0.1;  // Time duration
+		static const float damp = 0.3;  // Velocity damping
 
 		const bool has_edges = (node->impl->has_in_edges ||
 		                        node->impl->has_out_edges);
@@ -836,13 +836,13 @@ GanvCanvasImpl::layout_iteration()
 			node->impl->vel.x = 0.0;
 			node->impl->vel.y = 0.0;
 		} else {
-			node->impl->vel = vec_mult(node->impl->vel, damp);
 			node->impl->vel = vec_add(node->impl->vel,
 			                          vec_mult(node->impl->force, dur));
+			node->impl->vel = vec_mult(node->impl->vel, damp);
 
 			// Clamp velocity
 			const double        vel_mag = vec_mag(node->impl->vel);
-			static const double MAX_VEL = 4000.0;
+			static const double MAX_VEL = 2000.0;
 			if (vel_mag > MAX_VEL) {
 				node->impl->vel = vec_mult(
 					vec_mult(node->impl->vel, 1.0 / vel_mag),
@@ -851,8 +851,7 @@ GanvCanvasImpl::layout_iteration()
 				                           
 			// Update position
 			const Vector dpos = vec_mult(node->impl->vel, dur);
-			if (fabs(dpos.x) >= 1.0 || fabs(dpos.y) >= 1.0) {
-				ganv_item_move(GANV_ITEM(node), dpos.x, dpos.y);
+			if (ganv_item_move(GANV_ITEM(node), dpos.x, dpos.y)) {
 				++n_moved;
 			}
 		}
@@ -1663,7 +1662,7 @@ GanvCanvasImpl::contents_changed()
 	if (!_layout_idle_id) {
 		_layout_idle_id = g_timeout_add_full(
 			G_PRIORITY_DEFAULT_IDLE,
-			40,
+			66,
 			on_layout_timeout,
 			this,
 			on_layout_done);
