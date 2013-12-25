@@ -198,8 +198,8 @@ ganv_group_unmap(GanvItem* item)
 static gint
 item_layer_cmp(const void* a, const void* b, void* user_data)
 {
-	GanvItem* ia = (GanvItem*)a;
-	GanvItem* ib = (GanvItem*)b;
+	const GanvItem* ia = (const GanvItem*)a;
+	const GanvItem* ib = (const GanvItem*)b;
 	if (ia->layer == ib->layer) {
 		// Same layer, order in a quasi-cascade
 		return (ia->x1 - ib->x1) + (ia->y1 - ib->y1);
