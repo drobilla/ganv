@@ -33,11 +33,11 @@ def options(opt):
                    help='Build GObject introspection data')
 
 def configure(conf):
+    autowaf.configure(conf)
+    autowaf.display_header('Ganv Configuration')
     conf.load('compiler_c')
     conf.load('compiler_cxx')
-    autowaf.configure(conf)
     autowaf.set_c99_mode(conf)
-    autowaf.display_header('Ganv Configuration')
 
     conf.env.BUILD_TESTS = Options.options.build_tests
 
