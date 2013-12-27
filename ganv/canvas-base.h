@@ -205,21 +205,9 @@ int ganv_item_grab(GanvItem* item, unsigned int event_mask,
  */
 void ganv_item_ungrab(GanvItem* item, guint32 etime);
 
-/* These functions convert from a coordinate system to another.  "w" is world
- * coordinates and "i" is item coordinates.
+/* Convert from item coordinate to world coordinates.
  */
-void ganv_item_w2i(GanvItem* item, double* x, double* y);
 void ganv_item_i2w(GanvItem* item, double* x, double* y);
-
-/* Gets the affine transform that converts from item-relative coordinates to
- * world coordinates.
- */
-void ganv_item_i2w_affine(GanvItem* item, cairo_matrix_t* matrix);
-
-/* Gets the affine transform that converts from item-relative coordinates to
- * canvas pixel coordinates.
- */
-void ganv_item_i2c_affine(GanvItem* item, cairo_matrix_t* matrix);
 
 /* Used to send all of the keystroke events to a specific item as well as
  * GDK_FOCUS_CHANGE events.

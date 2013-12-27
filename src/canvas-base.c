@@ -586,51 +586,6 @@ ganv_item_ungrab(GanvItem* item, guint32 etime)
 	gdk_pointer_ungrab(etime);
 }
 
-/**
- * ganv_item_i2w_affine:
- * @item: A canvas item
- * @matrix: An affine transformation matrix (return value).
- *
- * Gets the affine transform that converts from the item's coordinate system to
- * world coordinates.
- **/
-void
-ganv_item_i2w_affine(GanvItem* item, cairo_matrix_t* matrix)
-{
-	g_return_if_fail(GANV_IS_ITEM(item));
-
-	cairo_matrix_init_identity(matrix);
-
-	while (item) {
-		matrix->x0 += item->x;
-		matrix->y0 += item->y;
-		item = item->parent;
-	}
-}
-
-/**
- * ganv_item_w2i:
- * @item: A canvas item.
- * @x: X coordinate to convert (input/output value).
- * @y: Y coordinate to convert (input/output value).
- *
- * Converts a coordinate pair from world coordinates to item-relative
- * coordinates.
- **/
-void
-ganv_item_w2i(GanvItem* item, double* x, double* y)
-{
-	g_return_if_fail(GANV_IS_ITEM(item));
-	g_return_if_fail(x != NULL);
-	g_return_if_fail(y != NULL);
-
-	cairo_matrix_t matrix;
-	ganv_item_i2w_affine(item, &matrix);
-	cairo_matrix_invert(&matrix);
-
-	cairo_matrix_transform_point(&matrix, x, y);
-}
-
 void
 ganv_item_i2w_offset(GanvItem* item, double* px, double* py)
 {
@@ -680,26 +635,6 @@ ganv_item_i2w_pair(GanvItem* item, double* x1, double* y1, double* x2, double* y
 	*y1 += off_y;
 	*x2 += off_x;
 	*y2 += off_y;
-}
-
-/**
- * ganv_item_i2c_affine:
- * @item: A canvas item.
- * @matrix: An affine transformation matrix (return value).
- *
- * Gets the affine transform that converts from item-relative coordinates to
- * canvas pixel coordinates.
- **/
-void
-ganv_item_i2c_affine(GanvItem* item, cairo_matrix_t* matrix)
-{
-	cairo_matrix_t i2w;
-	ganv_item_i2w_affine(item, &i2w);
-
-	cairo_matrix_t w2c;
-	ganv_canvas_base_w2c_affine(item->canvas, &w2c);
-
-	cairo_matrix_multiply(matrix, &i2w, &w2c);
 }
 
 /* Returns whether the item is an inferior of or is equal to the parent. */
@@ -1800,7 +1735,7 @@ ganv_canvas_base_paint_rect(GanvCanvasBase* canvas, gint x0, gint y0, gint x1, g
 	draw_width  = draw_x2 - draw_x1;
 	draw_height = draw_y2 - draw_y1;
 
-	if (( draw_width < 1) || ( draw_height < 1) ) {
+	if ((draw_width < 1) || (draw_height < 1)) {
 		return;
 	}
 

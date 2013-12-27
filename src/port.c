@@ -474,7 +474,6 @@ void
 ganv_port_set_value_label(GanvPort*   port,
                           const char* str)
 {
-	GanvNode*     node = GANV_NODE(port);
 	GanvPortImpl* impl = port->impl;
 	if (!impl->control) {
 		return;

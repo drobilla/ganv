@@ -427,12 +427,6 @@ ganv_node_default_event(GanvItem* item,
 	static double drag_start_x, drag_start_y;
 	static gboolean dragging = FALSE;
 
-	/*
-	  double click_x,
-	  ganv_item_w2i(GANV_ITEM(GANV_ITEM(node)->parent),
-	  &click_x, &click_y);
-	*/
-
 	switch (event->type) {
 	case GDK_ENTER_NOTIFY:
 		ganv_item_raise(GANV_ITEM(node));
