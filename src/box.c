@@ -155,8 +155,7 @@ ganv_box_request_redraw(GanvItem*            item,
 
 	if (!world) {
 		// Convert from parent-relative coordinates to world coordinates
-		ganv_item_i2w(item, &x1, &y1);
-		ganv_item_i2w(item, &x2, &y2);
+		ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 	}
 
 	ganv_canvas_base_request_redraw(item->canvas, x1, y1, x2, y2);
@@ -165,8 +164,7 @@ ganv_box_request_redraw(GanvItem*            item,
 static void
 coords_i2w(GanvItem* item, GanvBoxCoords* coords)
 {
-	ganv_item_i2w(item, &coords->x1, &coords->y1);
-	ganv_item_i2w(item, &coords->x2, &coords->y2);
+	ganv_item_i2w_pair(item, &coords->x1, &coords->y1, &coords->x2, &coords->y2);
 }
 
 static void
@@ -177,8 +175,7 @@ ganv_box_bounds(GanvItem* item,
 	// Note this will not be correct if children are outside the box bounds
 	GanvBox* box = GANV_BOX(item);
 	ganv_box_bounds_item(&box->impl->coords, x1, y1, x2, y2);
-	ganv_item_i2w(item, x1, y1);
-	ganv_item_i2w(item, x2, y2);
+	ganv_item_i2w_pair(item, x1, y1, x2, y2);
 }
 
 static void
@@ -224,8 +221,7 @@ ganv_box_draw(GanvItem* item,
 	double y1 = impl->coords.y1;
 	double x2 = impl->coords.x2;
 	double y2 = impl->coords.y2;
-	ganv_item_i2w(item, &x1, &y1);
-	ganv_item_i2w(item, &x2, &y2);
+	ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 
 	double dash_length, border_color, fill_color;
 	ganv_node_get_draw_properties(
@@ -233,11 +229,11 @@ ganv_box_draw(GanvItem* item,
 
 	double r, g, b, a;
 
-	double degrees = G_PI / 180.0;
+	static const double degrees = G_PI / 180.0;
 
 	for (int i = (impl->coords.stacked ? 1 : 0); i >= 0; --i) {
-		const double x = 0 - (STACKED_OFFSET * i);
-		const double y = 0 - (STACKED_OFFSET * i);
+		const double x = 0.0 - (STACKED_OFFSET * i);
+		const double y = 0.0 - (STACKED_OFFSET * i);
 
 		if (impl->radius_tl == 0.0 && impl->radius_tr == 0.0
 		    && impl->radius_br == 0.0 && impl->radius_bl == 0.0) {
@@ -341,8 +337,7 @@ ganv_box_is_within(const GanvNode* self,
 	             "y2", &by2,
 	             NULL);
 
-	ganv_item_i2w(GANV_ITEM(self), &bx1, &by1);
-	ganv_item_i2w(GANV_ITEM(self), &bx2, &by2);
+	ganv_item_i2w_pair(GANV_ITEM(self), &bx1, &by1, &bx2, &by2);
 
 	return (   bx1 >= x1
 	        && by2 >= y1

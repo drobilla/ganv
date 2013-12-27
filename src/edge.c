@@ -249,6 +249,30 @@ ganv_edge_bounds(GanvItem* item,
 	}
 }
 
+void
+ganv_edge_get_coords(const GanvEdge* edge, GanvEdgeCoords* coords)
+{
+	GanvEdgeImpl* impl = edge->impl;
+
+	GANV_NODE_GET_CLASS(impl->tail)->tail_vector(
+		impl->tail, impl->head,
+		&coords->x1, &coords->y1, &coords->cx1, &coords->cy1);
+	GANV_NODE_GET_CLASS(impl->head)->head_vector(
+		impl->head, impl->tail,
+		&coords->x2, &coords->y2, &coords->cx2, &coords->cy2);
+
+	const double dx = coords->x2 - coords->x1;
+	const double dy = coords->y2 - coords->y1;
+
+	coords->handle_x = coords->x1 + (dx / 2.0);
+	coords->handle_y = coords->y1 + (dy / 2.0);
+
+	coords->cx1 = coords->x1 + (coords->cx1 * (ceil(fabs(dx)) / 4.0));
+	coords->cy1 = coords->y1 + (coords->cy1 * (ceil(fabs(dy)) / 4.0));
+	coords->cx2 = coords->x2 + (coords->cx2 * (ceil(fabs(dx)) / 4.0));
+	coords->cy2 = coords->y2 + (coords->cy2 * (ceil(fabs(dy)) / 4.0));
+}
+
 static void
 ganv_edge_update(GanvItem* item, int flags)
 {
@@ -263,23 +287,7 @@ ganv_edge_update(GanvItem* item, int flags)
 	ganv_edge_request_redraw(item->canvas, &impl->old_coords);
 
 	// Calculate new coordinates from tail and head
-	GanvEdgeCoords* coords = &impl->coords;
-	GANV_NODE_GET_CLASS(impl->tail)->tail_vector(
-		impl->tail, impl->head,
-		&coords->x1, &coords->y1, &coords->cx1, &coords->cy1);
-	GANV_NODE_GET_CLASS(impl->head)->head_vector(
-		impl->head, impl->tail,
-		&coords->x2, &coords->y2, &coords->cx2, &coords->cy2);
-
-	const double dx = coords->x2 - coords->x1;
-	const double dy = coords->y2 - coords->y1;
-	coords->handle_x = coords->x1 + (dx / 2.0);
-	coords->handle_y = coords->y1 + (dy / 2.0);
-
-	coords->cx1 = coords->x1 + (coords->cx1 * (ceil(fabs(dx)) / 4.0));
-	coords->cy1 = coords->y1 + (coords->cy1 * (ceil(fabs(dy)) / 4.0));
-	coords->cx2 = coords->x2 + (coords->cx2 * (ceil(fabs(dx)) / 4.0));
-	coords->cy2 = coords->y2 + (coords->cy2 * (ceil(fabs(dy)) / 4.0));
+	ganv_edge_get_coords(edge, &impl->coords);
 
 	// Update old coordinates
 	impl->old_coords = impl->coords;

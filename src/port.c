@@ -138,6 +138,10 @@ ganv_port_draw(GanvItem* item,
 		GANV_ITEM_GET_CLASS(rect)->draw(rect, cr, cx, cy, width, height);
 	}
 
+	if (!GANV_NODE(port)->impl->show_label) {
+		return;
+	}
+
 	GanvItem* labels[2] = {
 		GANV_ITEM(GANV_NODE(item)->impl->label),
 		port->impl->control ? GANV_ITEM(port->impl->control->label) : NULL
@@ -158,11 +162,12 @@ ganv_port_tail_vector(const GanvNode* self,
                       double*         dx,
                       double*         dy)
 {
+	GanvItem*   item   = GANV_ITEM(self);
 	GanvPort*   port   = GANV_PORT(self);
 	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
 
-	double px, py;
-	g_object_get(G_OBJECT(self), "x", &px, "y", &py, NULL);
+	const double px = item->x;
+	const double py = item->y;
 
 	switch (canvas->direction) {
 	case GANV_DIRECTION_RIGHT:
@@ -190,11 +195,12 @@ ganv_port_head_vector(const GanvNode* self,
                       double*         dx,
                       double*         dy)
 {
+	GanvItem*   item   = GANV_ITEM(self);
 	GanvPort*   port   = GANV_PORT(self);
 	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
 
-	double px, py;
-	g_object_get(G_OBJECT(self), "x", &px, "y", &py, NULL);
+	const double px = item->x;
+	const double py = item->y;
 
 	switch (canvas->direction) {
 	case GANV_DIRECTION_RIGHT:
@@ -388,10 +394,6 @@ ganv_port_new(GanvModule* module,
 	va_end(args);
 
 	GanvBox* box = GANV_BOX(port);
-	box->impl->radius_tl           = (is_input ? 0.0 : 4.0);
-	box->impl->radius_tr           = (is_input ? 4.0 : 0.0);
-	box->impl->radius_br           = (is_input ? 4.0 : 0.0);
-	box->impl->radius_bl           = (is_input ? 0.0 : 4.0);
 	box->impl->coords.border_width = 1.0;
 
 	GanvNode* node = GANV_NODE(port);
@@ -472,6 +474,7 @@ void
 ganv_port_set_value_label(GanvPort*   port,
                           const char* str)
 {
+	GanvNode*     node = GANV_NODE(port);
 	GanvPortImpl* impl = port->impl;
 	if (!impl->control) {
 		return;

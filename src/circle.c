@@ -231,8 +231,7 @@ request_redraw(GanvItem*               item,
 
 	if (!world) {
 		// Convert from parent-relative coordinates to world coordinates
-		ganv_item_i2w(item, &x1, &y1);
-		ganv_item_i2w(item, &x2, &y2);
+		ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 	}
 
 	ganv_canvas_base_request_redraw(item->canvas, x1, y1, x2, y2);
@@ -264,8 +263,7 @@ ganv_circle_bounds(GanvItem* item,
                    double* x2, double* y2)
 {
 	ganv_circle_bounds_item(item, x1, y1, x2, y2);
-	ganv_item_i2w(item, x1, y1);
-	ganv_item_i2w(item, x2, y2);
+	ganv_item_i2w_pair(item, x1, y1, x2, y2);
 }
 
 static void

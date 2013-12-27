@@ -173,6 +173,8 @@ struct GanvCanvasImpl {
 	}
 
 	gboolean layout_iteration();
+	gboolean layout_calculate(double dur, bool update);
+
 #endif
 
 	GanvItem* root() {
@@ -714,10 +716,10 @@ get_region(const GanvNode* node)
 	Region reg;
 	reg.area.x = x2 - x1;
 	reg.area.y = y2 - y1;
-	reg.pos.x  = x1 + (reg.area.x / 2.0);
-	reg.pos.y  = y1 + (reg.area.y / 2.0);
+	reg.pos.x  = GANV_ITEM(node)->x + (reg.area.x / 2.0);
+	reg.pos.y  = GANV_ITEM(node)->y + (reg.area.y / 2.0);
 
-	ganv_item_i2w(GANV_ITEM(node), &reg.pos.x, &reg.pos.y);
+	// No need for i2w here since we only care about top-level items
 	return reg;
 }
 
@@ -731,10 +733,34 @@ apply_force(GanvNode* a, GanvNode* b, const Vector& f)
 gboolean
 GanvCanvasImpl::layout_iteration()
 {
-	static const double SPRING_K = 14.0;
+	static const double T_PER_US = .00001;  // Sym time per real microsecond
+
+	static uint64_t prev = 0;  // Previous iteration time
+
+	const uint64_t now         = g_get_monotonic_time();
+	const double   time_to_run = std::min((now - prev) * T_PER_US, 1.0);
+
+	prev = now;
+
+	const double QUANTUM  = 0.1;
+	double       sym_time = 0.0;
+	while (sym_time + QUANTUM < time_to_run) {
+		if (!layout_calculate(QUANTUM, FALSE)) {
+			break;
+		}
+		sym_time += QUANTUM;
+	}
+
+	return layout_calculate(QUANTUM, TRUE);
+}
+
+gboolean
+GanvCanvasImpl::layout_calculate(double dur, bool update)
+{
+	static const double SPRING_K = 28.0;
 
 	// A light directional force to push sources to the top left
-	static const double DIR_MAGNITUDE = -600.0;
+	static const double DIR_MAGNITUDE = -1200.0;
 	Vector              dir           = { 0.0, 0.0 };
 	switch (_gcanvas->direction) {
 	case GANV_DIRECTION_RIGHT: dir.x = DIR_MAGNITUDE; break;
@@ -759,9 +785,11 @@ GanvCanvasImpl::layout_iteration()
 		head->impl->has_in_edges  = TRUE;
 		tail->impl->has_out_edges = TRUE;
 
-		const Vector tpos = { edge->impl->coords.x1, edge->impl->coords.y1 };
-		const Vector hpos = { edge->impl->coords.x2, edge->impl->coords.y2 };
+		GanvEdgeCoords coords;
+		ganv_edge_get_coords(edge, &coords);
 
+		const Vector tpos = { coords.x1, coords.y1 };
+		const Vector hpos = { coords.x2, coords.y2 };
 		apply_force(tail, head, edge_force(dir, hpos, tpos, 0.0001, SPRING_K));
 	}
 
@@ -827,8 +855,7 @@ GanvCanvasImpl::layout_iteration()
 
 		GanvNode* const node = GANV_NODE(*i);
 
-		static const float dur  = 0.1;  // Time duration
-		static const float damp = 0.3;  // Velocity damping
+		static const float damp = 0.4;  // Velocity damping
 
 		const bool has_edges = (node->impl->has_in_edges ||
 		                        node->impl->has_out_edges);
@@ -851,7 +878,7 @@ GanvCanvasImpl::layout_iteration()
 				                           
 			// Update position
 			const Vector dpos = vec_mult(node->impl->vel, dur);
-			if (ganv_item_move(GANV_ITEM(node), dpos.x, dpos.y)) {
+			if (ganv_item_move_update(GANV_ITEM(node), dpos.x, dpos.y, update)) {
 				++n_moved;
 			}
 		}
@@ -863,17 +890,15 @@ GanvCanvasImpl::layout_iteration()
 		node->impl->has_out_edges = FALSE;
 	}
 
-	if (n_moved == 0) {
-		return FALSE;  // Stabilized, we're done
+	if (update) {
+		// Now update edge positions to reflect new node positions
+		FOREACH_EDGE(_edges, i) {
+			GanvEdge* const edge = *i;
+			ganv_edge_update_location(edge);
+		}
 	}
 
-	// Now update edge positions to reflect new node positions
-	FOREACH_EDGE(_edges, i) {
-		GanvEdge* const edge = *i;
-		ganv_edge_update_location(edge);
-	}
-
-	return TRUE;
+	return n_moved > 0;
 }
 
 #endif // GANV_FDGL
@@ -1662,7 +1687,7 @@ GanvCanvasImpl::contents_changed()
 	if (!_layout_idle_id) {
 		_layout_idle_id = g_timeout_add_full(
 			G_PRIORITY_DEFAULT_IDLE,
-			66,
+			33,
 			on_layout_timeout,
 			this,
 			on_layout_done);
@@ -2129,6 +2154,7 @@ ganv_canvas_set_direction(GanvCanvas* canvas, GanvDirection dir)
 	if (canvas->direction != dir) {
 		canvas->direction = dir;
 		ganv_canvas_for_each_node(canvas, set_node_direction, &dir);
+		ganv_canvas_contents_changed(canvas);
 	}
 }
 

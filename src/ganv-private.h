@@ -105,7 +105,6 @@ struct _GanvNodeImpl {
 	double            border_width;
 	guint             fill_color;
 	guint             border_color;
-	guint             layer;
 	gboolean          can_tail;
 	gboolean          can_head;
 	gboolean          is_source;
@@ -199,9 +198,21 @@ ganv_canvas_port_event(GanvCanvas* canvas,
                        GdkEvent*   event);
 
 void
+ganv_item_i2w_offset(GanvItem* item, double* px, double* py);
+
+void
+ganv_item_i2w_pair(GanvItem* item, double* x1, double* y1, double* x2, double* y2);
+
+gboolean
+ganv_item_move_update(GanvItem* item, double dx, double dy, gboolean update);
+
+void
 ganv_item_invoke_update(GanvItem* item, int flags);
 
 /* Edge */
+
+void
+ganv_edge_get_coords(const GanvEdge* edge, GanvEdgeCoords* coords);
 
 void
 ganv_edge_request_redraw(GanvCanvasBase*       canvas,

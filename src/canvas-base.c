@@ -415,14 +415,8 @@ ganv_item_lower(GanvItem* item)
 	--item->layer;
 }
 
-/**
- * ganv_item_move:
- * @item: A canvas item.
- * @dx: Horizontal offset.
- * @dy: Vertical offset.
- **/
 gboolean
-ganv_item_move(GanvItem* item, double dx, double dy)
+ganv_item_move_update(GanvItem* item, double dx, double dy, gboolean update)
 {
 	if (item == NULL || !GANV_IS_ITEM(item)) {
 		return FALSE;
@@ -440,6 +434,33 @@ ganv_item_move(GanvItem* item, double dx, double dy)
 	}
 	if (item->y < MIN_COORD) {
 		item->y = MIN_COORD;
+	}
+
+	const gboolean moved = (lrint(old_x) != lrint(item->x) ||
+	                        lrint(old_y) != lrint(item->y));
+
+	if (update) {
+		ganv_item_request_update(item);
+		item->canvas->need_repick = TRUE;
+	}
+
+	return moved;
+}
+
+/**
+ * ganv_item_move:
+ * @item: A canvas item.
+ * @dx: Horizontal offset.
+ * @dy: Vertical offset.
+ **/
+gboolean
+ganv_item_move(GanvItem* item, double dx, double dy)
+{
+	const double old_x = item->x;
+	const double old_y = item->y;
+
+	if (!ganv_item_move_update(item, dx, dy, FALSE)) {
+		return FALSE;
 	}
 
 	if (lrint(old_x) != lrint(item->x) ||
@@ -610,6 +631,20 @@ ganv_item_w2i(GanvItem* item, double* x, double* y)
 	cairo_matrix_transform_point(&matrix, x, y);
 }
 
+void
+ganv_item_i2w_offset(GanvItem* item, double* px, double* py)
+{
+	double x = 0.0;
+	double y = 0.0;
+  	while (item) {
+		x += item->x;
+		y += item->y;
+		item = item->parent;
+	}
+	*px = x;
+	*py = y;
+}
+
 /**
  * ganv_item_i2w:
  * @item: A canvas item.
@@ -622,14 +657,29 @@ ganv_item_w2i(GanvItem* item, double* x, double* y)
 void
 ganv_item_i2w(GanvItem* item, double* x, double* y)
 {
-	g_return_if_fail(GANV_IS_ITEM(item));
+	/*g_return_if_fail(GANV_IS_ITEM(item));
 	g_return_if_fail(x != NULL);
-	g_return_if_fail(y != NULL);
+	g_return_if_fail(y != NULL);*/
 
-	cairo_matrix_t matrix;
-	ganv_item_i2w_affine(item, &matrix);
+	double off_x;
+	double off_y;
+	ganv_item_i2w_offset(item, &off_x, &off_y);
 
-	cairo_matrix_transform_point(&matrix, x, y);
+	*x += off_x;
+	*y += off_y;
+}
+
+void
+ganv_item_i2w_pair(GanvItem* item, double* x1, double* y1, double* x2, double* y2)
+{
+	double off_x;
+	double off_y;
+	ganv_item_i2w_offset(item, &off_x, &off_y);
+
+	*x1 += off_x;
+	*y1 += off_y;
+	*x2 += off_x;
+	*y2 += off_y;
 }
 
 /**
@@ -720,41 +770,19 @@ ganv_item_grab_focus(GanvItem* item)
 void
 ganv_item_get_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2)
 {
-	double ix1, iy1, ix2, iy2;
-
 	g_return_if_fail(GANV_IS_ITEM(item));
 
-	ix1 = iy1 = ix2 = iy2 = 0.0;
-
-	/* Get the item's bounds in its coordinate system */
-
 	if (GANV_ITEM_GET_CLASS(item)->bounds) {
-		(*GANV_ITEM_GET_CLASS(item)->bounds)(item, &ix1, &iy1, &ix2, &iy2);
-	}
+		// Get bounds from item class
+		(*GANV_ITEM_GET_CLASS(item)->bounds)(item, x1, y1, x2, y2);
 
-	/* Make the bounds relative to the item's parent coordinate system */
-
-	ix1 -= item->x;
-	iy1 -= item->y;
-	ix2 -= item->x;
-	iy2 -= item->y;
-
-	/* Return the values */
-
-	if (x1) {
-		*x1 = ix1;
-	}
-
-	if (y1) {
-		*y1 = iy1;
-	}
-
-	if (x2) {
-		*x2 = ix2;
-	}
-
-	if (y2) {
-		*y2 = iy2;
+		// Make bounds relative to the item's parent coordinate system
+		*x1 -= item->x;
+		*y1 -= item->y;
+		*x2 -= item->x;
+		*y2 -= item->y;
+	} else {
+		*x1 = *y1 = *x2 = *y2 = 0.0;
 	}
 }
 
@@ -792,11 +820,6 @@ ganv_item_request_update(GanvItem* item)
 
 /*** GanvCanvasBase ***/
 
-enum {
-	DRAW_BACKGROUND,
-	LAST_SIGNAL
-};
-
 static void ganv_canvas_base_destroy(GtkObject* object);
 static void ganv_canvas_base_map(GtkWidget* widget);
 static void ganv_canvas_base_unmap(GtkWidget* widget);
@@ -821,16 +844,8 @@ static gint ganv_canvas_base_focus_in(GtkWidget*     widget,
 static gint ganv_canvas_base_focus_out(GtkWidget*     widget,
                                        GdkEventFocus* event);
 static void ganv_canvas_base_request_update_real(GanvCanvasBase* canvas);
-static void ganv_canvas_base_draw_background(GanvCanvasBase* canvas,
-                                             GdkDrawable*    drawable,
-                                             int             x,
-                                             int             y,
-                                             int             width,
-                                             int             height);
 
 static GtkLayoutClass* canvas_parent_class;
-
-static guint canvas_signals[LAST_SIGNAL];
 
 enum {
 	PROP_FOCUSED_ITEM = 1
@@ -906,23 +921,12 @@ ganv_canvas_base_class_init(GanvCanvasBaseClass* klass)
 	widget_class->focus_out_event      = ganv_canvas_base_focus_out;
 	widget_class->scroll_event         = ganv_canvas_base_scroll;
 
-	klass->draw_background = ganv_canvas_base_draw_background;
-	klass->request_update  = ganv_canvas_base_request_update_real;
+	klass->request_update = ganv_canvas_base_request_update_real;
 
 	g_object_class_install_property(gobject_class, PROP_FOCUSED_ITEM,
 	                                g_param_spec_object("focused_item", NULL, NULL,
 	                                                    GANV_TYPE_ITEM,
 	                                                    (G_PARAM_READABLE | G_PARAM_WRITABLE)));
-
-	canvas_signals[DRAW_BACKGROUND]
-	    = g_signal_new("draw_background",
-	                   G_TYPE_FROM_CLASS(object_class),
-	                   G_SIGNAL_RUN_LAST,
-	                   G_STRUCT_OFFSET(GanvCanvasBaseClass, draw_background),
-	                   NULL, NULL,
-	                   ganv_marshal_VOID__OBJECT_INT_INT_INT_INT,
-	                   G_TYPE_NONE, 5, GDK_TYPE_DRAWABLE,
-	                   G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 }
 
 /* Callback used when the root item of a canvas is destroyed.  The user should
@@ -1896,20 +1900,6 @@ paint(GanvCanvasBase* canvas)
 	canvas->redraw_y1 = 0;
 	canvas->redraw_x2 = 0;
 	canvas->redraw_y2 = 0;
-}
-
-static void
-ganv_canvas_base_draw_background(GanvCanvasBase* canvas, GdkDrawable* drawable,
-                                 int x, int y, int width, int height)
-{
-	/* By default, we use the style background. */
-	gdk_gc_set_foreground(canvas->pixmap_gc,
-	                      &GTK_WIDGET(canvas)->style->bg[GTK_STATE_NORMAL]);
-	gdk_draw_rectangle(drawable,
-	                   canvas->pixmap_gc,
-	                   TRUE,
-	                   0, 0,
-	                   width, height);
 }
 
 static void

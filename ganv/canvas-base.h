@@ -332,12 +332,6 @@ struct _GanvCanvasBase {
 struct _GanvCanvasBaseClass {
 	GtkLayoutClass parent_class;
 
-	/* Draw the background for the area given. This method is only used
-	 * for non-antialiased canvases.
-	 */
-	void (* draw_background)(GanvCanvasBase* canvas, GdkDrawable* drawable,
-	                         int x, int y, int width, int height);
-
 	/* Private Virtual methods for groping the canvas inside bonobo */
 	void (* request_update)(GanvCanvasBase* canvas);
 

@@ -195,19 +195,6 @@ ganv_group_unmap(GanvItem* item)
 	(*group_parent_class->unmap)(item);
 }
 
-static gint
-item_layer_cmp(const void* a, const void* b, void* user_data)
-{
-	const GanvItem* ia = (const GanvItem*)a;
-	const GanvItem* ib = (const GanvItem*)b;
-	if (ia->layer == ib->layer) {
-		// Same layer, order in a quasi-cascade
-		return (ia->x1 - ib->x1) + (ia->y1 - ib->y1);
-	} else {
-		return ia->layer - ib->layer;
-	}
-}
-
 static void
 ganv_group_draw(GanvItem* item, cairo_t* cr,
                 int x, int y, int width, int height)
@@ -223,7 +210,8 @@ ganv_group_draw(GanvItem* item, cairo_t* cr,
 	cairo_rectangle(cr, x, y, width, height);
 	cairo_fill(cr);
 
-	GSequence* items = g_sequence_new(NULL);
+	// TODO: Layered drawing
+
 	for (list = group->item_list; list; list = list->next) {
 		child = (GanvItem*)list->data;
 
@@ -231,27 +219,13 @@ ganv_group_draw(GanvItem* item, cairo_t* cr,
 		     && ((child->x1 < (x + width))
 		         && (child->y1 < (y + height))
 		         && (child->x2 > x)
-		         && (child->y2 > y)))
-		    || ((GTK_OBJECT_FLAGS(child) & GANV_ITEM_ALWAYS_REDRAW)
-		        && (child->x1 < child->canvas->redraw_x2)
-		        && (child->y1 < child->canvas->redraw_y2)
-		        && (child->x2 > child->canvas->redraw_x1)
-		        && (child->y2 > child->canvas->redraw_y2))) {
+		         && (child->y2 > y)))) {
 			if (GANV_ITEM_GET_CLASS(child)->draw) {
-				g_sequence_insert_sorted(items, child, item_layer_cmp, NULL);
+				(*GANV_ITEM_GET_CLASS(child)->draw)(
+					child, cr, x, y, width, height);
 			}
 		}
 	}
-
-	for (GSequenceIter* i = g_sequence_get_begin_iter(items);
-	     !g_sequence_iter_is_end(i);
-	     i = g_sequence_iter_next(i)) {
-		child = (GanvItem*)g_sequence_get(i);
-		(*GANV_ITEM_GET_CLASS(child)->draw)(
-			child, cr, x, y, width, height);
-	}
-		
-	g_sequence_free(items);
 }
 
 static double
