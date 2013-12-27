@@ -23,9 +23,9 @@ def options(opt):
     autowaf.set_options(opt)
     opt.add_option('--test', action='store_true', dest='build_tests',
                    help='Build unit tests')
-    opt.add_option('--no-graphviz', action='store_true', dest='no_graphviz',
+    opt.add_option('--graphviz', action='store_true', dest='graphviz',
                    help='Do not compile with graphviz support')
-    opt.add_option('--fdgl', action='store_true', dest='fdgl',
+    opt.add_option('--no-fdgl', action='store_true', dest='no_fdgl',
                    help='Use experimental force-directed graph layout')
     opt.add_option('--no-nls', action='store_true', dest='no_nls',
                    help='Disable i18n (native language support)')
@@ -52,11 +52,11 @@ def configure(conf):
         conf.find_program('g-ir-doc-tool', var='G_IR_DOC_TOOL', mandatory=False)
         conf.find_program('yelp-build', var='YELP_BUILD', mandatory=False)
 
-    if not Options.options.no_graphviz:
+    if Options.options.graphviz:
         autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH',
                           atleast_version='2.8', mandatory=False)
 
-    if Options.options.fdgl:
+    if not Options.options.no_fdgl:
         autowaf.define(conf, 'GANV_FDGL', 1)
 
     if not Options.options.no_nls:
