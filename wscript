@@ -66,7 +66,10 @@ def configure(conf):
 
     conf.write_config_header('ganv_config.h', remove=False)
 
-    autowaf.display_msg(conf, "Auto-arrange", conf.is_defined('HAVE_AGRAPH'))
+    autowaf.display_msg(conf, "Static (Graphviz) arrange",
+                        conf.is_defined('HAVE_AGRAPH'))
+    autowaf.display_msg(conf, "Interactive force-directed arrange",
+                        conf.is_defined('GANV_FDGL'))
     autowaf.display_msg(conf, "Native language support", conf.is_defined('ENABLE_NLS'))
     autowaf.display_msg(conf, "GObject introspection", conf.is_defined('HAVE_GIR'))
     autowaf.display_msg(conf, "Unit tests", str(conf.env.BUILD_TESTS))
