@@ -91,8 +91,8 @@ ganv_source = [
     'src/widget.c'
 ]
 
-def declare_doc_files(task):    
-    bld  = task.generator.bld 
+def declare_doc_files(task):
+    bld  = task.generator.bld
     path = bld.path.get_bld().find_or_declare('doc-html')
     for i in path.ant_glob('*', remove=False):
         i.sig = Utils.h_file(i.abspath())
