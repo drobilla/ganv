@@ -23,7 +23,7 @@ def options(opt):
     autowaf.set_options(opt)
     opt.add_option('--test', action='store_true', dest='build_tests',
                    help='Build unit tests')
-    opt.add_option('--graphviz', action='store_true', dest='graphviz',
+    opt.add_option('--no-graphviz', action='store_true', dest='no_graphviz',
                    help='Do not compile with graphviz support')
     opt.add_option('--no-fdgl', action='store_true', dest='no_fdgl',
                    help='Use experimental force-directed graph layout')
@@ -52,9 +52,12 @@ def configure(conf):
         conf.find_program('g-ir-doc-tool', var='G_IR_DOC_TOOL', mandatory=False)
         conf.find_program('yelp-build', var='YELP_BUILD', mandatory=False)
 
-    if Options.options.graphviz:
-        autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH',
-                          atleast_version='2.8', mandatory=False)
+    if not Options.options.no_graphviz:
+        autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH_2_30',
+                          atleast_version='2.30', mandatory=False)
+        if not conf.is_defined('HAVE_AGRAPH_2_30'):
+            autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH_2_20',
+                              atleast_version='2.20', mandatory=False)
 
     if not Options.options.no_fdgl:
         autowaf.define(conf, 'GANV_FDGL', 1)
@@ -67,7 +70,8 @@ def configure(conf):
     conf.write_config_header('ganv_config.h', remove=False)
 
     autowaf.display_msg(conf, "Static (Graphviz) arrange",
-                        conf.is_defined('HAVE_AGRAPH'))
+                        conf.is_defined('HAVE_AGRAPH_2_20') or
+                        conf.is_defined('HAVE_AGRAPH_2_30'))
     autowaf.display_msg(conf, "Interactive force-directed arrange",
                         conf.is_defined('GANV_FDGL'))
     autowaf.display_msg(conf, "Native language support", conf.is_defined('ENABLE_NLS'))
@@ -104,7 +108,7 @@ def build(bld):
 
     # Pkgconfig file
     autowaf.build_pc(bld, 'GANV', GANV_VERSION, GANV_MAJOR_VERSION,
-                     'AGRAPH GLIBMM ART',
+                     'AGRAPH_2_20 AGRAPH_2_30 GLIBMM ART',
                      {'GANV_MAJOR_VERSION' : GANV_MAJOR_VERSION})
 
     bld(rule = 'glib-genmarshal --prefix=ganv_marshal --header ${SRC} > ${TGT}',
@@ -122,7 +126,7 @@ def build(bld):
         includes        = ['.', './src'],
         name            = 'libganv',
         target          = 'ganv-%s' % GANV_MAJOR_VERSION,
-        uselib          = 'GTKMM AGRAPH ART',
+        uselib          = 'GTKMM AGRAPH_2_20 AGRAPH_2_30 ART',
         vnum            = GANV_VERSION,
         install_path    = '${LIBDIR}')
 
@@ -141,7 +145,7 @@ def build(bld):
             includes     = ['.', './src'],
             name         = 'libganv_profiled',
             target       = 'ganv_profiled',
-            uselib       = 'GTKMM AGRAPH ART',
+            uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30 ART',
             install_path = '',
             cflags       = [ '-fprofile-arcs', '-ftest-coverage' ])
 
