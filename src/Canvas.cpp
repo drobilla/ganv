@@ -46,7 +46,7 @@
 #include "./ganv-marshal.h"
 #include "./ganv-private.h"
 
-#ifdef HAVE_AGRAPH
+#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
 #    include <gvc.h>
 #endif
 #ifdef GANV_FDGL
@@ -91,7 +91,7 @@ typedef std::set<GanvNode*> Items;
 	for (SelectedPorts::iterator p = _selected_ports.begin(); \
 	     p != _selected_ports.end(); ++p)
 
-#ifdef HAVE_AGRAPH
+#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
 class GVNodes : public std::map<GanvNode*, Agnode_t*> {
 public:
 	GVNodes() : gvc(0), G(0) {}
@@ -204,7 +204,7 @@ struct GanvCanvasImpl {
 	void move_selected_items(double dx, double dy);
 	void selection_move_finished();
 
-#ifdef HAVE_AGRAPH
+#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
 	GVNodes layout_dot(const std::string& filename);
 #endif
 
@@ -488,13 +488,13 @@ GanvCanvasImpl::unselect_item(GanvNode* m)
 	g_object_set(m, "selected", FALSE, NULL);
 }
 
-#ifdef HAVE_AGRAPH
+#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
 static void
 gv_set(void* subject, const char* key, double value)
 {
 	std::ostringstream ss;
 	ss << value;
-	agsafeset(subject, (char*)key, (char*)ss.str().c_str(), NULL);
+	agsafeset(subject, (char*)key, (char*)ss.str().c_str(), (char*)"");
 }
 
 GVNodes
@@ -504,13 +504,23 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 
 	const double dpi = gdk_screen_get_resolution(gdk_screen_get_default());
 
-	GVC_t*    gvc = gvContext();
-	Agraph_t* G   = agopen((char*)"g", AGDIGRAPH);
-	agsafeset(G, (char*)"splines", (char*)"false", NULL);
-	agsafeset(G, (char*)"compound", (char*)"true", NULL);
-	agsafeset(G, (char*)"remincross", (char*)"true", NULL);
-	agsafeset(G, (char*)"overlap", (char*)"scale", NULL);
-	agsafeset(G, (char*)"nodesep", (char*)"0.05", NULL);
+	GVC_t* gvc = gvContext();
+
+#ifndef HAVE_AGRAPH_2_30
+#define agstrdup_html(g, str) agstrdup_html(str)
+#define agedge(g, t, h, name, flag) agedge(g, t, h)
+#define agnode(g, name, flag) agnode(g, name)
+#define agattr(g, t, k, v) agraphattr(g, k, v)
+	Agraph_t* G = agopen((char*)"g", AGDIGRAPH);
+#else
+	Agraph_t* G = agopen((char*)"g", Agdirected, NULL);
+#endif
+
+	agsafeset(G, (char*)"splines", (char*)"false", (char*)"");
+	agsafeset(G, (char*)"compound", (char*)"true", (char*)"");
+	agsafeset(G, (char*)"remincross", (char*)"true", (char*)"");
+	agsafeset(G, (char*)"overlap", (char*)"scale", (char*)"");
+	agsafeset(G, (char*)"nodesep", (char*)"0.05", (char*)"");
 	gv_set(G, "fontsize", ganv_canvas_get_font_size(_gcanvas));
 	gv_set(G, "dpi", dpi);
 
@@ -519,23 +529,25 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 
 	const bool flow_right = _gcanvas->direction;
 	if (flow_right) {
-		agraphattr(G, (char*)"rankdir", (char*)"LR");
+		agattr(G, AGRAPH, (char*)"rankdir", (char*)"LR");
 	} else {
-		agraphattr(G, (char*)"rankdir", (char*)"TD");
+		agattr(G, AGRAPH, (char*)"rankdir", (char*)"TD");
 	}
 
 	unsigned id = 0;
 	std::ostringstream ss;
 	FOREACH_ITEM(_items, i) {
+		ss.str("");
+		ss << "n" << id++;
+		const std::string node_id = ss.str();
+		
+		Agnode_t* node = agnode(G, strdup(node_id.c_str()), true);
+		nodes.insert(std::make_pair(*i, node));
+
 		if (GANV_IS_MODULE(*i)) {
 			GanvModule* const m = GANV_MODULE(*i);
 
-			ss.str("");
-			ss << "n" << id++;
-			const std::string node_id = ss.str();
-			Agnode_t* node = agnode(G, strdup(node_id.c_str()));
-			nodes.insert(std::make_pair(*i, (Agnode_t*)node));
-			agsafeset(node, (char*)"shape", (char*)"plaintext", NULL);
+			agsafeset(node, (char*)"shape", (char*)"plaintext", (char*)"");
 			gv_set(node, "width", ganv_box_get_width(GANV_BOX(*i)) / dpi);
 			gv_set(node, "height", ganv_box_get_height(GANV_BOX(*i)) / dpi);
 
@@ -622,16 +634,13 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 			}
 			html += "</TABLE>";
 			
-			char* html_label_str = agstrdup_html((char*)html.c_str());
+			char* html_label_str = agstrdup_html(G, (char*)html.c_str());
 
-			agsafeset(node, (char*)"label", (char*)html_label_str, NULL);
+			agsafeset(node, (char*)"label", (char*)html_label_str, (char*)"");
 		} else if (GANV_IS_CIRCLE(*i)) {
-			ss.str("");
-			ss << "n" << id++;
-			Agnode_t* node = agnode(G, strdup(ss.str().c_str()));
-			agsafeset(node, (char*)"shape", (char*)"circle", NULL);
-			agsafeset(node, (char*)"fixedsize", (char*)"true", NULL);
-			agsafeset(node, (char*)"margin", (char*)"0.0,0.0", NULL);
+			agsafeset(node, (char*)"shape", (char*)"circle", (char*)"");
+			agsafeset(node, (char*)"fixedsize", (char*)"true", (char*)"");
+			agsafeset(node, (char*)"margin", (char*)"0.0,0.0", (char*)"");
 
 			const double radius   = ganv_circle_get_radius(GANV_CIRCLE(*i));
 			const double penwidth = ganv_node_get_border_width(GANV_NODE(*i));
@@ -641,16 +650,15 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 			gv_set(node, (char*)"penwidth", penwidth);
 
 			if (ganv_node_get_dash_length(GANV_NODE(*i)) > 0.0) {
-				agsafeset(node, (char*)"style", (char*)"dashed", NULL);
+				agsafeset(node, (char*)"style", (char*)"dashed", (char*)"");
 			}
 				
 			const char* label = ganv_node_get_label(GANV_NODE(*i));
 			if (label) {
-				agsafeset(node, (char*)"label", (char*)label, NULL);
+				agsafeset(node, (char*)"label", (char*)label, (char*)"");
 			} else {
-				agsafeset(node, (char*)"label", (char*)"", NULL);
+				agsafeset(node, (char*)"label", (char*)"", (char*)"");
 			}
-			nodes.insert(std::make_pair(*i, node));
 		} else {
 			std::cerr << "Unable to arrange item of unknown type" << std::endl;
 		}
@@ -662,16 +670,16 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 		GVNodes::iterator     head_i = nodes.find(edge->impl->head);
 
 		if (tail_i != nodes.end() && head_i != nodes.end()) {
-			Agedge_t* e = agedge(G, tail_i->second, head_i->second);
+			Agedge_t* e = agedge(G, tail_i->second, head_i->second, NULL, true);
 			if (GANV_IS_PORT(edge->impl->tail)) {
-				ss.str("");
+				ss.str((char*)"");
 				ss << edge->impl->tail << (flow_right ? ":e" : ":s");
-				agsafeset(e, (char*)"tailport", (char*)ss.str().c_str(), NULL);
+				agsafeset(e, (char*)"tailport", (char*)ss.str().c_str(), (char*)"");
 			}
 			if (GANV_IS_PORT(edge->impl->head)) {
-				ss.str("");
+				ss.str((char*)"");
 				ss << edge->impl->head << (flow_right ? ":w" : ":n");
-				agsafeset(e, (char*)"headport", (char*)ss.str().c_str(), NULL);
+				agsafeset(e, (char*)"headport", (char*)ss.str().c_str(), (char*)"");
 			}
 		} else {
 			std::cerr << "Unable to find graphviz node" << std::endl;
@@ -684,8 +692,8 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 		if (partner) {
 			GVNodes::iterator p = nodes.find(partner);
 			if (p != nodes.end()) {
-				Agedge_t* e = agedge(G, i->second, p->second);
-				agsafeset(e, (char*)"style", (char*)"dotted", NULL);
+				Agedge_t* e = agedge(G, i->second, p->second, NULL, true);
+				agsafeset(e, (char*)"style", (char*)"dotted", (char*)"");
 			}
 		}
 	}
@@ -2376,9 +2384,9 @@ ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y)
 
 void
 ganv_canvas_arrange(GanvCanvas* canvas)
-{
-#ifdef HAVE_AGRAPH
-	GVNodes nodes = canvas->impl->layout_dot("");
+{	
+#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
+	GVNodes nodes = canvas->impl->layout_dot((char*)"");
 
 	double least_x=HUGE_VAL, least_y=HUGE_VAL, most_x=0, most_y=0;
 
@@ -2460,7 +2468,7 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 void
 ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename)
 {
-#ifdef HAVE_AGRAPH
+#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
 	GVNodes nodes = canvas->impl->layout_dot(filename);
 	nodes.cleanup();
 #endif
