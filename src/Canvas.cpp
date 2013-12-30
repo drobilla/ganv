@@ -1427,7 +1427,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			const int    screen_height = gdk_screen_get_height(screen);
 			const double drag_dx       = mouse_x - control_start_x;
 			const double drag_dy       = mouse_y - control_start_y;
-			const double xpad          = 100.0;  // Pad from screen edge
+			const double xpad          = 8.0;  // Pad from screen edge
 			const double ythresh       = 0.2;  // Minimum y fraction for fine
 
 			const double range_x = ((drag_dx > 0)
@@ -1445,11 +1445,10 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 				? port->impl->control->max - control_start_value
 				: control_start_value - port->impl->control->min;
 
-			const double fine = (dy < 0.20)
-				? 0.0
-				: ((dy - ythresh) * (1/(1 + ythresh)));
+			const double sens = (dy < ythresh)
+				? 1.0
+				: 1.0 - fabs(drag_dy / (range_y + ythresh));
 
-			const double sens   = fmaxf(1.0 - fine, value_range / range_x);
 			const double dvalue = (dx * value_range) * sens;
 			double       value  = control_start_value + dvalue;
 			if (value < port->impl->control->min) {
