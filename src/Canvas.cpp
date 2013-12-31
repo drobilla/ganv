@@ -875,9 +875,11 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			                          vec_mult(node->impl->force, dur));
 			node->impl->vel = vec_mult(node->impl->vel, damp);
 
+			static const double MAX_VEL   = 2000.0;
+			static const double MIN_COORD = 4.0;
+
 			// Clamp velocity
-			const double        vel_mag = vec_mag(node->impl->vel);
-			static const double MAX_VEL = 2000.0;
+			const double vel_mag = vec_mag(node->impl->vel);
 			if (vel_mag > MAX_VEL) {
 				node->impl->vel = vec_mult(
 					vec_mult(node->impl->vel, 1.0 / vel_mag),
@@ -885,8 +887,20 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			}
 				                           
 			// Update position
+			GanvItem*    item = GANV_ITEM(node);
+			const double x0   = item->x;
+			const double y0   = item->y;
 			const Vector dpos = vec_mult(node->impl->vel, dur);
-			if (ganv_item_move_update(GANV_ITEM(node), dpos.x, dpos.y, update)) {
+
+			item->x = std::max(MIN_COORD, item->x + dpos.x);
+			item->y = std::max(MIN_COORD, item->y + dpos.y);
+
+			if (update) {
+				ganv_item_request_update(item);
+				item->canvas->need_repick = TRUE;
+			}
+
+			if (lrint(x0) != lrint(item->x) || lrint(y0) != lrint(item->y)) {
 				++n_moved;
 			}
 		}

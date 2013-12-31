@@ -203,9 +203,6 @@ ganv_item_i2w_offset(GanvItem* item, double* px, double* py);
 void
 ganv_item_i2w_pair(GanvItem* item, double* x1, double* y1, double* x2, double* y2);
 
-gboolean
-ganv_item_move_update(GanvItem* item, double dx, double dy, gboolean update);
-
 void
 ganv_item_invoke_update(GanvItem* item, int flags);
 

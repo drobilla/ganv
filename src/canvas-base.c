@@ -415,62 +415,24 @@ ganv_item_lower(GanvItem* item)
 	--item->layer;
 }
 
-gboolean
-ganv_item_move_update(GanvItem* item, double dx, double dy, gboolean update)
-{
-	if (item == NULL || !GANV_IS_ITEM(item)) {
-		return FALSE;
-	}
-
-	const double old_x = item->x;
-	const double old_y = item->y;
-
-	item->x += dx;
-	item->y += dy;
-
-	static const double MIN_COORD = 4.0;
-	if (item->x < MIN_COORD) {
-		item->x = MIN_COORD;
-	}
-	if (item->y < MIN_COORD) {
-		item->y = MIN_COORD;
-	}
-
-	const gboolean moved = (lrint(old_x) != lrint(item->x) ||
-	                        lrint(old_y) != lrint(item->y));
-
-	if (update) {
-		ganv_item_request_update(item);
-		item->canvas->need_repick = TRUE;
-	}
-
-	return moved;
-}
-
 /**
  * ganv_item_move:
  * @item: A canvas item.
  * @dx: Horizontal offset.
  * @dy: Vertical offset.
  **/
-gboolean
+void
 ganv_item_move(GanvItem* item, double dx, double dy)
 {
-	const double old_x = item->x;
-	const double old_y = item->y;
-
-	if (!ganv_item_move_update(item, dx, dy, FALSE)) {
-		return FALSE;
+	if (!item || !GANV_IS_ITEM(item)) {
+		return;
 	}
 
-	if (lrint(old_x) != lrint(item->x) ||
-	    lrint(old_y) != lrint(item->y)) {
-		ganv_item_request_update(item);
-		item->canvas->need_repick = TRUE;
-		return TRUE;
-	}
+	item->x += dx;
+	item->y += dy;
 
-	return FALSE;
+	ganv_item_request_update(item);
+	item->canvas->need_repick = TRUE;
 }
 
 /**
