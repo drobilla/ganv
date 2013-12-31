@@ -16,7 +16,7 @@
 #include <float.h>
 #include <math.h>
 
-static const double CHARGE_KE = 100000000.0;
+static const double CHARGE_KE = 200000000.0;
 
 struct Region {
 	Vector pos;
@@ -109,5 +109,7 @@ repel_force(const Region& a, const Region& b)
 	const double mag   = vec_mag(vec);
 	const Vector force = vec_mult(
 		vec, (CHARGE_KE * 0.5 / (mag * mag * mag * mag * mag)));
-	return vec_mult(force, vec_mult(a.area, b.area));
+	const Vector dforce = { force.x * (a.area.x * b.area.x),
+	                        force.y * (a.area.y * b.area.y) };
+	return dforce;
 }

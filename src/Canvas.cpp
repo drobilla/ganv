@@ -768,7 +768,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 	static const double SPRING_K = 48.0;
 
 	// A light directional force to push sources to the top left
-	static const double DIR_MAGNITUDE = -2000.0;
+	static const double DIR_MAGNITUDE = -2200.0;
 	Vector              dir           = { 0.0, 0.0 };
 	switch (_gcanvas->direction) {
 	case GANV_DIRECTION_RIGHT: dir.x = DIR_MAGNITUDE; break;
