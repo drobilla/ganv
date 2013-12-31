@@ -180,7 +180,7 @@ void ganv_item_raise(GanvItem* item);
 void ganv_item_lower(GanvItem* item);
 
 /* Move an item by the specified amount */
-gboolean ganv_item_move(GanvItem* item, double dx, double dy);
+void ganv_item_move(GanvItem* item, double dx, double dy);
 
 /* Show an item (make it visible).  If the item is already shown, it has no
  * effect.
