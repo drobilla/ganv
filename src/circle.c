@@ -262,7 +262,6 @@ ganv_circle_bounds(GanvItem* item,
                    double* x2, double* y2)
 {
 	ganv_circle_bounds_item(item, x1, y1, x2, y2);
-	ganv_item_i2w_pair(item, x1, y1, x2, y2);
 }
 
 static void
@@ -285,9 +284,10 @@ ganv_circle_update(GanvItem* item, int flags)
 	impl->old_coords = impl->coords;
 	coords_i2w(item, &impl->old_coords);
 
-	// Get bounding circle
+	// Get bounding box
 	double x1, x2, y1, y2;
 	ganv_circle_bounds(item, &x1, &y1, &x2, &y2);
+	ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 
 	// Update item canvas coordinates
 	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x1, y1, &item->x1, &item->y1);

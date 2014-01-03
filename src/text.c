@@ -229,7 +229,6 @@ ganv_text_bounds(GanvItem* item,
                  double* x2, double* y2)
 {
 	ganv_text_bounds_item(item, x1, y1, x2, y2);
-	ganv_item_i2w_pair(item->parent, x1, y1, x2, y2);
 }
 
 static void
@@ -237,6 +236,7 @@ ganv_text_update(GanvItem* item, int flags)
 {
 	double x1, y1, x2, y2;
 	ganv_text_bounds(item, &x1, &y1, &x2, &y2);
+	ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 
 	// I have no idea why this is necessary
 	item->x1 = x1;

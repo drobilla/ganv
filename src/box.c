@@ -149,7 +149,7 @@ ganv_box_request_redraw(GanvItem*            item,
 	ganv_box_bounds_item(coords, &x1, &y1, &x2, &y2);
 
 	if (!world) {
-		// Convert from parent-relative coordinates to world coordinates
+		// Convert from item-relative coordinates to world coordinates
 		ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 	}
 
@@ -170,7 +170,6 @@ ganv_box_bounds(GanvItem* item,
 	// Note this will not be correct if children are outside the box bounds
 	GanvBox* box = (GanvBox*)item;
 	ganv_box_bounds_item(&box->impl->coords, x1, y1, x2, y2);
-	ganv_item_i2w_pair(item, x1, y1, x2, y2);
 }
 
 static void
@@ -196,6 +195,7 @@ ganv_box_update(GanvItem* item, int flags)
 	// Get bounding box
 	double x1, x2, y1, y2;
 	ganv_box_bounds(item, &x1, &y1, &x2, &y2);
+	ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 
 	// Update item canvas coordinates
 	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x1, y1, &item->x1, &item->y1);

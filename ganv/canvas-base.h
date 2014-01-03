@@ -221,7 +221,7 @@ void ganv_item_grab_focus(GanvItem* item);
 
 /* Fetch the bounding box of the item.  The bounding box may not be exactly
  * tight, but the canvas items will do the best they can.  The returned bounding
- * box is in the coordinate system of the item's parent.
+ * box is in item relative coordinates.
  */
 void ganv_item_get_bounds(GanvItem* item,
                           double* x1, double* y1, double* x2, double* y2);

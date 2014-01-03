@@ -293,6 +293,19 @@ ganv_group_point(GanvItem* item, double x, double y, int cx, int cy,
 	}
 }
 
+/** Get bounds of child item in group-relative coordinates. */
+static void
+get_child_bounds(GanvItem* child, double* x1, double* y1, double* x2, double* y2)
+{
+	ganv_item_get_bounds(child, x1, y1, x2, y2);
+
+	// Make bounds relative to the item's parent coordinate system
+	*x1 -= child->x;
+	*y1 -= child->y;
+	*x2 -= child->x;
+	*y2 -= child->y;
+}
+
 static void
 ganv_group_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2)
 {
@@ -316,7 +329,7 @@ ganv_group_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2
 
 		if (child->object.flags & GANV_ITEM_VISIBLE) {
 			set = TRUE;
-			ganv_item_get_bounds(child, &minx, &miny, &maxx, &maxy);
+			get_child_bounds(child, &minx, &miny, &maxx, &maxy);
 			break;
 		}
 	}
@@ -339,7 +352,7 @@ ganv_group_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2
 			continue;
 		}
 
-		ganv_item_get_bounds(child, &tx1, &ty1, &tx2, &ty2);
+		get_child_bounds(child, &tx1, &ty1, &tx2, &ty2);
 
 		if (tx1 < minx) {
 			minx = tx1;
