@@ -167,7 +167,8 @@ void ganv_item_construct(GanvItem* item, GanvItem* parent,
                          const gchar* first_arg_name, va_list args);
 
 /* Configure an item using the standard Gtk argument mechanism.  The last
- * argument must be a NULL pointer.
+ * argument must
+ be a NULL pointer.
  */
 void ganv_item_set(GanvItem* item, const gchar* first_arg_name, ...);
 

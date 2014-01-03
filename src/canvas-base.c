@@ -673,6 +673,12 @@ ganv_item_grab_focus(GanvItem* item)
 	}
 }
 
+static void
+ganv_item_default_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2)
+{
+	*x1 = *y1 = *x2 = *y2 = 0.0;
+}
+
 /**
  * ganv_item_get_bounds:
  * @item: A canvas item.
@@ -687,20 +693,7 @@ ganv_item_grab_focus(GanvItem* item)
 void
 ganv_item_get_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2)
 {
-	g_return_if_fail(GANV_IS_ITEM(item));
-
-	if (GANV_ITEM_GET_CLASS(item)->bounds) {
-		// Get bounds from item class
-		(*GANV_ITEM_GET_CLASS(item)->bounds)(item, x1, y1, x2, y2);
-
-		// Make bounds relative to the item's parent coordinate system
-		*x1 -= item->x;
-		*y1 -= item->y;
-		*x2 -= item->x;
-		*y2 -= item->y;
-	} else {
-		*x1 = *y1 = *x2 = *y2 = 0.0;
-	}
+	GANV_ITEM_GET_CLASS(item)->bounds(item, x1, y1, x2, y2);
 }
 
 /**
@@ -1748,45 +1741,36 @@ ganv_canvas_base_paint_rect(GanvCanvasBase* canvas, gint x0, gint y0, gint x1, g
 static gint
 ganv_canvas_base_expose(GtkWidget* widget, GdkEventExpose* event)
 {
-	GanvCanvasBase* canvas;
-	GdkRectangle*   rects;
-	gint            n_rects;
-	int             i;
-
-	canvas = GANV_CANVAS_BASE(widget);
-
-	if (!GTK_WIDGET_DRAWABLE(widget) || (event->window != canvas->layout.bin_window)) {
+	GanvCanvasBase* canvas = GANV_CANVAS_BASE(widget);
+	if (!GTK_WIDGET_DRAWABLE(widget) ||
+	    (event->window != canvas->layout.bin_window)) {
 		return FALSE;
 	}
 
-#ifdef VERBOSE
-	g_print("Expose\n");
-#endif
+	/* Find a single bounding rectangle for all rectangles in the region.
+	   Since drawing the root group is O(n) and thus very expensive for large
+	   canvases, it's much faster to do a single paint than many, even though
+	   more area may be painted that way.  With a better group implementation,
+	   it would likely be better to paint each changed rectangle separately. */
+	GdkRectangle clip;
+	gdk_region_get_clipbox(event->region, &clip);
 
-	gdk_region_get_rectangles(event->region, &rects, &n_rects);
+	const int x2 = clip.x + clip.width;
+	const int y2 = clip.y + clip.height;
+	
+	if (canvas->need_update || canvas->need_redraw) {
+		/* Update or drawing is scheduled, so just mark exposed area as dirty */
+		ganv_canvas_base_request_redraw(canvas, clip.x, clip.y, x2, y2);
+	} else {
+		/* No pending updates, draw exposed area immediately */
+		ganv_canvas_base_paint_rect(canvas, clip.x, clip.y, x2, y2);
 
-	for (i = 0; i < n_rects; i++) {
-		const int x0 = rects[i].x - canvas->zoom_xofs;
-		const int y0 = rects[i].y - canvas->zoom_yofs;
-		const int x1 = rects[i].x + rects[i].width - canvas->zoom_xofs;
-		const int y1 = rects[i].y + rects[i].height - canvas->zoom_yofs;
-
-		if (canvas->need_update || canvas->need_redraw) {
-			/* Update or drawing is scheduled, so just mark exposed area as dirty */
-			ganv_canvas_base_request_redraw(canvas, x0, y0, x1, y1);
-		} else {
-			/* No pending updates, draw exposed area immediately */
-			ganv_canvas_base_paint_rect(canvas, x0, y0, x1, y1);
-
-			/* And call expose on parent container class */
-			if (GTK_WIDGET_CLASS(canvas_parent_class)->expose_event) {
-				(*GTK_WIDGET_CLASS(canvas_parent_class)->expose_event)(
-				    widget, event);
-			}
+		/* And call expose on parent container class */
+		if (GTK_WIDGET_CLASS(canvas_parent_class)->expose_event) {
+			(*GTK_WIDGET_CLASS(canvas_parent_class)->expose_event)(
+				widget, event);
 		}
 	}
-
-	g_free(rects);
 
 	return FALSE;
 }
@@ -2515,4 +2499,5 @@ ganv_item_class_init(GanvItemClass* klass)
 	klass->unmap     = ganv_item_unmap;
 	klass->update    = ganv_item_update;
 	klass->point     = ganv_item_point;
+	klass->bounds    = ganv_item_default_bounds;
 }

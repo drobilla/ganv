@@ -716,16 +716,18 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 #ifdef GANV_FDGL
 
 inline Region
-get_region(const GanvNode* node)
+get_region(GanvNode* node)
 {
+	GanvItem* item = &node->item;
+
 	double x1, y1, x2, y2;
-	ganv_item_get_bounds(GANV_ITEM(node), &x1, &y1, &x2, &y2);
+	ganv_item_get_bounds(item, &x1, &y1, &x2, &y2);
 
 	Region reg;
 	reg.area.x = x2 - x1;
 	reg.area.y = y2 - y1;
-	reg.pos.x  = GANV_ITEM(node)->x + (reg.area.x / 2.0);
-	reg.pos.y  = GANV_ITEM(node)->y + (reg.area.y / 2.0);
+	reg.pos.x  = item->x + (reg.area.x / 2.0);
+	reg.pos.y  = item->y + (reg.area.y / 2.0);
 
 	// No need for i2w here since we only care about top-level items
 	return reg;
@@ -806,7 +808,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 		if (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i)) {
 			continue;
 		}
-		GanvNode* const node = GANV_NODE(*i);
+		GanvNode* const node = *i;
 		const Region    reg  = get_region(node);
 
 		GanvNode* partner = ganv_node_get_partner(node);
@@ -844,7 +846,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			if (i == j || (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i))) {
 				continue;
 			}
-			GanvNode* const node2 = GANV_NODE(*j);
+			GanvNode* const node2 = *j;
 			if ((!node2->impl->has_in_edges && !node2->impl->has_out_edges) &&
 			    !node2->impl->is_source) {
 				continue;
@@ -861,7 +863,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			continue;
 		}
 
-		GanvNode* const node = GANV_NODE(*i);
+		GanvNode* const node = *i;
 
 		static const float damp = 0.3;  // Velocity damping
 
@@ -887,7 +889,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			}
 				                           
 			// Update position
-			GanvItem*    item = GANV_ITEM(node);
+			GanvItem*    item = &node->item;
 			const double x0   = item->x;
 			const double y0   = item->y;
 			const Vector dpos = vec_mult(node->impl->vel, dur);

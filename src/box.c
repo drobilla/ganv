@@ -134,15 +134,10 @@ ganv_box_bounds_item(const GanvBoxCoords* coords,
                      double* x1, double* y1,
                      double* x2, double* y2)
 {
-	*x1 = MIN(coords->x1, coords->x2) - coords->border_width;
-	*y1 = MIN(coords->y1, coords->y2) - coords->border_width;
-	*x2 = MAX(coords->x1, coords->x2) + coords->border_width;
-	*y2 = MAX(coords->y1, coords->y2) + coords->border_width;
-
-	if (coords->stacked) {
-		*x2 += STACKED_OFFSET;
-		*y2 += STACKED_OFFSET;
-	}
+	*x1 = coords->x1 - coords->border_width;
+	*y1 = coords->y1 - coords->border_width;
+	*x2 = coords->x2 + coords->border_width + (coords->stacked * STACKED_OFFSET);
+	*y2 = coords->y2 + coords->border_width + (coords->stacked * STACKED_OFFSET);
 }
 
 void
@@ -173,7 +168,7 @@ ganv_box_bounds(GanvItem* item,
                 double* x2, double* y2)
 {
 	// Note this will not be correct if children are outside the box bounds
-	GanvBox* box = GANV_BOX(item);
+	GanvBox* box = (GanvBox*)item;
 	ganv_box_bounds_item(&box->impl->coords, x1, y1, x2, y2);
 	ganv_item_i2w_pair(item, x1, y1, x2, y2);
 }
@@ -195,6 +190,8 @@ ganv_box_update(GanvItem* item, int flags)
 	// group we are in moves between now and the next update
 	impl->old_coords = impl->coords;
 	coords_i2w(item, &impl->old_coords);
+
+	ganv_box_normalize(box);
 
 	// Get bounding box
 	double x1, x2, y1, y2;
@@ -474,17 +471,16 @@ ganv_box_class_init(GanvBoxClass* klass)
 void
 ganv_box_normalize(GanvBox* box)
 {
-	GanvBoxCoords* coords = &box->impl->coords;
-
-	const double x1 = coords->x1;
-	const double y1 = coords->y1;
-	const double x2 = coords->x2;
-	const double y2 = coords->y2;
-
-	coords->x1 = MIN(x1, x2);
-	coords->y1 = MIN(y1, y2);
-	coords->x2 = MAX(x1, x2);
-	coords->y2 = MAX(y1, y2);
+	if (box->impl->coords.x2 < box->impl->coords.x1) {
+		const double tmp = box->impl->coords.x1;
+		box->impl->coords.x1 = box->impl->coords.x2;
+		box->impl->coords.x2 = tmp;
+	}
+	if (box->impl->coords.y2 < box->impl->coords.y1) {
+		const double tmp = box->impl->coords.y1;
+		box->impl->coords.y1 = box->impl->coords.y2;
+		box->impl->coords.y2 = tmp;
+	}
 }
 
 double

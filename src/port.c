@@ -164,9 +164,9 @@ ganv_port_tail_vector(const GanvNode* self,
                       double*         dx,
                       double*         dy)
 {
-	GanvItem*   item   = GANV_ITEM(self);
 	GanvPort*   port   = GANV_PORT(self);
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
+	GanvItem*   item   = &port->box.node.item;
+	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
 
 	const double px = item->x;
 	const double py = item->y;
@@ -186,7 +186,7 @@ ganv_port_tail_vector(const GanvNode* self,
 		break;
 	}
 
-	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
+	ganv_item_i2w(item->parent, x, y);
 }
 
 static void
@@ -197,9 +197,9 @@ ganv_port_head_vector(const GanvNode* self,
                       double*         dx,
                       double*         dy)
 {
-	GanvItem*   item   = GANV_ITEM(self);
 	GanvPort*   port   = GANV_PORT(self);
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
+	GanvItem*   item   = &port->box.node.item;
+	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
 
 	const double px = item->x;
 	const double py = item->y;
@@ -219,7 +219,7 @@ ganv_port_head_vector(const GanvNode* self,
 		break;
 	}
 
-	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
+	ganv_item_i2w(item->parent, x, y);
 }
 
 static void

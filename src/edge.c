@@ -267,10 +267,13 @@ ganv_edge_get_coords(const GanvEdge* edge, GanvEdgeCoords* coords)
 	coords->handle_x = coords->x1 + (dx / 2.0);
 	coords->handle_y = coords->y1 + (dy / 2.0);
 
-	coords->cx1 = coords->x1 + (coords->cx1 * (ceil(fabs(dx)) / 4.0));
-	coords->cy1 = coords->y1 + (coords->cy1 * (ceil(fabs(dy)) / 4.0));
-	coords->cx2 = coords->x2 + (coords->cx2 * (ceil(fabs(dx)) / 4.0));
-	coords->cy2 = coords->y2 + (coords->cy2 * (ceil(fabs(dy)) / 4.0));
+	const double abs_dx = fabs(dx);
+	const double abs_dy = fabs(dy);
+
+	coords->cx1 = coords->x1 + (coords->cx1 * (abs_dx / 4.0));
+	coords->cy1 = coords->y1 + (coords->cy1 * (abs_dy / 4.0));
+	coords->cx2 = coords->x2 + (coords->cx2 * (abs_dx / 4.0));
+	coords->cy2 = coords->y2 + (coords->cy2 * (abs_dy / 4.0));
 }
 
 static void
