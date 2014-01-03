@@ -599,6 +599,26 @@ ganv_item_i2w_pair(GanvItem* item, double* x1, double* y1, double* x2, double* y
 	*y2 += off_y;
 }
 
+/**
+ * ganv_item_w2i:
+ * @item: A canvas item.
+ * @x: X coordinate to convert (input/output value).
+ * @y: Y coordinate to convert (input/output value).
+ *
+ * Converts a coordinate pair from world coordinates to item-relative
+ * coordinates.
+ **/
+void
+ganv_item_w2i(GanvItem* item, double* x, double* y)
+{
+	double off_x;
+	double off_y;
+	ganv_item_i2w_offset(item, &off_x, &off_y);
+
+	*x -= off_x;
+	*y -= off_y;
+}
+
 /* Returns whether the item is an inferior of or is equal to the parent. */
 static gboolean
 is_descendant(GanvItem* item, GanvItem* parent)

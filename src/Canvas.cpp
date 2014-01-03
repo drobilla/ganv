@@ -1408,7 +1408,13 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 	case GDK_BUTTON_PRESS:
 		if (event->button.button == 1) {
 			GanvModule* const module = ganv_port_get_module(port);
-			if (module && port->impl->is_input && port->impl->control) {
+			double port_x = event->button.x;
+			double port_y = event->button.y;
+			ganv_item_w2i(GANV_ITEM(port), &port_x, &port_y);
+
+			if (module && port->impl->control &&
+			    (port->impl->is_input ||
+			     port_x < ganv_box_get_width(GANV_BOX(port)) / 2.0)) {
 				if (port->impl->control->is_toggle) {
 					if (port->impl->control->value >= 0.5) {
 						ganv_port_set_control_value_internal(port, 0.0);

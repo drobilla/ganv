@@ -205,9 +205,13 @@ int ganv_item_grab(GanvItem* item, unsigned int event_mask,
  */
 void ganv_item_ungrab(GanvItem* item, guint32 etime);
 
-/* Convert from item coordinate to world coordinates.
+/* Convert from item coordinates to world coordinates.
  */
 void ganv_item_i2w(GanvItem* item, double* x, double* y);
+
+/* Convert from world coordinates to item coordinates.
+ */
+void ganv_item_w2i(GanvItem* item, double* x, double* y);
 
 /* Used to send all of the keystroke events to a specific item as well as
  * GDK_FOCUS_CHANGE events.
