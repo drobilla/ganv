@@ -175,8 +175,8 @@ ganv_circle_is_within(const GanvNode* self,
                       double          x2,
                       double          y2)
 {
-	double x, y;
-	g_object_get(G_OBJECT(self), "x", &x, "y", &y, NULL);
+	const double x = GANV_ITEM(self)->x;
+	const double y = GANV_ITEM(self)->y;
 
 	return x >= x1
 		&& x <= x2
@@ -194,11 +194,10 @@ ganv_circle_vector(const GanvNode* self,
 {
 	GanvCircle* circle = GANV_CIRCLE(self);
 
-	double cx, cy;
-	g_object_get(G_OBJECT(circle), "x", &cx, "y", &cy, NULL);
-
-	double other_x, other_y;
-	g_object_get(G_OBJECT(other), "x", &other_x, "y", &other_y, NULL);
+	const double cx      = GANV_ITEM(self)->x;
+	const double cy      = GANV_ITEM(self)->y;
+	const double other_x = GANV_ITEM(other)->x;
+	const double other_y = GANV_ITEM(other)->y;
 
 	const double xdist = other_x - cx;
 	const double ydist = other_y - cy;

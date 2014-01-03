@@ -127,7 +127,8 @@ ganv_port_draw(GanvItem* item,
                int cx, int cy,
                int width, int height)
 {
-	GanvPort* port = GANV_PORT(item);
+	GanvPort*   port   = GANV_PORT(item);
+	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
 
 	// Draw Box
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
@@ -138,7 +139,8 @@ ganv_port_draw(GanvItem* item,
 		GANV_ITEM_GET_CLASS(rect)->draw(rect, cr, cx, cy, width, height);
 	}
 
-	if (!GANV_NODE(port)->impl->show_label) {
+	if (canvas->direction == GANV_DIRECTION_DOWN ||
+	    !GANV_NODE(port)->impl->show_label) {
 		return;
 	}
 
@@ -429,7 +431,6 @@ ganv_port_set_direction(GanvPort*     port,
 		box->impl->radius_bl = (is_input ? 4.0 : 0.0);
 		break;
 	}
-	ganv_node_set_show_label(node, direction == GANV_DIRECTION_RIGHT);
 	ganv_node_resize(node);
 }
 

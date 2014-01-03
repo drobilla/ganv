@@ -339,8 +339,8 @@ void
 GanvCanvasImpl::selection_move_finished()
 {
 	FOREACH_ITEM(_selected_items, i) {
-		double x, y;
-		g_object_get(*i, "x", &x, "y", &y, NULL);
+		const double x = GANV_ITEM(*i)->x;
+		const double y = GANV_ITEM(*i)->y;
 		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
 	}
 }
@@ -765,7 +765,7 @@ GanvCanvasImpl::layout_iteration()
 gboolean
 GanvCanvasImpl::layout_calculate(double dur, bool update)
 {
-	static const double SPRING_K = 48.0;
+	static const double SPRING_K = 64.0;
 
 	// A light directional force to push sources to the top left
 	static const double DIR_MAGNITUDE = -2200.0;
@@ -815,15 +815,15 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			const Region preg = get_region(partner);
 			apply_force(node, partner,
 			            edge_force(dir, preg.pos, reg.pos,
-			                       preg.area.x, SPRING_K));
+			                       preg.area.x + reg.area.x, SPRING_K / 2.0));
 		}
 
 		if (node->impl->is_source) {
 			// Add fake weak spring from origin to sources to anchor graph layout
-			const Vector anchor = { 16.0, 16.0 };
+			const Vector anchor = { 0.0, 0.0 };
 			node->impl->force = vec_add(
 				node->impl->force,
-				spring_force(anchor, reg.pos, 12.0, SPRING_K / 6.0));
+				spring_force(anchor, reg.pos, 32.0, SPRING_K / 8.0));
 		} else if (!node->impl->partner &&
 		           !node->impl->has_in_edges &&
 		           !node->impl->has_out_edges) {
@@ -863,7 +863,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 
 		GanvNode* const node = GANV_NODE(*i);
 
-		static const float damp = 0.4;  // Velocity damping
+		static const float damp = 0.3;  // Velocity damping
 
 		const bool has_edges = (node->impl->has_in_edges ||
 		                        node->impl->has_out_edges);
@@ -2126,17 +2126,16 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 	double bottom = DBL_MAX;
 
 	FOREACH_ITEM(canvas->impl->_items, i) {
-		GObject* const obj = G_OBJECT(*i);
+		GanvItem* const item = GANV_ITEM(*i);
+		const double    x    = item->x;
+		const double    y    = item->y;
 		if (GANV_IS_CIRCLE(*i)) {
-			double x = 0.0, y = 0.0, r = 0.0;
-			g_object_get(obj, "x", &x, "y", &y, "radius", &r, NULL);
+			const double r = GANV_CIRCLE(*i)->impl->coords.radius;
 			left   = MIN(left, x - r);
 			right  = MAX(right, x + r);
 			bottom = MIN(bottom, y - r);
 			top    = MAX(top, y + r);
 		} else {
-			double x = 0.0, y = 0.0;
-			g_object_get(obj, "x", &x, "y", &y, NULL);
 			left   = MIN(left, x);
 			right  = MAX(right, x + ganv_box_get_width(GANV_BOX(*i)));
 			bottom = MIN(bottom, y);
@@ -2388,8 +2387,8 @@ ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y)
 {
 	double min_x=HUGE_VAL, min_y=HUGE_VAL;
 	FOREACH_ITEM(canvas->impl->_items, i) {
-		double x, y;
-		g_object_get(*i, "x", &x, "y", &y, NULL);
+		const double x = GANV_ITEM(*i)->x;
+		const double y = GANV_ITEM(*i)->y;
 		min_x = std::min(min_x, x);
 		min_y = std::min(min_y, y);
 	}
@@ -2472,8 +2471,8 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 	ganv_canvas_base_scroll_to(GANV_CANVAS_BASE(canvas->impl->_gcanvas), 0, 0);
 
 	FOREACH_ITEM(canvas->impl->_items, i) {
-		double x, y;
-		g_object_get(*i, "x", &x, "y", &y, NULL);
+		const double x = GANV_ITEM(*i)->x;
+		const double y = GANV_ITEM(*i)->y;
 		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
 	}
 #endif

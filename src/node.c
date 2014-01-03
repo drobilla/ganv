@@ -232,10 +232,8 @@ ganv_node_default_tail_vector(const GanvNode* self,
 {
 	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
 
-	g_object_get(G_OBJECT(self),
-	             "x", x,
-	             "y", y,
-	             NULL);
+	*x = GANV_ITEM(self)->x;
+	*y = GANV_ITEM(self)->y;
 
 	switch (canvas->direction) {
 	case GANV_DIRECTION_RIGHT:
@@ -261,10 +259,8 @@ ganv_node_default_head_vector(const GanvNode* self,
 {
 	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
 
-	g_object_get(G_OBJECT(self),
-	             "x", x,
-	             "y", y,
-	             NULL);
+	*x = GANV_ITEM(self)->x;
+	*y = GANV_ITEM(self)->y;
 
 	switch (canvas->direction) {
 	case GANV_DIRECTION_RIGHT:
@@ -467,8 +463,8 @@ ganv_node_default_event(GanvItem* item,
 				if (selected) {
 					ganv_canvas_selection_move_finished(canvas);
 				} else {
-					double x, y;
-					g_object_get(node, "x", &x, "y", &y, NULL);
+					const double x = GANV_ITEM(node)->x;
+					const double y = GANV_ITEM(node)->y;
 					g_signal_emit(node, signal_moved, 0, x, y, NULL);
 				}
 			} else {
