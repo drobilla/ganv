@@ -1502,6 +1502,10 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 		} else if (control_dragging) {
 			control_dragging = false;
 			GANV_NODE(port)->impl->grabbed = FALSE;
+			if (event->button.x_root == control_start_x &&
+			    event->button.y_root == control_start_y) {
+				select_port_toggle(port, event->button.state);
+			}
 		} else if (event->button.state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK)) {
 			select_port_toggle(port, event->button.state);
 		} else {
