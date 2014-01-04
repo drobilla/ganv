@@ -40,7 +40,8 @@ static GanvBoxClass* parent_class;
 
 enum {
 	PROP_0,
-	PROP_IS_INPUT
+	PROP_IS_INPUT,
+	PROP_IS_CONTROLLABLE
 };
 
 enum {
@@ -56,7 +57,8 @@ ganv_port_init(GanvPort* port)
 	port->impl = G_TYPE_INSTANCE_GET_PRIVATE(
 		port, GANV_TYPE_PORT, GanvPortImpl);
 
-	port->impl->is_input = TRUE;
+	port->impl->is_input        = TRUE;
+	port->impl->is_controllable = FALSE;
 }
 
 static void
@@ -96,6 +98,7 @@ ganv_port_set_property(GObject*      object,
 
 	switch (prop_id) {
 		SET_CASE(IS_INPUT, boolean, port->impl->is_input);
+		SET_CASE(IS_CONTROLLABLE, boolean, port->impl->is_controllable);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -115,6 +118,7 @@ ganv_port_get_property(GObject*    object,
 
 	switch (prop_id) {
 		GET_CASE(IS_INPUT, boolean, port->impl->is_input);
+		GET_CASE(IS_CONTROLLABLE, boolean, port->impl->is_controllable);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -351,6 +355,14 @@ ganv_port_class_init(GanvPortClass* klass)
 			"is-input",
 			_("Is input"),
 			_("Whether this port is an input, rather than an output."),
+			0,
+			G_PARAM_READWRITE));
+
+	g_object_class_install_property(
+		gobject_class, PROP_IS_CONTROLLABLE, g_param_spec_boolean(
+			"is-controllable",
+			_("Is controllable"),
+			_("Whether this port can be controlled by the user."),
 			0,
 			G_PARAM_READWRITE));
 

@@ -46,6 +46,8 @@ public:
 	     bool               is_input,
 	     uint32_t           color);
 
+	RW_PROPERTY(gboolean, is_controllable)
+
 	METHODRET0(ganv_port, gboolean, is_input)
 	METHODRET0(ganv_port, gboolean, is_output)
 

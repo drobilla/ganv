@@ -1341,7 +1341,7 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 
 		GanvNode* joinee = get_node_at(x, y);
 
-		if (joinee) {
+		if (GANV_IS_PORT(joinee)) {
 			if (joinee == GANV_NODE(_connect_port)) {
 				// Drag ended on the same port it started on, port clicked
 				if (_selected_ports.empty()) {
@@ -1402,7 +1402,8 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 
 			if (module && port->impl->control &&
 			    (port->impl->is_input ||
-			     port_x < ganv_box_get_width(GANV_BOX(port)) / 2.0)) {
+			     (port->impl->is_controllable &&
+			      port_x < ganv_box_get_width(GANV_BOX(port)) / 2.0))) {
 				if (port->impl->control->is_toggle) {
 					if (port->impl->control->value >= 0.5) {
 						ganv_port_set_control_value_internal(port, 0.0);

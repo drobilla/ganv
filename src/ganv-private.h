@@ -135,6 +135,7 @@ typedef struct {
 struct _GanvPortImpl {
 	GanvPortControl* control;
 	gboolean         is_input;
+	gboolean         is_controllable;
 };
 
 /* Text */
