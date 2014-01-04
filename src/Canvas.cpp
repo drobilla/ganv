@@ -138,6 +138,8 @@ struct GanvCanvasImpl {
 		, _drag_edge(NULL)
 		, _drag_node(NULL)
 		, _select_rect(NULL)
+		, _select_start_x(0.0)
+		, _select_start_y(0.0)
 		, _zoom(1.0)
 		, _font_size(0.0)
 		, _drag_state(NOT_DRAGGING)
@@ -267,7 +269,9 @@ struct GanvCanvasImpl {
 	GanvEdge*     _drag_edge;
 	GanvNode*     _drag_node;
 
-	GanvBox*  _select_rect;  ///< Rectangle for drag selection
+	GanvBox* _select_rect;     ///< Rectangle for drag selection
+	double   _select_start_x;  ///< Selection drag start x coordinate
+	double   _select_start_y;  ///< Selection drag start y coordinate
 
 	double _zoom;       ///< Current zoom level
 	double _font_size;  ///< Current font size in points
@@ -724,6 +728,7 @@ get_region(GanvNode* node)
 	ganv_item_get_bounds(item, &x1, &y1, &x2, &y2);
 
 	Region reg;
+	ganv_item_get_bounds(item, &reg.pos.x, &reg.pos.y, &reg.area.x, &reg.area.y);
 	reg.area.x = x2 - x1;
 	reg.area.y = y2 - y1;
 	reg.pos.x  = item->x + (reg.area.x / 2.0);
@@ -752,7 +757,7 @@ GanvCanvasImpl::layout_iteration()
 
 	prev = now;
 
-	const double QUANTUM  = 0.1;
+	const double QUANTUM  = 0.05;
 	double       sym_time = 0.0;
 	while (sym_time + QUANTUM < time_to_run) {
 		if (!layout_calculate(QUANTUM, FALSE)) {
@@ -767,10 +772,8 @@ GanvCanvasImpl::layout_iteration()
 gboolean
 GanvCanvasImpl::layout_calculate(double dur, bool update)
 {
-	static const double SPRING_K = 64.0;
-
 	// A light directional force to push sources to the top left
-	static const double DIR_MAGNITUDE = -2200.0;
+	static const double DIR_MAGNITUDE = -2000.0;
 	Vector              dir           = { 0.0, 0.0 };
 	switch (_gcanvas->direction) {
 	case GANV_DIRECTION_RIGHT: dir.x = DIR_MAGNITUDE; break;
@@ -792,15 +795,14 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			continue;
 		}
 
-		head->impl->has_in_edges  = TRUE;
-		tail->impl->has_out_edges = TRUE;
+		head->impl->connected = tail->impl->connected = TRUE;
 
 		GanvEdgeCoords coords;
 		ganv_edge_get_coords(edge, &coords);
 
 		const Vector tpos = { coords.x1, coords.y1 };
 		const Vector hpos = { coords.x2, coords.y2 };
-		apply_force(tail, head, edge_force(dir, hpos, tpos, 0.000000000001, SPRING_K));
+		apply_force(tail, head, edge_force(dir, hpos, tpos));
 	}
 
 	// Calculate repelling forces between nodes
@@ -808,30 +810,20 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 		if (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i)) {
 			continue;
 		}
-		GanvNode* const node = *i;
-		const Region    reg  = get_region(node);
 
-		GanvNode* partner = ganv_node_get_partner(node);
+		GanvNode* const node    = *i;
+		GanvNode*       partner = ganv_node_get_partner(node);
+		if (!partner && !node->impl->connected) {
+			continue;
+		}
+
+		const Region reg = get_region(node);
 		if (partner) {
 			// Add fake long spring to partner to line up as if connected
 			const Region preg = get_region(partner);
-			apply_force(node, partner,
-			            edge_force(dir, preg.pos, reg.pos,
-			                       preg.area.x + reg.area.x, SPRING_K / 2.0));
+			apply_force(node, partner, edge_force(dir, preg.pos, reg.pos));
 		}
 
-		if (node->impl->is_source) {
-			// Add fake weak spring from origin to sources to anchor graph layout
-			const Vector anchor = { 0.0, 0.0 };
-			node->impl->force = vec_add(
-				node->impl->force,
-				spring_force(anchor, reg.pos, 32.0, SPRING_K / 8.0));
-		} else if (!node->impl->partner &&
-		           !node->impl->has_in_edges &&
-		           !node->impl->has_out_edges) {
-			// Not a source and disconnected, don't repel other nodes
-			continue;
-		}
 
 		/* Add tide force which pulls all objects as if the layout is happening
 		   on a flowing river surface.  This prevents disconnected components
@@ -846,13 +838,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			if (i == j || (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i))) {
 				continue;
 			}
-			GanvNode* const node2 = *j;
-			if ((!node2->impl->has_in_edges && !node2->impl->has_out_edges) &&
-			    !node2->impl->is_source) {
-				continue;
-			}
-
-			apply_force(node, node2, repel_force(reg, get_region(node2)));
+			apply_force(node, *j, repel_force(reg, get_region(*j)));
 		}
 	}
 
@@ -865,11 +851,9 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 
 		GanvNode* const node = *i;
 
-		static const float damp = 0.3;  // Velocity damping
+		static const float damp = 0.2;  // Velocity damping
 
-		const bool has_edges = (node->impl->has_in_edges ||
-		                        node->impl->has_out_edges);
-		if (node->impl->grabbed || (!has_edges && !node->impl->is_source)) {
+		if (node->impl->grabbed || !node->impl->connected) {
 			node->impl->vel.x = 0.0;
 			node->impl->vel.y = 0.0;
 		} else {
@@ -877,7 +861,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			                          vec_mult(node->impl->force, dur));
 			node->impl->vel = vec_mult(node->impl->vel, damp);
 
-			static const double MAX_VEL   = 2000.0;
+			static const double MAX_VEL   = 1000.0;
 			static const double MIN_COORD = 4.0;
 
 			// Clamp velocity
@@ -908,10 +892,9 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 		}
 
 		// Reset forces for next time
-		node->impl->force.x       = 0.0;
-		node->impl->force.y       = 0.0;
-		node->impl->has_in_edges  = FALSE;
-		node->impl->has_out_edges = FALSE;
+		node->impl->force.x   = 0.0;
+		node->impl->force.y   = 0.0;
+		node->impl->connected = FALSE;
 	}
 
 	if (update) {
@@ -1234,6 +1217,8 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 				"fill-color", SELECT_RECT_FILL_COLOUR,
 				"border-color", SELECT_RECT_BORDER_COLOUR,
 				NULL));
+		_select_start_x = event->button.x;
+		_select_start_y = event->button.y;
 		ganv_item_grab(
 			GANV_ITEM(root()), GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 			NULL, event->button.time);
@@ -1242,10 +1227,11 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 		assert(_select_rect);
 		double x, y;
 		get_motion_coords(&event->motion, &x, &y);
-		ganv_item_set(GANV_ITEM(_select_rect),
-		              "x2", x,
-		              "y2", y,
-		              NULL);
+		_select_rect->impl->coords.x1 = MIN(_select_start_x, x);
+		_select_rect->impl->coords.y1 = MIN(_select_start_y, y);
+		_select_rect->impl->coords.x2 = MAX(_select_start_x, x);
+		_select_rect->impl->coords.y2 = MAX(_select_start_y, y);
+		ganv_item_request_update(&_select_rect->node.item);
 		return true;
 	} else if (event->type == GDK_BUTTON_RELEASE && _drag_state == SELECT) {
 		// Normalize select rect

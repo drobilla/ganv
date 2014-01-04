@@ -76,8 +76,7 @@ ganv_node_init(GanvNode* node)
 	impl->force.y       = 0.0;
 	impl->vel.x         = 0.0;
 	impl->vel.y         = 0.0;
-	impl->has_in_edges  = FALSE;
-	impl->has_out_edges = FALSE;
+	impl->connected     = FALSE;
 #endif
 }
 

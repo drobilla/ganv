@@ -116,8 +116,7 @@ struct _GanvNodeImpl {
 #ifdef GANV_FDGL
 	Vector            force;
 	Vector            vel;
-	gboolean          has_in_edges;
-	gboolean          has_out_edges;
+	gboolean          connected;
 #endif
 };
 

@@ -16,7 +16,9 @@
 #include <float.h>
 #include <math.h>
 
-static const double CHARGE_KE = 200000000.0;
+static const double CHARGE_KE = 4000000.0;
+static const double EDGE_K    = 64.0;
+static const double EDGE_LEN  = 1.0;
 
 struct Region {
 	Vector pos;
@@ -76,13 +78,9 @@ spring_force(const Vector& a, const Vector& b, double length, double k)
 
 /** Spring force with a directional force to align with flow direction. */
 static const Vector
-edge_force(const Vector& dir,
-           const Vector& hpos,
-           const Vector& tpos,
-           double        length,
-           double        k)
+edge_force(const Vector& dir, const Vector& hpos, const Vector& tpos)
 {
-	return vec_add(dir, spring_force(hpos, tpos, length, k));
+	return vec_add(dir, spring_force(hpos, tpos, EDGE_LEN, EDGE_K));
 }
 
 /** Constant tide force, does not vary with distance. */
@@ -95,21 +93,74 @@ tide_force(const Vector& a, const Vector& b, double power)
 	return vec_mult(vec, G * power / mag);
 }
 
-/**
-   Repelling charge force.
+inline double
+rect_distance(Vector* vec,
+              const double ax1, const double ay1,
+              const double ax2, const double ay2,
+              const double bx1, const double by1,
+              const double bx2, const double by2)
+{
+	vec->x = 0.0;
+	vec->y = 0.0;
 
-   Many FDGL algorithms use charge according to Coulomb's law, but here we use
-   an inverse cube (not squared) law so influence drops off more rapidly with
-   distance.  This, in conjunction with a tide, keeps the layout compact.
-*/
+	if (ax2 <= bx1) {  // A is completely to the left of B
+		vec->x = ax2 - bx1; 
+		if (ay2 <= by1) {  // Top Left		
+			const double dx = bx1 - ax2;
+			const double dy = by1 - ay2;
+			vec->y = ay2 - by1;
+			return sqrt(dx * dx + dy * dy);
+		} else if (ay1 >= by2) {  // Bottom left
+			const double dx = bx1 - ax2;
+			const double dy = ay1 - by2;
+			vec->y = ay1 - by2;
+			return sqrt(dx * dx + dy * dy);
+		} else {  // Left
+			return bx1 - ax2;
+		}
+	} else if (ax1 >= bx2) {  //  A is completely to the right of B
+		vec->x = ax1 - bx2;
+		if (ay2 <= by1) {  // Top right
+			const double dx = ax1 - bx2;
+			const double dy = by1 - ay2;
+			vec->y = ay2 - by1;
+			return sqrt(dx * dx + dy * dy);
+		} else if (ay1 >= by2) {  // Bottom right
+			const double dx = ax1 - bx2;
+			const double dy = ay1 - by2;
+			vec->y = ay1 - by2;
+			return sqrt(dx * dx + dy * dy);
+		} else {  // Right
+			return ax1 - bx2;
+		}
+	} else if (ay2 <= by1) {  // Top
+		vec->y = ay2 - by1;
+		return by1 - ay2;
+	} else if (ay1 >= by2) {  // Bottom
+		vec->y = ay1 - by2;
+		return ay1 - by2;
+	} else {  // Overlap
+		return 0.0;
+	}
+}
+
+/** Repelling charge force, ala Coulomb's law. */
 inline Vector
 repel_force(const Region& a, const Region& b)
 {
-	const Vector vec   = vec_sub(a.pos, b.pos);
-	const double mag   = vec_mag(vec);
-	const Vector force = vec_mult(
-		vec, (CHARGE_KE * 0.5 / (mag * mag * mag * mag * mag)));
-	const Vector dforce = { force.x * (a.area.x * b.area.x),
-	                        force.y * (a.area.y * b.area.y) };
-	return dforce;
+	static const double MIN_DIST = DBL_EPSILON;
+
+	Vector vec;
+	double dist = rect_distance(
+		&vec,
+		a.pos.x - (a.area.x / 2.0), a.pos.y - (a.area.y / 2.0),
+		a.pos.x + (a.area.x / 2.0), a.pos.y + (a.area.y / 2.0),
+		b.pos.x - (b.area.x / 2.0), b.pos.y - (b.area.y / 2.0),
+		b.pos.x + (b.area.x / 2.0), b.pos.y + (b.area.y / 2.0));
+
+	if (dist <= MIN_DIST) {
+		dist = MIN_DIST;
+		vec  = vec_sub(a.pos, b.pos);
+	}
+	return vec_mult(vec, (CHARGE_KE * 0.5 / (vec_mag(vec) * dist * dist)));
 }
