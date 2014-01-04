@@ -45,7 +45,8 @@ enum {
 	PROP_IS_SOURCE,
 	PROP_SELECTED,
 	PROP_HIGHLIGHTED,
-	PROP_DRAGGABLE
+	PROP_DRAGGABLE,
+	PROP_GRABBED
 };
 
 static void
@@ -151,6 +152,7 @@ ganv_node_set_property(GObject*      object,
 		SET_CASE(IS_SOURCE, boolean, impl->is_source);
 		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
 		SET_CASE(DRAGGABLE, boolean, impl->draggable);
+		SET_CASE(GRABBED, boolean, impl->grabbed);
 	case PROP_SELECTED:
 		if (impl->selected != g_value_get_boolean(value)) {
 			GanvItem* item = GANV_ITEM(object);
@@ -212,6 +214,7 @@ ganv_node_get_property(GObject*    object,
 		GET_CASE(SELECTED, boolean, impl->selected);
 		GET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
 		GET_CASE(DRAGGABLE, boolean, impl->draggable);
+		GET_CASE(GRABBED, boolean, impl->grabbed);
 	case PROP_CANVAS:
 		g_value_set_object(value, GANV_ITEM(object)->canvas);
 		break;
@@ -659,6 +662,14 @@ ganv_node_class_init(GanvNodeClass* klass)
 			"draggable",
 			_("Draggable"),
 			_("Whether this object is draggable."),
+			0,
+			G_PARAM_READWRITE));
+
+	g_object_class_install_property(
+		gobject_class, PROP_GRABBED, g_param_spec_boolean(
+			"grabbed",
+			_("Grabbed"),
+			_("Whether this object is grabbed by the user."),
 			0,
 			G_PARAM_READWRITE));
 

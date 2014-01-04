@@ -57,6 +57,7 @@ public:
 	RW_PROPERTY(gboolean, selected)
 	RW_PROPERTY(gboolean, highlighted)
 	RW_PROPERTY(gboolean, draggable)
+	RW_PROPERTY(gboolean, grabbed)
 
 	RW_OBJECT_PROPERTY(Node*, partner);
 
