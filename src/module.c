@@ -169,6 +169,12 @@ measure(GanvModule* module, Metrics* m)
 
 		m->width = MAX(contents_width, ports_width);
 		m->width = MAX(m->width, impl->embed_width);
+
+		if (impl->embed_item) {
+			fprintf(stderr, "DOWN EMBED %lf %lf\n", impl->embed_width, m->width);
+			m->width   = MAX(impl->embed_width + 2.0 * PAD, m->width);
+			m->embed_x = PAD;
+		}
 		return;
 	}
 
@@ -176,9 +182,7 @@ measure(GanvModule* module, Metrics* m)
 	// side that the port isn't right on the edge).
 	const double hor_pad = (canvas_title ? 10.0 : 20.0);
 
-	m->width = (canvas_title)
-		? title_w + 10.0
-		: 1.0;
+	m->width = (canvas_title) ? title_w + 10.0 : 1.0;
 
 	// Title is wide, put inputs and outputs beside each other
 	m->horiz = (impl->widest_input + impl->widest_output + 10.0
@@ -380,9 +384,7 @@ resize_down(GanvModule* module)
 	}
 
 	ganv_box_set_height(GANV_BOX(module), height);
-	ganv_box_set_width(GANV_BOX(module),
-	                   MAX(title_w, MAX(in_x, out_x) + port_breadth) + PAD);
-
+	ganv_box_set_width(GANV_BOX(module), m.width);
 	place_title(module, GANV_DIRECTION_DOWN);
 }
 
