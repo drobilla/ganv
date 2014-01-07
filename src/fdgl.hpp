@@ -16,9 +16,9 @@
 #include <float.h>
 #include <math.h>
 
-static const double CHARGE_KE = 4000000.0;
-static const double EDGE_K    = 64.0;
-static const double EDGE_LEN  = 1.0;
+static const double CHARGE_KE = 2000000.0;
+static const double EDGE_K    = 32.0;
+static const double EDGE_LEN  = 0.1;
 
 struct Region {
 	Vector pos;

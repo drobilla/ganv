@@ -824,7 +824,6 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			apply_force(node, partner, edge_force(dir, preg.pos, reg.pos));
 		}
 
-
 		/* Add tide force which pulls all objects as if the layout is happening
 		   on a flowing river surface.  This prevents disconnected components
 		   from being ejected, since at some point the tide force will be
@@ -851,7 +850,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 
 		GanvNode* const node = *i;
 
-		static const float damp = 0.2;  // Velocity damping
+		static const float damp = 0.3;  // Velocity damping
 
 		if (node->impl->grabbed || !node->impl->connected) {
 			node->impl->vel.x = 0.0;
