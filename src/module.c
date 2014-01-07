@@ -171,7 +171,6 @@ measure(GanvModule* module, Metrics* m)
 		m->width = MAX(m->width, impl->embed_width);
 
 		if (impl->embed_item) {
-			fprintf(stderr, "DOWN EMBED %lf %lf\n", impl->embed_width, m->width);
 			m->width   = MAX(impl->embed_width + 2.0 * PAD, m->width);
 			m->embed_x = PAD;
 		}
