@@ -664,8 +664,9 @@ ganv_item_default_bounds(GanvItem* item, double* x1, double* y1, double* x2, dou
  * @x2: Rightmost edge of the bounding box (return value).
  * @y2: Lower edge of the bounding box (return value).
  *
- * Queries the bounding box of a canvas item.  The bounds are returned in the
- * coordinate system of the item's parent.
+ * Queries the bounding box of a canvas item.  The bounding box may not be
+ * exactly tight, but the canvas items will do the best they can.  The bounds
+ * are returned in the coordinate system of the item's parent.
  **/
 void
 ganv_item_get_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2)

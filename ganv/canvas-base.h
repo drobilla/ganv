@@ -30,9 +30,6 @@
 
 G_BEGIN_DECLS
 
-/* "Small" value used by canvas stuff */
-#define GANV_CANVAS_BASE_EPSILON 1e-10
-
 typedef struct _GanvCanvasBase      GanvCanvasBase;
 typedef struct _GanvCanvasBaseClass GanvCanvasBaseClass;
 
@@ -182,21 +179,10 @@ void ganv_canvas_base_scroll_to(GanvCanvasBase* canvas, int cx, int cy);
  */
 void ganv_canvas_base_get_scroll_offsets(GanvCanvasBase* canvas, int* cx, int* cy);
 
-/* Requests that the canvas be repainted immediately instead of in the idle
- * loop.
- */
-void ganv_canvas_base_update_now(GanvCanvasBase* canvas);
-
 /* Returns the item that is at the specified position in world coordinates, or
  * NULL if no item is there.
  */
 GanvItem* ganv_canvas_base_get_item_at(GanvCanvasBase* canvas, double x, double y);
-
-/* For use only by item type implementations.  Request that the canvas
- * eventually redraw the specified region, specified in canvas pixel
- * coordinates.  The region contains (x1, y1) but not (x2, y2).
- */
-void ganv_canvas_base_request_redraw(GanvCanvasBase* canvas, int x1, int y1, int x2, int y2);
 
 /* Gets the affine transform that converts world coordinates into canvas pixel
  * coordinates.

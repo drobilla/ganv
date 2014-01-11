@@ -1365,7 +1365,7 @@ ganv_canvas_base_set_pixels_per_unit(GanvCanvasBase* canvas, double n)
 	int    anchor_x, anchor_y;
 
 	g_return_if_fail(GANV_IS_CANVAS_BASE(canvas));
-	g_return_if_fail(n > GANV_CANVAS_BASE_EPSILON);
+	g_return_if_fail(n > 1e-10);
 
 	if (canvas->center_scroll_region) {
 		anchor_x = GTK_WIDGET(canvas)->allocation.width / 2;
@@ -1442,30 +1442,6 @@ ganv_canvas_base_get_scroll_offsets(GanvCanvasBase* canvas, int* cx, int* cy)
 	if (cy) {
 		*cy = canvas->layout.vadjustment->value;
 	}
-}
-
-/**
- * ganv_canvas_base_update_now:
- * @canvas: A canvas.
- *
- * Forces an immediate update and redraw of a canvas.  If the canvas does not
- * have any pending update or redraw requests, then no action is taken.  This is
- * typically only used by applications that need explicit control of when the
- * display is updated, like games.  It is not needed by normal applications.
- */
-void
-ganv_canvas_base_update_now(GanvCanvasBase* canvas)
-{
-	g_return_if_fail(GANV_IS_CANVAS_BASE(canvas));
-
-	if (!(canvas->need_update || canvas->need_redraw)) {
-		g_assert(canvas->idle_id == 0);
-		g_assert(canvas->redraw_region == NULL);
-		return;
-	}
-
-	remove_idle(canvas);
-	do_update(canvas);
 }
 
 /**

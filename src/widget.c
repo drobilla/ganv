@@ -21,6 +21,7 @@
 
 #include <gtk/gtksignal.h>
 
+#include "ganv/canvas-base.h"
 #include "ganv/widget.h"
 
 #include "./gettext.h"

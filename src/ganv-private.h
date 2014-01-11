@@ -22,8 +22,9 @@ extern "C" {
 
 #include <cairo.h>
 
-#include "ganv/types.h"
+#include "ganv/canvas-base.h"
 #include "ganv/text.h"
+#include "ganv/types.h"
 
 extern guint signal_moved;
 
@@ -217,6 +218,13 @@ ganv_canvas_base_request_update(GanvCanvasBase* canvas);
 int
 ganv_canvas_base_emit_event(GanvCanvasBase* canvas, GdkEvent* event);
 
+/* For use only by item type implementations.  Request that the canvas
+ * eventually redraw the specified region, specified in canvas pixel
+ * coordinates.  The region contains (x1, y1) but not (x2, y2).
+ */
+void
+ganv_canvas_base_request_redraw(GanvCanvasBase* canvas,
+                                int x1, int y1, int x2, int y2);
 
 /* Edge */
 
