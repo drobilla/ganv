@@ -26,10 +26,7 @@
 #include "./ganv-private.h"
 #include "./gettext.h"
 
-/**
- * #GanvItem: Base class for all canvas items.
- *
- * All canvas items are derived from GanvItem.  The only information a GanvItem
+/* All canvas items are derived from GanvItem.  The only information a GanvItem
  * contains is its parent canvas, its parent canvas item, its bounding box in
  * world coordinates, and its current affine transformation.
  *

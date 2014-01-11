@@ -803,6 +803,10 @@ apply_force(GanvNode* a, GanvNode* b, const Vector& f)
 gboolean
 GanvCanvasImpl::layout_iteration()
 {
+	if (_drag_state == EDGE) {
+		return FALSE;  // Canvas is locked, halt layout process
+	}
+
 	static const double T_PER_US = .0001;  // Sym time per real microsecond
 
 	static uint64_t prev = 0;  // Previous iteration time
