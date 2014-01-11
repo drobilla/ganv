@@ -20,7 +20,6 @@
 
 #include <gtk/gtkstyle.h>
 
-#include "ganv/canvas-base.h"
 #include "ganv/canvas.h"
 #include "ganv/text.h"
 
@@ -246,7 +245,7 @@ ganv_text_update(GanvItem* item, int flags)
 
 	parent_class->update(item, flags);
 
-	ganv_canvas_base_request_redraw(item->canvas, x1, y1, x2, y2);
+	ganv_canvas_request_redraw(item->canvas, x1, y1, x2, y2);
 }
 
 static double

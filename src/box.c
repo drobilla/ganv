@@ -153,7 +153,7 @@ ganv_box_request_redraw(GanvItem*            item,
 		ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 	}
 
-	ganv_canvas_base_request_redraw(item->canvas, x1, y1, x2, y2);
+	ganv_canvas_request_redraw(item->canvas, x1, y1, x2, y2);
 }
 
 static void
@@ -198,8 +198,8 @@ ganv_box_update(GanvItem* item, int flags)
 	ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 
 	// Update item canvas coordinates
-	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x1, y1, &item->x1, &item->y1);
-	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x2, y2, &item->x2, &item->y2);
+	ganv_canvas_w2c_d(item->canvas, x1, y1, &item->x1, &item->y1);
+	ganv_canvas_w2c_d(item->canvas, x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
 	ganv_box_request_redraw(item, &impl->coords, FALSE);
@@ -337,9 +337,9 @@ ganv_box_is_within(const GanvNode* self,
 	ganv_item_i2w_pair(GANV_ITEM(self), &bx1, &by1, &bx2, &by2);
 
 	return (   bx1 >= x1
-	        && by2 >= y1
-	        && bx2 <= x2
-	        && by2 <= y2);
+	           && by2 >= y1
+	           && bx2 <= x2
+	           && by2 <= y2);
 }
 
 static void

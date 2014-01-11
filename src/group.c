@@ -20,7 +20,7 @@
 
 #include <math.h>
 
-#include "ganv/canvas-base.h"
+#include "ganv/canvas.h"
 #include "ganv/group.h"
 
 #include "./gettext.h"

@@ -18,6 +18,8 @@
 
 #include "ganv/item.h"
 
+G_BEGIN_DECLS
+
 /* Based on GnomeCanvasGroup, by Federico Mena <federico@nuclecu.unam.mx>
  * and Raph Levien <raph@gimp.org>
  * Copyright 1997-2000 Free Software Foundation
@@ -46,5 +48,7 @@ struct _GanvGroupClass {
 };
 
 GType ganv_group_get_type(void) G_GNUC_CONST;
+
+G_END_DECLS
 
 #endif  /* GANV_GROUP_H */

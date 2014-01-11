@@ -17,7 +17,6 @@
 #include <string.h>
 
 #include "ganv/canvas.h"
-#include "ganv/canvas-base.h"
 #include "ganv/circle.h"
 
 #include "./color.h"
@@ -233,8 +232,8 @@ request_redraw(GanvItem*               item,
 		ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 	}
 
-	ganv_canvas_base_request_redraw(item->canvas, x1, y1, x2, y2);
-	ganv_canvas_base_request_redraw(item->canvas, 0, 0, 10000, 10000);
+	ganv_canvas_request_redraw(item->canvas, x1, y1, x2, y2);
+	ganv_canvas_request_redraw(item->canvas, 0, 0, 10000, 10000);
 }
 
 static void
@@ -290,8 +289,8 @@ ganv_circle_update(GanvItem* item, int flags)
 	ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 
 	// Update item canvas coordinates
-	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x1, y1, &item->x1, &item->y1);
-	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x2, y2, &item->x2, &item->y2);
+	ganv_canvas_w2c_d(item->canvas, x1, y1, &item->x1, &item->y1);
+	ganv_canvas_w2c_d(item->canvas, x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
 	request_redraw(item, &impl->coords, FALSE);

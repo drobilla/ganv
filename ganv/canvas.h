@@ -16,9 +16,15 @@
 #ifndef GANV_CANVAS_H
 #define GANV_CANVAS_H
 
-#include "ganv/canvas-base.h"
+#include <stdarg.h>
+
+#include <cairo.h>
+#include <gtk/gtk.h>
+
+#include "ganv/canvas.h"
 #include "ganv/types.h"
 #include "ganv/edge.h"
+#include "ganv/item.h"
 
 G_BEGIN_DECLS
 
@@ -47,42 +53,158 @@ typedef enum {
 } GanvDirection;
 
 struct _GanvCanvas {
-	GanvCanvasBase         canvas;
+	GtkLayout layout;
+
 	struct GanvCanvasImpl* impl;
-	GanvDirection          direction;
-	double                 width;
-	double                 height;
-	gboolean               locked;
+
+	/* Root canvas item */
+	GanvItem* root;
+
+	/* Region that needs redrawing (list of rectangles) */
+	GSList* redraw_region;
+
+	/* The item containing the mouse pointer, or NULL if none */
+	GanvItem* current_item;
+
+	/* Item that is about to become current (used to track deletions and such) */
+	GanvItem* new_current_item;
+
+	/* Item that holds a pointer grab, or NULL if none */
+	GanvItem* grabbed_item;
+
+	/* If non-NULL, the currently focused item */
+	GanvItem* focused_item;
+
+	/* GC for temporary draw pixmap */
+	GdkGC* pixmap_gc;
+
+	/* Event on which selection of current item is based */
+	GdkEvent pick_event;
+
+	/* Scrolling region */
+	double scroll_x1, scroll_y1;
+	double scroll_x2, scroll_y2;
+
+	/* Scaling factor to be used for display */
+	double pixels_per_unit;
+
+	/* Idle handler ID */
+	guint idle_id;
+
+	/* Signal handler ID for destruction of the root item */
+	guint root_destroy_id;
+
+	/* Area that is being redrawn.  Contains (x1, y1) but not (x2, y2).
+	 * Specified in canvas pixel coordinates.
+	 */
+	int redraw_x1, redraw_y1;
+	int redraw_x2, redraw_y2;
+
+	/* Offsets of the temprary drawing pixmap */
+	int draw_xofs, draw_yofs;
+
+	/* Internal pixel offsets when zoomed out */
+	int zoom_xofs, zoom_yofs;
+
+	/* Last known modifier state, for deferred repick when a button is down */
+	int state;
+
+	/* Event mask specified when grabbing an item */
+	guint grabbed_event_mask;
+
+	/* Tolerance distance for picking items */
+	int close_enough;
+
+	/* Whether the canvas should center the scroll region in the middle of
+	 * the window if the scroll region is smaller than the window.
+	 */
+	unsigned int center_scroll_region : 1;
+
+	/* Whether items need update at next idle loop iteration */
+	unsigned int need_update : 1;
+
+	/* Whether the canvas needs redrawing at the next idle loop iteration */
+	unsigned int need_redraw : 1;
+
+	/* Whether current item will be repicked at next idle loop iteration */
+	unsigned int need_repick : 1;
+
+	/* For use by internal pick_current_item() function */
+	unsigned int left_grabbed_item : 1;
+
+	/* For use by internal pick_current_item() function */
+	unsigned int in_repick : 1;
+
+	/* Flow direction */
+	GanvDirection direction;
+
+	/* Canvas width */
+	double width;
+
+	/* Canvas height */
+	double height;
+
+	/* Disable changes to canvas */
+	gboolean locked;
+
 #ifdef GANV_FDGL
 	guint                  layout_idle_id;
 #endif
 };
 
 struct _GanvCanvasClass {
-	GanvCanvasBaseClass parent_class;
+	GtkLayoutClass parent_class;
+
+	/* Private Virtual methods for groping the canvas inside bonobo */
+	void (* request_update)(GanvCanvas* canvas);
+
+	/* Reserved for future expansion */
+	gpointer spare_vmethods [4];
 };
 
-GType ganv_canvas_get_type(void);
+GType ganv_canvas_get_type(void) G_GNUC_CONST;
 
 GanvCanvas* ganv_canvas_new(double width, double height);
 
-/**
- * ganv_canvas_resize:
- * Resize the canvas to the given dimensions.
- */
+GanvItem* ganv_canvas_root(GanvCanvas* canvas);
+
+void ganv_canvas_set_scroll_region(GanvCanvas* canvas,
+                                   double x1, double y1, double x2, double y2);
+
+void ganv_canvas_get_scroll_region(GanvCanvas* canvas,
+                                   double* x1, double* y1, double* x2, double* y2);
+
+void ganv_canvas_set_center_scroll_region(GanvCanvas* canvas, gboolean center_scroll_region);
+
+gboolean ganv_canvas_get_center_scroll_region(GanvCanvas* canvas);
+
+void ganv_canvas_set_pixels_per_unit(GanvCanvas* canvas, double n);
+
+void ganv_canvas_scroll_to(GanvCanvas* canvas, int cx, int cy);
+
+void ganv_canvas_get_scroll_offsets(GanvCanvas* canvas, int* cx, int* cy);
+
+GanvItem* ganv_canvas_get_item_at(GanvCanvas* canvas, double x, double y);
+
+void ganv_canvas_w2c_affine(GanvCanvas* canvas, cairo_matrix_t* matrix);
+
+void ganv_canvas_w2c(GanvCanvas* canvas, double wx, double wy, int* cx, int* cy);
+
+void ganv_canvas_w2c_d(GanvCanvas* canvas, double wx, double wy, double* cx, double* cy);
+
+void ganv_canvas_c2w(GanvCanvas* canvas, int cx, int cy, double* wx, double* wy);
+
+void ganv_canvas_window_to_world(GanvCanvas* canvas,
+                                 double winx, double winy, double* worldx, double* worldy);
+
+void ganv_canvas_world_to_window(GanvCanvas* canvas,
+                                 double worldx, double worldy, double* winx, double* winy);
+
 void
 ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
 
 void
 ganv_canvas_contents_changed(GanvCanvas* canvas);
-
-/**
- * ganv_canvas_get_root:
- *
- * Return value: (transfer none): The root group of @canvas.
- */
-GanvItem*
-ganv_canvas_get_root(const GanvCanvas* canvas);
 
 void
 ganv_canvas_add_node(GanvCanvas* canvas,
@@ -92,12 +214,6 @@ void
 ganv_canvas_remove_node(GanvCanvas* canvas,
                         GanvNode*   node);
 
-/**
- * ganv_canvas_get_edge:
- * Get the edge between two nodes, or NULL if none exists.
- *
- * Return value: (transfer none): The root group of @canvas.
- */
 GanvEdge*
 ganv_canvas_get_edge(GanvCanvas* canvas,
                      GanvNode*   tail,
@@ -112,7 +228,6 @@ ganv_canvas_remove_edge_between(GanvCanvas* canvas,
                                 GanvNode*   tail,
                                 GanvNode*   head);
 
-/** Get the default font size in points. */
 double
 ganv_canvas_get_default_font_size(const GanvCanvas* canvas);
 
@@ -125,7 +240,6 @@ ganv_canvas_clear_selection(GanvCanvas* canvas);
 void
 ganv_canvas_arrange(GanvCanvas* canvas);
 
-/** Write a Graphviz DOT description of the canvas to @c filename. */
 void
 ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename);
 

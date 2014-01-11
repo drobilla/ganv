@@ -22,7 +22,7 @@ extern "C" {
 
 #include <cairo.h>
 
-#include "ganv/canvas-base.h"
+#include "ganv/canvas.h"
 #include "ganv/text.h"
 #include "ganv/types.h"
 
@@ -210,21 +210,19 @@ ganv_item_invoke_update(GanvItem* item, int flags);
 void
 ganv_item_emit_event(GanvItem* item, GdkEvent* event, gint* finished);
 
-/* CanvasBase */
-
 void
-ganv_canvas_base_request_update(GanvCanvasBase* canvas);
+ganv_canvas_request_update(GanvCanvas* canvas);
 
 int
-ganv_canvas_base_emit_event(GanvCanvasBase* canvas, GdkEvent* event);
+ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event);
 
 /* For use only by item type implementations.  Request that the canvas
  * eventually redraw the specified region, specified in canvas pixel
  * coordinates.  The region contains (x1, y1) but not (x2, y2).
  */
 void
-ganv_canvas_base_request_redraw(GanvCanvasBase* canvas,
-                                int x1, int y1, int x2, int y2);
+ganv_canvas_request_redraw(GanvCanvas* canvas,
+                           int x1, int y1, int x2, int y2);
 
 /* Edge */
 
@@ -232,7 +230,7 @@ void
 ganv_edge_get_coords(const GanvEdge* edge, GanvEdgeCoords* coords);
 
 void
-ganv_edge_request_redraw(GanvCanvasBase*       canvas,
+ganv_edge_request_redraw(GanvCanvas*           canvas,
                          const GanvEdgeCoords* coords);
 
 /* Box */

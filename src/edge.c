@@ -18,7 +18,6 @@
 
 #include <cairo.h>
 
-#include "ganv/canvas-base.h"
 #include "ganv/canvas.h"
 #include "ganv/edge.h"
 #include "ganv/node.h"
@@ -164,7 +163,7 @@ ganv_edge_get_property(GObject*    object,
 }
 
 void
-ganv_edge_request_redraw(GanvCanvasBase*       canvas,
+ganv_edge_request_redraw(GanvCanvas*           canvas,
                          const GanvEdgeCoords* coords)
 {
 	const double w = coords->width;
@@ -184,17 +183,17 @@ ganv_edge_request_redraw(GanvCanvasBase*       canvas,
 		const double r1y1 = MIN(MIN(src_y, join_y), src_y1);
 		const double r1x2 = MAX(MAX(src_x, join_x), src_x1);
 		const double r1y2 = MAX(MAX(src_y, join_y), src_y1);
-		ganv_canvas_base_request_redraw(canvas,
-		                                r1x1 - w, r1y1 - w,
-		                                r1x2 + w, r1y2 + w);
+		ganv_canvas_request_redraw(canvas,
+		                           r1x1 - w, r1y1 - w,
+		                           r1x2 + w, r1y2 + w);
 
 		const double r2x1 = MIN(MIN(dst_x, join_x), dst_x1);
 		const double r2y1 = MIN(MIN(dst_y, join_y), dst_y1);
 		const double r2x2 = MAX(MAX(dst_x, join_x), dst_x1);
 		const double r2y2 = MAX(MAX(dst_y, join_y), dst_y1);
-		ganv_canvas_base_request_redraw(canvas,
-		                                r2x1 - w, r2y1 - w,
-		                                r2x2 + w, r2y2 + w);
+		ganv_canvas_request_redraw(canvas,
+		                           r2x1 - w, r2y1 - w,
+		                           r2x2 + w, r2y2 + w);
 
 	} else {
 		const double x1 = MIN(coords->x1, coords->x2);
@@ -202,13 +201,13 @@ ganv_edge_request_redraw(GanvCanvasBase*       canvas,
 		const double x2 = MAX(coords->x1, coords->x2);
 		const double y2 = MAX(coords->y1, coords->y2);
 
-		ganv_canvas_base_request_redraw(canvas,
-		                                x1 - w, y1 - w,
-		                                x2 + w, y2 + w);
+		ganv_canvas_request_redraw(canvas,
+		                           x1 - w, y1 - w,
+		                           x2 + w, y2 + w);
 	}
 
 	if (coords->handle_radius > 0.0) {
-		ganv_canvas_base_request_redraw(
+		ganv_canvas_request_redraw(
 			canvas,
 			coords->handle_x - coords->handle_radius - w,
 			coords->handle_y - coords->handle_radius - w,
@@ -217,7 +216,7 @@ ganv_edge_request_redraw(GanvCanvasBase*       canvas,
 	}
 
 	if (coords->arrowhead) {
-		ganv_canvas_base_request_redraw(
+		ganv_canvas_request_redraw(
 			canvas,
 			coords->x2 - ARROW_DEPTH,
 			coords->y2 - ARROW_BREADTH,
@@ -308,8 +307,8 @@ ganv_edge_update(GanvItem* item, int flags)
 	}
 
 	// Update item canvas coordinates
-	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x1, y1, &item->x1, &item->y1);
-	ganv_canvas_base_w2c_d(GANV_CANVAS_BASE(item->canvas), x2, y2, &item->x2, &item->y2);
+	ganv_canvas_w2c_d(item->canvas, x1, y1, &item->x1, &item->y1);
+	ganv_canvas_w2c_d(item->canvas, x2, y2, &item->x2, &item->y2);
 
 	// Request redraw of new location
 	ganv_edge_request_redraw(item->canvas, &impl->coords);
@@ -621,7 +620,7 @@ ganv_edge_new(GanvCanvas* canvas,
 	va_list args;
 	va_start(args, first_prop_name);
 	ganv_item_construct(&edge->item,
-	                    GANV_ITEM(ganv_canvas_get_root(canvas)),
+	                    GANV_ITEM(ganv_canvas_root(canvas)),
 	                    first_prop_name, args);
 	va_end(args);
 

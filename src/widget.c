@@ -21,7 +21,7 @@
 
 #include <gtk/gtksignal.h>
 
-#include "ganv/canvas-base.h"
+#include "ganv/canvas.h"
 #include "ganv/widget.h"
 
 #include "./gettext.h"
@@ -85,7 +85,7 @@ recalc_bounds(GanvWidget* witem)
 
 	/* Get canvas pixel coordinates */
 
-	ganv_canvas_base_w2c(item->canvas, wx, wy, &witem->cx, &witem->cy);
+	ganv_canvas_w2c(item->canvas, wx, wy, &witem->cx, &witem->cy);
 
 	/* Anchor widget item */
 
@@ -330,7 +330,7 @@ ganv_widget_point(GanvItem* item, double x, double y,
 	*actual_item = item;
 
 	double x1, y1;
-	ganv_canvas_base_c2w(item->canvas, witem->cx, witem->cy, &x1, &y1);
+	ganv_canvas_c2w(item->canvas, witem->cx, witem->cy, &x1, &y1);
 
 	double x2 = x1 + (witem->cwidth - 1) / item->canvas->pixels_per_unit;
 	double y2 = y1 + (witem->cheight - 1) / item->canvas->pixels_per_unit;

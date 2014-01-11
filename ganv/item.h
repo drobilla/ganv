@@ -28,21 +28,6 @@
 
 G_BEGIN_DECLS
 
-/**
- * GanvItem: Base class for all canvas items.
- *
- * All canvas items are derived from GanvItem.  The only information a GanvItem
- * contains is its parent canvas, its parent canvas item, its bounding box in
- * world coordinates, and its current affine transformation.
- *
- * Items inside a canvas are organized in a tree, where leaves are items
- * without any children.  Each canvas has a single root item, which can be
- * obtained with the ganv_canvas_base_get_root() function.
- *
- * The abstract GanvItem class does not have any configurable or queryable
- * attributes.
- */
-
 typedef struct _GanvItem      GanvItem;
 typedef struct _GanvItemClass GanvItemClass;
 
@@ -67,7 +52,7 @@ struct _GanvItem {
 	GtkObject object;
 
 	/* Parent canvas for this item */
-	struct _GanvCanvasBase* canvas;
+	struct _GanvCanvas* canvas;
 
 	/* Parent for this item */
 	GanvItem* parent;
@@ -88,18 +73,13 @@ struct _GanvItem {
 struct _GanvItemClass {
 	GtkObjectClass parent_class;
 
-	/**
-	 * Add a child to this item (optional).
-	 */
+	/* Add a child to this item (optional). */
 	void (*add)(GanvItem* item, GanvItem* child);
 
-	/**
-	 * Remove a child from this item (optional).
-	 */
+	/* Remove a child from this item (optional). */
 	void (*remove)(GanvItem* item, GanvItem* child);
 
-	/**
-	 * Tell the item to update itself.
+	/* Tell the item to update itself.
 	 *
 	 * The flags are from the update flags defined above.  The item should
 	 * update its internal state from its queued state, and recompute and
@@ -108,28 +88,19 @@ struct _GanvItemClass {
 	 */
 	void (*update)(GanvItem* item, int flags);
 
-	/**
-	 * Realize an item (create GCs, etc.).
-	 */
+	/* Realize an item (create GCs, etc.). */
 	void (*realize)(GanvItem* item);
 
-	/**
-	 * Unrealize an item.
-	 */
+	/* Unrealize an item. */
 	void (*unrealize)(GanvItem* item);
 
-	/**
-	 * Map an item - normally only need by items with their own GdkWindows.
-	 */
+	/* Map an item - normally only need by items with their own GdkWindows. */
 	void (*map)(GanvItem* item);
 
-	/**
-	 * Unmap an item
-	 */
+	/* Unmap an item */
 	void (*unmap)(GanvItem* item);
 
-	/**
-	 *  Draw an item of this type.
+	/* Draw an item of this type.
 	 *
 	 * (x, y) are the upper-left canvas pixel coordinates of the drawable.
 	 * (width, height) are the dimensions of the drawable.
@@ -141,8 +112,7 @@ struct _GanvItemClass {
 	             int       width,
 	             int       height);
 
-	/**
-	 * Calculate the distance from an item to the specified point.
+	/* Calculate the distance from an item to the specified point.
 	 *
 	 * It also returns a canvas item which is actual item the point is within,
 	 * which may not be equal to @item if @item has children.  (cx, cy) are the
@@ -156,15 +126,13 @@ struct _GanvItemClass {
 	                int        cy,
 	                GanvItem** actual_item);
 
-	/**
-	 * Fetch the item's bounding box (need not be exactly tight).
+	/* Fetch the item's bounding box (need not be exactly tight).
 	 *
 	 * This should be in item-relative coordinates.
 	 */
 	void (*bounds)(GanvItem* item, double* x1, double* y1, double* x2, double* y2);
 
-	/**
-	 * Signal: an event occurred for an item of this type.
+	/* Signal: an event occurred for an item of this type.
 	 *
 	 * The (x, y) coordinates are in the canvas world coordinate system.
 	 */

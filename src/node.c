@@ -14,7 +14,6 @@
  */
 
 #include "ganv/canvas.h"
-#include "ganv/canvas-base.h"
 #include "ganv/node.h"
 
 #include "./boilerplate.h"
@@ -169,8 +168,8 @@ ganv_node_set_property(GObject*      object,
 		break;
 	case PROP_CANVAS:
 		if (!GANV_ITEM(object)->parent) {
-			GanvCanvasBase* canvas = GANV_CANVAS_BASE(g_value_get_object(value));
-			g_object_set(object, "parent", ganv_canvas_base_root(canvas), NULL);
+			GanvCanvas* canvas = GANV_CANVAS(g_value_get_object(value));
+			g_object_set(object, "parent", ganv_canvas_root(canvas), NULL);
 			ganv_canvas_add_node(GANV_CANVAS(canvas), node);
 		} else {
 			g_warning("Cannot change `canvas' property after construction");

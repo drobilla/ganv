@@ -19,7 +19,6 @@
  */
 
 #include "ganv/canvas.h"
-#include "ganv/canvas-base.h"
 #include "ganv/node.h"
 
 #include "./boilerplate.h"
@@ -27,9 +26,31 @@
 #include "./ganv-private.h"
 #include "./gettext.h"
 
-#define GCI_UPDATE_MASK (GANV_CANVAS_BASE_UPDATE_REQUESTED \
-                         | GANV_CANVAS_BASE_UPDATE_AFFINE \
-                         | GANV_CANVAS_BASE_UPDATE_VISIBILITY)
+/**
+ * #GanvItem: Base class for all canvas items.
+ *
+ * All canvas items are derived from GanvItem.  The only information a GanvItem
+ * contains is its parent canvas, its parent canvas item, its bounding box in
+ * world coordinates, and its current affine transformation.
+ *
+ * Items inside a canvas are organized in a tree, where leaves are items
+ * without any children.  Each canvas has a single root item, which can be
+ * obtained with the ganv_canvas_base_get_root() function.
+ *
+ * The abstract GanvItem class does not have any configurable or queryable
+ * attributes.
+ */
+
+/* Update flags for items */
+enum {
+	GANV_CANVAS_UPDATE_REQUESTED  = 1 << 0,
+	GANV_CANVAS_UPDATE_AFFINE     = 1 << 1,
+	GANV_CANVAS_UPDATE_VISIBILITY = 1 << 2,
+};
+
+#define GCI_UPDATE_MASK (GANV_CANVAS_UPDATE_REQUESTED \
+                         | GANV_CANVAS_UPDATE_AFFINE \
+                         | GANV_CANVAS_UPDATE_VISIBILITY)
 
 enum {
 	ITEM_PROP_0,
@@ -48,7 +69,7 @@ static guint item_signals[ITEM_LAST_SIGNAL];
 
 G_DEFINE_TYPE(GanvItem, ganv_item, GTK_TYPE_OBJECT)
 
-static GtkObjectClass * item_parent_class;
+static GtkObjectClass* item_parent_class;
 
 /* Object initialization function for GanvItem */
 static void
@@ -70,7 +91,7 @@ ganv_item_init(GanvItem* item)
  * Creates a new canvas item with @parent as its parent group.  The item is
  * created at the top of its parent's stack, and starts up as visible.  The item
  * is of the specified @type, for example, it can be
- * ganv_canvas_base_rect_get_type().  The list of object arguments/value pairs is
+ * ganv_canvas_rect_get_type().  The list of object arguments/value pairs is
  * used to configure the item. If you need to pass construct time parameters, you
  * should use g_object_new() to pass the parameters and
  * ganv_item_construct() to set up the canvas item.
@@ -108,9 +129,9 @@ item_post_create_setup(GanvItem* item)
 			g_warning("item added to non-parent item\n");
 		}
 	}
-	ganv_canvas_base_request_redraw(item->canvas,
-	                                item->x1, item->y1,
-	                                item->x2 + 1, item->y2 + 1);
+	ganv_canvas_request_redraw(item->canvas,
+	                           item->x1, item->y1,
+	                           item->x2 + 1, item->y2 + 1);
 	item->canvas->need_repick = TRUE;
 }
 
@@ -212,8 +233,8 @@ static void
 redraw_if_visible(GanvItem* item)
 {
 	if (item->object.flags & GANV_ITEM_VISIBLE) {
-		ganv_canvas_base_request_redraw(item->canvas, item->x1, item->y1, item->x2 + 1,
-		                                item->y2 + 1);
+		ganv_canvas_request_redraw(item->canvas, item->x1, item->y1, item->x2 + 1,
+		                           item->y2 + 1);
 	}
 }
 
@@ -332,14 +353,14 @@ ganv_item_invoke_update(GanvItem* item, int flags)
 
 	/* apply object flags to child flags */
 
-	child_flags &= ~GANV_CANVAS_BASE_UPDATE_REQUESTED;
+	child_flags &= ~GANV_CANVAS_UPDATE_REQUESTED;
 
 	if (item->object.flags & GANV_ITEM_NEED_UPDATE) {
-		child_flags |= GANV_CANVAS_BASE_UPDATE_REQUESTED;
+		child_flags |= GANV_CANVAS_UPDATE_REQUESTED;
 	}
 
 	if (item->object.flags & GANV_ITEM_NEED_VIS) {
-		child_flags |= GANV_CANVAS_BASE_UPDATE_VISIBILITY;
+		child_flags |= GANV_CANVAS_UPDATE_VISIBILITY;
 	}
 
 	if (child_flags & GCI_UPDATE_MASK) {
@@ -432,8 +453,8 @@ ganv_item_show(GanvItem* item)
 
 	if (!(item->object.flags & GANV_ITEM_VISIBLE)) {
 		item->object.flags |= GANV_ITEM_VISIBLE;
-		ganv_canvas_base_request_redraw(item->canvas, item->x1, item->y1, item->x2 + 1,
-		                                item->y2 + 1);
+		ganv_canvas_request_redraw(item->canvas, item->x1, item->y1, item->x2 + 1,
+		                           item->y2 + 1);
 		item->canvas->need_repick = TRUE;
 	}
 }
@@ -452,8 +473,8 @@ ganv_item_hide(GanvItem* item)
 
 	if (item->object.flags & GANV_ITEM_VISIBLE) {
 		item->object.flags &= ~GANV_ITEM_VISIBLE;
-		ganv_canvas_base_request_redraw(item->canvas, item->x1, item->y1, item->x2 + 1,
-		                                item->y2 + 1);
+		ganv_canvas_request_redraw(item->canvas, item->x1, item->y1, item->x2 + 1,
+		                           item->y2 + 1);
 		item->canvas->need_repick = TRUE;
 	}
 }
@@ -537,7 +558,7 @@ ganv_item_i2w_offset(GanvItem* item, double* px, double* py)
 {
 	double x = 0.0;
 	double y = 0.0;
-  	while (item) {
+	while (item) {
 		x += item->x;
 		y += item->y;
 		item = item->parent;
@@ -559,8 +580,8 @@ void
 ganv_item_i2w(GanvItem* item, double* x, double* y)
 {
 	/*g_return_if_fail(GANV_IS_ITEM(item));
-	g_return_if_fail(x != NULL);
-	g_return_if_fail(y != NULL);*/
+	  g_return_if_fail(x != NULL);
+	  g_return_if_fail(y != NULL);*/
 
 	double off_x;
 	double off_y;
@@ -628,7 +649,7 @@ ganv_item_grab_focus(GanvItem* item)
 		ev.focus_change.send_event = FALSE;
 		ev.focus_change.in         = FALSE;
 
-		ganv_canvas_base_emit_event(item->canvas, &ev);
+		ganv_canvas_emit_event(item->canvas, &ev);
 	}
 
 	item->canvas->focused_item = item;
@@ -640,7 +661,7 @@ ganv_item_grab_focus(GanvItem* item)
 		ev.focus_change.send_event = FALSE;
 		ev.focus_change.in         = TRUE;
 
-		ganv_canvas_base_emit_event(item->canvas, &ev);
+		ganv_canvas_emit_event(item->canvas, &ev);
 	}
 }
 
@@ -702,7 +723,7 @@ ganv_item_request_update(GanvItem* item)
 		ganv_item_request_update(item->parent);
 	} else {
 		/* Have reached the top of the tree, make sure the update call gets scheduled. */
-		ganv_canvas_base_request_update(item->canvas);
+		ganv_canvas_request_update(item->canvas);
 	}
 }
 
@@ -736,43 +757,43 @@ ganv_item_class_init(GanvItemClass* klass)
 	gobject_class->get_property = ganv_item_get_property;
 
 	g_object_class_install_property
-	    (gobject_class, ITEM_PROP_PARENT,
-	    g_param_spec_object("parent", NULL, NULL,
-	                        GANV_TYPE_ITEM,
-	                        (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+		(gobject_class, ITEM_PROP_PARENT,
+		 g_param_spec_object("parent", NULL, NULL,
+		                     GANV_TYPE_ITEM,
+		                     (G_PARAM_READABLE | G_PARAM_WRITABLE)));
 
 	g_object_class_install_property
-	    (gobject_class, ITEM_PROP_X,
-	    g_param_spec_double("x",
-	                        _("X"),
-	                        _("X"),
-	                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
-	                        (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+		(gobject_class, ITEM_PROP_X,
+		 g_param_spec_double("x",
+		                     _("X"),
+		                     _("X"),
+		                     -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
+		                     (G_PARAM_READABLE | G_PARAM_WRITABLE)));
 	g_object_class_install_property
-	    (gobject_class, ITEM_PROP_Y,
-	    g_param_spec_double("y",
-	                        _("Y"),
-	                        _("Y"),
-	                        -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
-	                        (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+		(gobject_class, ITEM_PROP_Y,
+		 g_param_spec_double("y",
+		                     _("Y"),
+		                     _("Y"),
+		                     -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
+		                     (G_PARAM_READABLE | G_PARAM_WRITABLE)));
 
 	g_object_class_install_property
-	    (gobject_class, ITEM_PROP_MANAGED,
-	    g_param_spec_boolean("managed",
-	                        _("Managed"),
-	                        _("Whether the item is managed by its parent"),
-	                         0,
-	                        (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+		(gobject_class, ITEM_PROP_MANAGED,
+		 g_param_spec_boolean("managed",
+		                      _("Managed"),
+		                      _("Whether the item is managed by its parent"),
+		                      0,
+		                      (G_PARAM_READABLE | G_PARAM_WRITABLE)));
 
 	item_signals[ITEM_EVENT]
-	    = g_signal_new("event",
-	                   G_TYPE_FROM_CLASS(klass),
-	                   G_SIGNAL_RUN_LAST,
-	                   G_STRUCT_OFFSET(GanvItemClass, event),
-	                   boolean_handled_accumulator, NULL,
-	                   ganv_marshal_BOOLEAN__BOXED,
-	                   G_TYPE_BOOLEAN, 1,
-	                   GDK_TYPE_EVENT | G_SIGNAL_TYPE_STATIC_SCOPE);
+		= g_signal_new("event",
+		               G_TYPE_FROM_CLASS(klass),
+		               G_SIGNAL_RUN_LAST,
+		               G_STRUCT_OFFSET(GanvItemClass, event),
+		               boolean_handled_accumulator, NULL,
+		               ganv_marshal_BOOLEAN__BOXED,
+		               G_TYPE_BOOLEAN, 1,
+		               GDK_TYPE_EVENT | G_SIGNAL_TYPE_STATIC_SCOPE);
 
 	gobject_class->dispose = ganv_item_dispose;
 

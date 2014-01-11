@@ -83,7 +83,6 @@ ganv_source = [
     'src/Canvas.cpp',
     'src/Port.cpp',
     'src/box.c',
-    'src/canvas-base.c',
     'src/circle.c',
     'src/edge.c',
     'src/ganv-marshal.c',
