@@ -20,7 +20,7 @@
 #ifndef GANV_WIDGET_H
 #define GANV_WIDGET_H
 
-#include "ganv/canvas-base.h"
+#include "ganv/item.h"
 
 G_BEGIN_DECLS
 

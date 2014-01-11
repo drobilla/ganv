@@ -16,7 +16,7 @@
 #ifndef GANV_EDGE_H
 #define GANV_EDGE_H
 
-#include "ganv/canvas-base.h"
+#include "ganv/item.h"
 #include "ganv/node.h"
 #include "ganv/types.h"
 

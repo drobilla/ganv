@@ -26,6 +26,8 @@
 #include <cairo.h>
 #include <gtk/gtk.h>
 
+#include "ganv/item.h"
+
 G_BEGIN_DECLS
 
 /* "Small" value used by canvas stuff */
@@ -33,32 +35,6 @@ G_BEGIN_DECLS
 
 typedef struct _GanvCanvasBase      GanvCanvasBase;
 typedef struct _GanvCanvasBaseClass GanvCanvasBaseClass;
-typedef struct _GanvItem            GanvItem;
-typedef struct _GanvItemClass       GanvItemClass;
-
-/* GanvItem - base item class for canvas items
- *
- * All canvas items are derived from GanvItem.  The only information a GanvItem
- * contains is its parent canvas, its parent canvas item, its bounding box in
- * world coordinates, and its current affine transformation.
- *
- * Items inside a canvas are organized in a tree, where leaves are items
- * without any children.  Each canvas has a single root item, which can be
- * obtained with the ganv_canvas_base_get_root() function.
- *
- * The abstract GanvItem class does not have any configurable or
- * queryable attributes.
- */
-
-/* Object flags for items */
-enum {
-	GANV_ITEM_REALIZED      = 1 << 1,
-	GANV_ITEM_MAPPED        = 1 << 2,
-	GANV_ITEM_ALWAYS_REDRAW = 1 << 3,
-	GANV_ITEM_VISIBLE       = 1 << 4,
-	GANV_ITEM_NEED_UPDATE   = 1 << 5,
-	GANV_ITEM_NEED_VIS      = 1 << 6,
-};
 
 /* Update flags for items */
 enum {
@@ -66,172 +42,6 @@ enum {
 	GANV_CANVAS_BASE_UPDATE_AFFINE     = 1 << 1,
 	GANV_CANVAS_BASE_UPDATE_VISIBILITY = 1 << 2,
 };
-
-#define GANV_TYPE_ITEM            (ganv_item_get_type())
-#define GANV_ITEM(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GANV_TYPE_ITEM, GanvItem))
-#define GANV_ITEM_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GANV_TYPE_ITEM, GanvItemClass))
-#define GANV_IS_ITEM(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GANV_TYPE_ITEM))
-#define GANV_IS_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GANV_TYPE_ITEM))
-#define GANV_ITEM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GANV_TYPE_ITEM, GanvItemClass))
-
-struct _GanvItem {
-	GtkObject object;
-
-	/* Parent canvas for this item */
-	GanvCanvasBase* canvas;
-
-	/* Parent for this item */
-	GanvItem* parent;
-
-	/* Layer (z order), higher values are on top */
-	guint layer;
-
-	/* Position in parent-relative coordinates. */
-	double x, y;
-
-	/* Bounding box for this item (in canvas coordinates) */
-	double x1, y1, x2, y2;
-
-	/* True if parent manages this item (don't call add/remove) */
-	gboolean managed;
-};
-
-struct _GanvItemClass {
-	GtkObjectClass parent_class;
-
-	/* Add a child to this item (optional) */
-	void (* add)(GanvItem* item, GanvItem* child);
-
-	/* Remove a child from this item (optional) */
-	void (* remove)(GanvItem* item, GanvItem* child);
-
-	/* Tell the item to update itself.  The flags are from the update flags
-	 * defined above.  The item should update its internal state from its
-	 * queued state, and recompute and request its repaint area.  The update
-	 * method also recomputes the bounding box of the item.
-	 */
-	void (* update)(GanvItem* item, int flags);
-
-	/* Realize an item -- create GCs, etc. */
-	void (* realize)(GanvItem* item);
-
-	/* Unrealize an item */
-	void (* unrealize)(GanvItem* item);
-
-	/* Map an item - normally only need by items with their own GdkWindows */
-	void (* map)(GanvItem* item);
-
-	/* Unmap an item */
-	void (* unmap)(GanvItem* item);
-
-	/* Draw an item of this type.  (x, y) are the upper-left canvas pixel
-	 * coordinates of the drawable, a temporary pixmap, where things get
-	 * drawn.  (width, height) are the dimensions of the drawable.
-	 */
-	void (* draw)(GanvItem* item, cairo_t* cr,
-	              int x, int y, int width, int height);
-
-	/* Calculate the distance from an item to the specified point.  It also
-	 * returns a canvas item which is actual item the point is within, which
-	 * may not be equal to @item if @item has children.  (cx, cy) are the
-	 * canvas pixel coordinates that correspond to the item-relative
-	 * coordinates (x, y).
-	 */
-	double (* point)(GanvItem* item, double x, double y, int cx, int cy,
-	                 GanvItem** actual_item);
-
-	/* Fetch the item's bounding box (need not be exactly tight).  This
-	 * should be in item-relative coordinates.
-	 */
-	void (* bounds)(GanvItem* item, double* x1, double* y1, double* x2, double* y2);
-
-	/* Signal: an event occurred for an item of this type.  The (x, y)
-	 * coordinates are in the canvas world coordinate system.
-	 */
-	gboolean (* event)(GanvItem* item, GdkEvent* event);
-
-	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
-};
-
-GType ganv_item_get_type(void) G_GNUC_CONST;
-
-/* Create a canvas item using the standard Gtk argument mechanism.  The item
- * automatically added to @parent.  The last argument must be a NULL pointer.
- */
-GanvItem* ganv_item_new(GanvItem* parent, GType type,
-                        const gchar* first_arg_name, ...);
-
-/* Constructors for use in derived classes and language wrappers */
-void ganv_item_construct(GanvItem* item, GanvItem* parent,
-                         const gchar* first_arg_name, va_list args);
-
-/* Configure an item using the standard Gtk argument mechanism.  The last
- * argument must
- be a NULL pointer.
- */
-void ganv_item_set(GanvItem* item, const gchar* first_arg_name, ...);
-
-/* Used only for language wrappers and the like */
-void ganv_item_set_valist(GanvItem* item,
-                          const gchar* first_arg_name, va_list args);
-
-void ganv_item_raise(GanvItem* item);
-
-void ganv_item_lower(GanvItem* item);
-
-/* Move an item by the specified amount */
-void ganv_item_move(GanvItem* item, double dx, double dy);
-
-/* Show an item (make it visible).  If the item is already shown, it has no
- * effect.
- */
-void ganv_item_show(GanvItem* item);
-
-/* Hide an item (make it invisible).  If the item is already invisible, it has
- * no effect.
- */
-void ganv_item_hide(GanvItem* item);
-
-/* Grab the mouse for the specified item.  Only the events in event_mask will be
- * reported.  If cursor is non-NULL, it will be used during the duration of the
- * grab.  Time is a proper X event time parameter.  Returns the same values as
- * XGrabPointer().
- */
-int ganv_item_grab(GanvItem* item, unsigned int event_mask,
-                   GdkCursor* cursor, guint32 etime);
-
-/* Ungrabs the mouse -- the specified item must be the same that was passed to
- * ganv_item_grab().  Time is a proper X event time parameter.
- */
-void ganv_item_ungrab(GanvItem* item, guint32 etime);
-
-/* Convert from item coordinates to world coordinates.
- */
-void ganv_item_i2w(GanvItem* item, double* x, double* y);
-
-/* Convert from world coordinates to item coordinates.
- */
-void ganv_item_w2i(GanvItem* item, double* x, double* y);
-
-/* Used to send all of the keystroke events to a specific item as well as
- * GDK_FOCUS_CHANGE events.
- */
-void ganv_item_grab_focus(GanvItem* item);
-
-/* Fetch the bounding box of the item.  The bounding box may not be exactly
- * tight, but the canvas items will do the best they can.  The returned bounding
- * box is in item relative coordinates.
- */
-void ganv_item_get_bounds(GanvItem* item,
-                          double* x1, double* y1, double* x2, double* y2);
-
-/* Request that the update method eventually get called.  This should be used
- * only by item implementations.
- */
-void ganv_item_request_update(GanvItem* item);
-
-/*** GanvCanvasBase ***/
 
 #define GANV_TYPE_CANVAS_BASE            (ganv_canvas_base_get_type())
 #define GANV_CANVAS_BASE(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GANV_TYPE_CANVAS_BASE, GanvCanvasBase))

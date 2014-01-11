@@ -16,7 +16,7 @@
 #ifndef GANV_GROUP_H
 #define GANV_GROUP_H
 
-#include "ganv/canvas-base.h"
+#include "ganv/item.h"
 
 /* Based on GnomeCanvasGroup, by Federico Mena <federico@nuclecu.unam.mx>
  * and Raph Levien <raph@gimp.org>

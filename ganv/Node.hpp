@@ -19,7 +19,6 @@
 #include <glib.h>
 #include <assert.h>
 
-#include "ganv/canvas-base.h"
 #include "ganv/node.h"
 #include "ganv/Item.hpp"
 

@@ -23,9 +23,9 @@
 #include <sigc++/signal.h>
 #include <sigc++/trackable.h>
 
-#include "ganv/canvas-base.h"
-#include "ganv/wrap.hpp"
 #include "ganv/Canvas.hpp"
+#include "ganv/item.h"
+#include "ganv/wrap.hpp"
 
 namespace Ganv {
 

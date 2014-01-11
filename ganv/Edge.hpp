@@ -20,7 +20,6 @@
 
 #include <gdk/gdkevents.h>
 
-#include "ganv/canvas-base.h"
 #include "ganv/Canvas.hpp"
 #include "ganv/Item.hpp"
 #include "ganv/Node.hpp"

@@ -16,7 +16,7 @@
 #ifndef GANV_NODE_H
 #define GANV_NODE_H
 
-#include "ganv/canvas-base.h"
+#include "ganv/item.h"
 #include "ganv/types.h"
 #include "ganv/text.h"
 

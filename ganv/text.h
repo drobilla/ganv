@@ -16,7 +16,7 @@
 #ifndef GANV_TEXT_H
 #define GANV_TEXT_H
 
-#include "ganv/canvas-base.h"
+#include "ganv/item.h"
 
 G_BEGIN_DECLS
 
