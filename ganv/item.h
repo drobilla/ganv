@@ -91,12 +91,12 @@ struct _GanvItemClass {
 	/**
 	 * Add a child to this item (optional).
 	 */
-	void (* add)(GanvItem* item, GanvItem* child);
+	void (*add)(GanvItem* item, GanvItem* child);
 
 	/**
 	 * Remove a child from this item (optional).
 	 */
-	void (* remove)(GanvItem* item, GanvItem* child);
+	void (*remove)(GanvItem* item, GanvItem* child);
 
 	/**
 	 * Tell the item to update itself.
@@ -106,27 +106,27 @@ struct _GanvItemClass {
 	 * request its repaint area.  The update method also recomputes the
 	 * bounding box of the item.
 	 */
-	void (* update)(GanvItem* item, int flags);
+	void (*update)(GanvItem* item, int flags);
 
 	/**
 	 * Realize an item (create GCs, etc.).
 	 */
-	void (* realize)(GanvItem* item);
+	void (*realize)(GanvItem* item);
 
 	/**
 	 * Unrealize an item.
 	 */
-	void (* unrealize)(GanvItem* item);
+	void (*unrealize)(GanvItem* item);
 
 	/**
 	 * Map an item - normally only need by items with their own GdkWindows.
 	 */
-	void (* map)(GanvItem* item);
+	void (*map)(GanvItem* item);
 
 	/**
 	 * Unmap an item
 	 */
-	void (* unmap)(GanvItem* item);
+	void (*unmap)(GanvItem* item);
 
 	/**
 	 *  Draw an item of this type.
@@ -134,8 +134,12 @@ struct _GanvItemClass {
 	 * (x, y) are the upper-left canvas pixel coordinates of the drawable.
 	 * (width, height) are the dimensions of the drawable.
 	 */
-	void (* draw)(GanvItem* item, cairo_t* cr,
-	              int x, int y, int width, int height);
+	void (*draw)(GanvItem* item,
+	             cairo_t*  cr,
+	             int       x,
+	             int       y,
+	             int       width,
+	             int       height);
 
 	/**
 	 * Calculate the distance from an item to the specified point.
@@ -145,22 +149,26 @@ struct _GanvItemClass {
 	 * canvas pixel coordinates that correspond to the item-relative
 	 * coordinates (x, y).
 	 */
-	double (* point)(GanvItem* item, double x, double y, int cx, int cy,
-	                 GanvItem** actual_item);
+	double (*point)(GanvItem*  item,
+	                double     x,
+	                double     y,
+	                int        cx,
+	                int        cy,
+	                GanvItem** actual_item);
 
 	/**
 	 * Fetch the item's bounding box (need not be exactly tight).
 	 *
 	 * This should be in item-relative coordinates.
 	 */
-	void (* bounds)(GanvItem* item, double* x1, double* y1, double* x2, double* y2);
+	void (*bounds)(GanvItem* item, double* x1, double* y1, double* x2, double* y2);
 
 	/**
 	 * Signal: an event occurred for an item of this type.
 	 *
 	 * The (x, y) coordinates are in the canvas world coordinate system.
 	 */
-	gboolean (* event)(GanvItem* item, GdkEvent* event);
+	gboolean (*event)(GanvItem* item, GdkEvent* event);
 
 	/* Reserved for future expansion */
 	gpointer spare_vmethods [4];
