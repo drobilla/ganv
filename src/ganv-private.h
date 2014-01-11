@@ -206,6 +206,18 @@ ganv_item_i2w_pair(GanvItem* item, double* x1, double* y1, double* x2, double* y
 void
 ganv_item_invoke_update(GanvItem* item, int flags);
 
+void
+ganv_item_emit_event(GanvItem* item, GdkEvent* event, gint* finished);
+
+/* CanvasBase */
+
+void
+ganv_canvas_base_request_update(GanvCanvasBase* canvas);
+
+int
+ganv_canvas_base_emit_event(GanvCanvasBase* canvas, GdkEvent* event);
+
+
 /* Edge */
 
 void
