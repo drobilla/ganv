@@ -16,8 +16,8 @@
 #include <float.h>
 #include <math.h>
 
-static const double CHARGE_KE = 2000000.0;
-static const double EDGE_K    = 32.0;
+static const double CHARGE_KE = 1000000.0;
+static const double EDGE_K    = 16.0;
 static const double EDGE_LEN  = 0.1;
 
 struct Region {
@@ -148,7 +148,7 @@ rect_distance(Vector* vec,
 inline Vector
 repel_force(const Region& a, const Region& b)
 {
-	static const double MIN_DIST = DBL_EPSILON;
+	static const double MIN_DIST = 1.0;
 
 	Vector vec;
 	double dist = rect_distance(
