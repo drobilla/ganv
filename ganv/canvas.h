@@ -148,7 +148,7 @@ struct _GanvCanvas {
 	gboolean locked;
 
 #ifdef GANV_FDGL
-	guint                  layout_idle_id;
+	guint layout_idle_id;
 #endif
 };
 
