@@ -35,7 +35,6 @@
 	     i != (const GanvPort**)ports->pdata + ports->len; ++i)
 
 static const double MODULE_LABEL_PAD = 2.0;
-static const double MODULE_ICON_SIZE = 16;
 
 G_DEFINE_TYPE(GanvModule, ganv_module, GANV_TYPE_BOX)
 
