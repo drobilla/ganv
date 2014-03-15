@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 #define GANV_IS_WIDGET_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GANV_TYPE_WIDGET))
 #define GANV_WIDGET_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GANV_TYPE_WIDGET, GanvWidgetClass))
 
-typedef struct _GanvWidget GanvWidget;
+typedef struct _GanvWidget      GanvWidget;
 typedef struct _GanvWidgetClass GanvWidgetClass;
 
 struct _GanvWidget {
@@ -54,9 +54,12 @@ struct _GanvWidget {
 
 struct _GanvWidgetClass {
 	GanvItemClass parent_class;
+
+	/* Reserved for future expansion */
+	gpointer spare_vmethods [4];
 };
 
-GType ganv_widget_get_type(void);
+GType ganv_widget_get_type(void) G_GNUC_CONST;
 
 G_END_DECLS
 

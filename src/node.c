@@ -236,7 +236,7 @@ ganv_node_default_tail_vector(const GanvNode* self,
 	*x = GANV_ITEM(self)->x;
 	*y = GANV_ITEM(self)->y;
 
-	switch (canvas->direction) {
+	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
 		*dx = 1.0;
 		*dy = 0.0;
@@ -263,7 +263,7 @@ ganv_node_default_head_vector(const GanvNode* self,
 	*x = GANV_ITEM(self)->x;
 	*y = GANV_ITEM(self)->y;
 
-	switch (canvas->direction) {
+	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
 		*dx = -1.0;
 		*dy = 0.0;
@@ -440,8 +440,8 @@ ganv_node_default_event(GanvItem* item,
 		drag_start_y = event->button.y;
 		last_x       = event->button.x;
 		last_y       = event->button.y;
-		if (!canvas->locked && node->impl->draggable && event->button.button == 1) {
-			ganv_item_grab(
+		if (!ganv_canvas_get_locked(canvas) && node->impl->draggable && event->button.button == 1) {
+			ganv_canvas_grab_item(
 				GANV_ITEM(node),
 				GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK|GDK_BUTTON_PRESS_MASK,
 				ganv_canvas_get_move_cursor(canvas),
@@ -456,7 +456,7 @@ ganv_node_default_event(GanvItem* item,
 		if (dragging) {
 			gboolean selected;
 			g_object_get(G_OBJECT(node), "selected", &selected, NULL);
-			ganv_item_ungrab(GANV_ITEM(node), event->button.time);
+			ganv_canvas_ungrab_item(GANV_ITEM(node), event->button.time);
 			node->impl->grabbed = FALSE;
 			ganv_canvas_contents_changed(canvas);
 			dragging = FALSE;

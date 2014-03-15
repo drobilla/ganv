@@ -44,9 +44,12 @@ struct _GanvCircle {
 
 struct _GanvCircleClass {
 	GanvNodeClass parent_class;
+
+	/* Reserved for future expansion */
+	gpointer spare_vmethods [4];
 };
 
-GType ganv_circle_get_type(void);
+GType ganv_circle_get_type(void) G_GNUC_CONST;
 
 GanvCircle*
 ganv_circle_new(GanvCanvas* canvas,

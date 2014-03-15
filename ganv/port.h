@@ -39,9 +39,12 @@ struct _GanvPort {
 
 struct _GanvPortClass {
 	GanvBoxClass parent_class;
+
+	/* Reserved for future expansion */
+	gpointer spare_vmethods [4];
 };
 
-GType ganv_port_get_type(void);
+GType ganv_port_get_type(void) G_GNUC_CONST;
 
 GanvPort*
 ganv_port_new(GanvModule* module,

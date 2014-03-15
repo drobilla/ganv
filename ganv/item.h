@@ -165,11 +165,6 @@ void ganv_item_show(GanvItem* item);
 
 void ganv_item_hide(GanvItem* item);
 
-int ganv_item_grab(GanvItem* item, unsigned int event_mask,
-                   GdkCursor* cursor, guint32 etime);
-
-void ganv_item_ungrab(GanvItem* item, guint32 etime);
-
 void ganv_item_i2w(GanvItem* item, double* x, double* y);
 
 void ganv_item_w2i(GanvItem* item, double* x, double* y);

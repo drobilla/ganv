@@ -28,7 +28,6 @@
 #include <cassert>
 #include <cmath>
 #include <iostream>
-#include <list>
 #include <map>
 #include <set>
 #include <sstream>
@@ -84,24 +83,23 @@ static void ganv_canvas_unmap(GtkWidget* widget);
 static void ganv_canvas_realize(GtkWidget* widget);
 static void ganv_canvas_unrealize(GtkWidget* widget);
 static void ganv_canvas_size_allocate(GtkWidget*     widget,
-                                           GtkAllocation* allocation);
+                                      GtkAllocation* allocation);
 static gint ganv_canvas_button(GtkWidget*      widget,
-                                    GdkEventButton* event);
+                               GdkEventButton* event);
 static gint ganv_canvas_motion(GtkWidget*      widget,
-                                    GdkEventMotion* event);
+                               GdkEventMotion* event);
 static gint ganv_canvas_expose(GtkWidget*      widget,
-                                    GdkEventExpose* event);
+                               GdkEventExpose* event);
 static gboolean ganv_canvas_key(GtkWidget*   widget,
-                                     GdkEventKey* event);
+                                GdkEventKey* event);
 static gboolean ganv_canvas_scroll(GtkWidget*      widget,
-                                        GdkEventScroll* event);
+                                   GdkEventScroll* event);
 static gint ganv_canvas_crossing(GtkWidget*        widget,
-                                      GdkEventCrossing* event);
+                                 GdkEventCrossing* event);
 static gint ganv_canvas_focus_in(GtkWidget*     widget,
-                                      GdkEventFocus* event);
+                                 GdkEventFocus* event);
 static gint ganv_canvas_focus_out(GtkWidget*     widget,
-                                       GdkEventFocus* event);
-static void ganv_canvas_request_update_real(GanvCanvas* canvas);
+                                  GdkEventFocus* event);
 
 static GtkLayoutClass* canvas_parent_class;
 }
@@ -112,12 +110,6 @@ static guint signal_connect;
 static guint signal_disconnect;
 
 static GEnumValue dir_values[3];
-
-using std::cerr;
-using std::endl;
-using std::list;
-using std::string;
-using std::vector;
 
 typedef std::set<GanvNode*> Items;
 
@@ -184,10 +176,18 @@ struct HeadTailOrder {
 	}
 };
 
+/* Callback used when the root item of a canvas is destroyed.  The user should
+ * never ever do this, so we panic if this happens.
+ */
+static void
+panic_root_destroyed(GtkObject* object, gpointer data)
+{
+	g_error("Eeeek, root item %p of canvas %p was destroyed!", (void*)object, data);
+}
+
 struct GanvCanvasImpl {
-	GanvCanvasImpl(GanvCanvas* gobj)
-		: _gcanvas(gobj)
-		, _layout(GTK_LAYOUT(_gcanvas))
+	GanvCanvasImpl(GanvCanvas* canvas)
+		: _gcanvas(canvas)
 		, _connect_port(NULL)
 		, _last_selected_port(NULL)
 		, _drag_edge(NULL)
@@ -195,30 +195,81 @@ struct GanvCanvasImpl {
 		, _select_rect(NULL)
 		, _select_start_x(0.0)
 		, _select_start_y(0.0)
-		, _zoom(1.0)
-		, _font_size(0.0)
 		, _drag_state(NOT_DRAGGING)
-		, _layout_idle_id(0)
 	{
+		this->root         = GANV_ITEM(g_object_new(ganv_group_get_type(), NULL));
+		this->root->canvas = canvas;
+		g_object_ref_sink(this->root);
+
+		this->direction = GANV_DIRECTION_RIGHT;
+		this->width     = 0;
+		this->height    = 0;
+
+		this->redraw_region    = NULL;
+		this->current_item     = NULL;
+		this->new_current_item = NULL;
+		this->grabbed_item     = NULL;
+		this->focused_item     = NULL;
+		this->pixmap_gc        = NULL;
+
+		this->pick_event.type       = GDK_LEAVE_NOTIFY;
+		this->pick_event.crossing.x = 0;
+		this->pick_event.crossing.y = 0;
+
+		this->scroll_x1 = 0.0;
+		this->scroll_y1 = 0.0;
+		this->scroll_x2 = canvas->layout.width;
+		this->scroll_y2 = canvas->layout.height;
+
+		this->pixels_per_unit = 1.0;
+		this->font_size       = ganv_canvas_get_default_font_size(canvas);
+
+		this->idle_id         = 0;
+		this->root_destroy_id = g_signal_connect(
+			this->root, "destroy", G_CALLBACK(panic_root_destroyed), canvas);
+
+		this->redraw_x1 = 0;
+		this->redraw_y1 = 0;
+		this->redraw_x2 = 0;
+		this->redraw_y2 = 0;
+
+		this->draw_xofs = 0;
+		this->draw_yofs = 0;
+		this->zoom_xofs = 0;
+		this->zoom_yofs = 0;
+
+		this->state              = 0;
+		this->grabbed_event_mask = 0;
+
+		this->center_scroll_region = TRUE;
+		this->need_update          = FALSE;
+		this->need_redraw          = FALSE;
+		this->need_repick          = TRUE;
+		this->left_grabbed_item    = FALSE;
+		this->in_repick            = FALSE;
+		this->locked               = FALSE;
+
+#ifdef GANV_FDGL
+		this->layout_idle_id = 0;
+#endif
+
+		_animate_idle_id = g_timeout_add(120, on_animate_timeout, this);
+
+		gtk_layout_set_hadjustment(GTK_LAYOUT(canvas), NULL);
+		gtk_layout_set_vadjustment(GTK_LAYOUT(canvas), NULL);
+
 		_wrapper_key = g_quark_from_string("ganvmm");
 		_move_cursor = gdk_cursor_new(GDK_FLEUR);
-
-		g_signal_connect(G_OBJECT(ganv_canvas_root(GANV_CANVAS(_gcanvas))),
-		                 "event", G_CALLBACK(on_canvas_event), this);
 	}
 
 	~GanvCanvasImpl()
 	{
+		while (g_idle_remove_by_data(this)) ;
+		ganv_canvas_clear(_gcanvas);
 		gdk_cursor_unref(_move_cursor);
 	}
 
-	static gboolean
-	on_canvas_event(GanvItem* canvasitem,
-	                GdkEvent* ev,
-	                void*     impl)
-	{
-		return ((GanvCanvasImpl*)impl)->on_event(ev);
-	}
+	static gboolean on_animate_timeout(gpointer impl);
 
 #ifdef GANV_FDGL
 	static gboolean on_layout_timeout(gpointer impl) {
@@ -226,51 +277,18 @@ struct GanvCanvasImpl {
 	}
 
 	static void on_layout_done(gpointer impl) {
-		((GanvCanvasImpl*)impl)->_layout_idle_id = 0;
+		((GanvCanvasImpl*)impl)->layout_idle_id = 0;
 	}
 
 	gboolean layout_iteration();
 	gboolean layout_calculate(double dur, bool update);
-
 #endif
 
-	GanvItem* root() {
-		return ganv_canvas_root(GANV_CANVAS(_gcanvas));
-	}
-
-	void resize(double width, double height);
-	void contents_changed();
-
-	void set_zoom_and_font_size(double zoom, double points);
-
-	void for_each_node(GanvNodeFunc f, void* data);
-	void for_each_edge_from(const GanvNode* tail, GanvEdgeFunc f, void* data);
-	void for_each_edge_to(const GanvNode* head, GanvEdgeFunc f, void* data);
-	void for_each_edge_on(const GanvNode* node, GanvEdgeFunc f, void* data);
-
-	void add_item(GanvNode* i);
-	bool remove_item(GanvNode* i);
-
-	void select_edge(GanvEdge* edge);
-	void unselect_edge(GanvEdge* edge);
-	void select_item(GanvNode* item);
-	void unselect_item(GanvNode* item);
 	void unselect_ports();
-	void clear_selection();
-
-	void move_selected_items(double dx, double dy);
-	void selection_move_finished();
 
 #if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
 	GVNodes layout_dot(const std::string& filename);
 #endif
-
-	void remove_edge(GanvEdge* c);
-	bool are_connected(const GanvNode* tail,
-	                   const GanvNode* head) const;
-	GanvEdge*
-	get_edge_between(const GanvNode* tail,
-	                 const GanvNode* head) const;
 
 	typedef std::set<GanvEdge*, TailHeadOrder> Edges;
 	typedef std::set<GanvEdge*, HeadTailOrder> DstEdges;
@@ -296,21 +314,19 @@ struct GanvCanvasImpl {
 	void end_connect_drag();
 
 	/*
-	   Event handler for ports.
+	  Event handler for ports.
 
-	   This must be implemented as a Canvas method since port event handling
-	   depends on shared data (for selection and connecting).  This function
-	   should only be used by Port implementations.
+	  This must be implemented as a Canvas method since port event handling
+	  depends on shared data (for selection and connecting).  This function
+	  should only be used by Port implementations.
 	*/
 	bool port_event(GdkEvent* event, GanvPort* port);
 
 	void ports_joined(GanvPort* port1, GanvPort* port2);
-	bool animate_selected();
 
 	void move_contents_to_internal(double x, double y, double min_x, double min_y);
 
 	GanvCanvas* _gcanvas;
-	GtkLayout*  _layout;
 
 	Items         _items;       ///< Items on this canvas
 	Edges         _edges;       ///< Edges ordered (src, dst)
@@ -328,15 +344,112 @@ struct GanvCanvasImpl {
 	double   _select_start_x;  ///< Selection drag start x coordinate
 	double   _select_start_y;  ///< Selection drag start y coordinate
 
-	double _zoom;       ///< Current zoom level
-	double _font_size;  ///< Current font size in points
-
 	enum DragState { NOT_DRAGGING, EDGE, SCROLL, SELECT };
 	DragState      _drag_state;
 
 	GQuark     _wrapper_key;
 	GdkCursor* _move_cursor;
-	guint      _layout_idle_id;
+	guint      _animate_idle_id;
+	
+	/* Root canvas item */
+	GanvItem* root;
+
+	/* Flow direction */
+	GanvDirection direction;
+
+	/* Canvas width */
+	double width;
+
+	/* Canvas height */
+	double height;
+
+	/* Region that needs redrawing (list of rectangles) */
+	GSList* redraw_region;
+
+	/* The item containing the mouse pointer, or NULL if none */
+	GanvItem* current_item;
+
+	/* Item that is about to become current (used to track deletions and such) */
+	GanvItem* new_current_item;
+
+	/* Item that holds a pointer grab, or NULL if none */
+	GanvItem* grabbed_item;
+
+	/* If non-NULL, the currently focused item */
+	GanvItem* focused_item;
+
+	/* GC for temporary draw pixmap */
+	GdkGC* pixmap_gc;
+
+	/* Event on which selection of current item is based */
+	GdkEvent pick_event;
+
+	/* Scrolling region */
+	double scroll_x1;
+	double scroll_y1;
+	double scroll_x2;
+	double scroll_y2;
+
+	/* Scaling factor to be used for display */
+	double pixels_per_unit;
+
+	/* Font size in points */
+	double font_size;
+
+	/* Idle handler ID */
+	guint idle_id;
+
+	/* Signal handler ID for destruction of the root item */
+	guint root_destroy_id;
+
+	/* Area that is being redrawn.  Contains (x1, y1) but not (x2, y2).
+	 * Specified in canvas pixel coordinates.
+	 */
+	int redraw_x1;
+	int redraw_y1;
+	int redraw_x2;
+	int redraw_y2;
+
+	/* Offsets of the temprary drawing pixmap */
+	int draw_xofs;
+	int draw_yofs;
+
+	/* Internal pixel offsets when zoomed out */
+	int zoom_xofs;
+	int zoom_yofs;
+
+	/* Last known modifier state, for deferred repick when a button is down */
+	int state;
+
+	/* Event mask specified when grabbing an item */
+	guint grabbed_event_mask;
+
+	/* Whether the canvas should center the scroll region in the middle of
+	 * the window if the scroll region is smaller than the window.
+	 */
+	gboolean center_scroll_region;
+
+	/* Whether items need update at next idle loop iteration */
+	gboolean need_update;
+
+	/* Whether the canvas needs redrawing at the next idle loop iteration */
+	gboolean need_redraw;
+
+	/* Whether current item will be repicked at next idle loop iteration */
+	gboolean need_repick;
+
+	/* For use by internal pick_current_item() function */
+	gboolean left_grabbed_item;
+
+	/* For use by internal pick_current_item() function */
+	gboolean in_repick;
+
+	/* Disable changes to canvas */
+	gboolean locked;
+
+#ifdef GANV_FDGL
+	guint layout_idle_id;
+#endif
 };
 
 typedef struct {
@@ -370,38 +483,6 @@ GanvCanvasImpl::first_edge_to(const GanvNode* head)
 	GanvEdgeKey key;
 	make_edge_search_key(&key, NULL, head);
 	return _dst_edges.lower_bound((GanvEdge*)&key);
-}
-
-void
-GanvCanvasImpl::select_edge(GanvEdge* edge)
-{
-	ganv_item_set(GANV_ITEM(edge), "selected", TRUE, NULL);
-	_selected_edges.insert(edge);
-}
-
-void
-GanvCanvasImpl::unselect_edge(GanvEdge* edge)
-{
-	ganv_item_set(GANV_ITEM(edge), "selected", FALSE, NULL);
-	_selected_edges.erase(edge);
-}
-
-void
-GanvCanvasImpl::move_selected_items(double dx, double dy)
-{
-	FOREACH_ITEM(_selected_items, i) {
-		ganv_node_move(*i, dx, dy);
-	}
-}
-
-void
-GanvCanvasImpl::selection_move_finished()
-{
-	FOREACH_ITEM(_selected_items, i) {
-		const double x = GANV_ITEM(*i)->x;
-		const double y = GANV_ITEM(*i)->y;
-		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
-	}
 }
 
 static void
@@ -441,110 +522,16 @@ select_edges(GanvPort* port, void* data)
 {
 	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
 	if (port->impl->is_input) {
-		impl->for_each_edge_to(GANV_NODE(port),
-		                       select_if_tail_is_selected,
-		                       NULL);
+		ganv_canvas_for_each_edge_to(impl->_gcanvas,
+		                             GANV_NODE(port),
+		                             select_if_tail_is_selected,
+		                             NULL);
 	} else {
-		impl->for_each_edge_from(GANV_NODE(port),
-		                         select_if_head_is_selected,
-		                         NULL);
+		ganv_canvas_for_each_edge_from(impl->_gcanvas,
+		                               GANV_NODE(port),
+		                               select_if_head_is_selected,
+		                               NULL);
 	}
-}
-
-void
-GanvCanvasImpl::add_item(GanvNode* n)
-{
-	GanvItem* item = GANV_ITEM(n);
-	if (item->parent == GANV_ITEM(root())) {
-		_items.insert(n);
-	}
-}
-
-/** Remove an item from the canvas, cutting all references.
- * Returns true if item was found (and removed).
- */
-bool
-GanvCanvasImpl::remove_item(GanvNode* item)
-{
-	bool ret = false;
-
-	if (item == (GanvNode*)_connect_port) {
-		if (_drag_state == EDGE) {
-			ganv_item_ungrab(GANV_ITEM(root()), 0);
-			end_connect_drag();
-		}
-		_connect_port = NULL;
-	}
-
-	// Remove from selection
-	_selected_items.erase(item);
-
-	// Remove children ports from selection if item is a module
-	if (GANV_IS_MODULE(item)) {
-		GanvModule* const module = GANV_MODULE(item);
-		for (unsigned i = 0; i < ganv_module_num_ports(module); ++i) {
-			unselect_port(ganv_module_get_port(module, i));
-		}
-	}
-
-	// Remove from items
-	_items.erase(item);
-
-	return ret;
-}
-
-static void
-select_if_ends_are_selected(GanvEdge* edge, void* data)
-{
-	if (ganv_node_is_selected(ganv_edge_get_tail(edge)) &&
-	    ganv_node_is_selected(ganv_edge_get_head(edge))) {
-		ganv_edge_select(edge);
-	}
-}
-	    
-void
-GanvCanvasImpl::select_item(GanvNode* m)
-{
-	_selected_items.insert(m);
-
-	// Select any connections to or from this node
-	if (GANV_IS_MODULE(m)) {
-		ganv_module_for_each_port(GANV_MODULE(m), select_edges, this);
-	} else {
-		for_each_edge_on(m, select_if_ends_are_selected, this);
-	}
-
-	g_object_set(m, "selected", TRUE, NULL);
-}
-
-static void
-unselect_edges(GanvPort* port, void* data)
-{
-	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
-	if (port->impl->is_input) {
-		impl->for_each_edge_to(GANV_NODE(port),
-		                       (GanvEdgeFunc)ganv_edge_unselect,
-		                       NULL);
-	} else {
-		impl->for_each_edge_from(GANV_NODE(port),
-		                         (GanvEdgeFunc)ganv_edge_unselect,
-		                         NULL);
-	}
-}
-
-void
-GanvCanvasImpl::unselect_item(GanvNode* m)
-{
-	// Unselect any connections to or from this node
-	if (GANV_IS_MODULE(m)) {
-		ganv_module_for_each_port(GANV_MODULE(m), unselect_edges, this);
-	} else {
-		for_each_edge_on(m, (GanvEdgeFunc)ganv_edge_unselect, NULL);
-	}
-
-	// Unselect item
-	_selected_items.erase(m);
-	g_object_set(m, "selected", FALSE, NULL);
 }
 
 #if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
@@ -586,7 +573,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 	nodes.gvc = gvc;
 	nodes.G   = G;
 
-	const bool flow_right = _gcanvas->direction;
+	const bool flow_right = _gcanvas->impl->direction;
 	if (flow_right) {
 		agattr(G, AGRAPH, (char*)"rankdir", (char*)"LR");
 	} else {
@@ -834,7 +821,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 	// A light directional force to push sources to the top left
 	static const double DIR_MAGNITUDE = -1000.0;
 	Vector              dir           = { 0.0, 0.0 };
-	switch (_gcanvas->direction) {
+	switch (_gcanvas->impl->direction) {
 	case GANV_DIRECTION_RIGHT: dir.x = DIR_MAGNITUDE; break;
 	case GANV_DIRECTION_DOWN:  dir.y = DIR_MAGNITUDE; break;
 	}
@@ -941,7 +928,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 
 			if (update) {
 				ganv_item_request_update(item);
-				item->canvas->need_repick = TRUE;
+				item->canvas->impl->need_repick = TRUE;
 			}
 
 			if (lrint(x0) != lrint(item->x) || lrint(y0) != lrint(item->y)) {
@@ -967,41 +954,6 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 }
 
 #endif // GANV_FDGL
-
-void
-GanvCanvasImpl::remove_edge(GanvEdge* edge)
-{
-	if (edge) {
-		_selected_edges.erase(edge);
-		_edges.erase(edge);
-		_dst_edges.erase(edge);
-		ganv_edge_request_redraw(GANV_ITEM(edge)->canvas, &edge->impl->coords);
-		gtk_object_destroy(GTK_OBJECT(edge));
-		contents_changed();
-	}
-}
-
-GanvEdge*
-GanvCanvasImpl::get_edge_between(const GanvNode* tail,
-                                 const GanvNode* head) const
-{
-	GanvEdgeKey key;
-	make_edge_search_key(&key, tail, head);
-	Edges::const_iterator i = _edges.find((GanvEdge*)&key);
-	return (i != _edges.end()) ? *i : NULL;
-}
-
-/** Return whether there is a edge between item1 and item2.
- *
- * Note that edges are directed, so this may return false when there
- * is a edge between the two items (in the opposite direction).
- */
-bool
-GanvCanvasImpl::are_connected(const GanvNode* tail,
-                              const GanvNode* head) const
-{
-	return get_edge_between(tail, head) != NULL;
-}
 
 void
 GanvCanvasImpl::select_port(GanvPort* p, bool unique)
@@ -1085,8 +1037,8 @@ GanvCanvasImpl::selection_joined_with(GanvPort* port)
 void
 GanvCanvasImpl::join_selection()
 {
-	vector<GanvPort*> inputs;
-	vector<GanvPort*> outputs;
+	std::vector<GanvPort*> inputs;
+	std::vector<GanvPort*> outputs;
 	FOREACH_SELECTED_PORT(i) {
 		if ((*i)->impl->is_input) {
 			inputs.push_back(*i);
@@ -1151,7 +1103,7 @@ GanvCanvasImpl::on_event(GdkEvent* event)
 		case GDK_Return:
 			if (_selected_ports.size() > 1) {
 				join_selection();
-				clear_selection();
+				ganv_canvas_clear_selection(_gcanvas);
 			}
 			break;
 		default:
@@ -1199,9 +1151,11 @@ GanvCanvasImpl::scroll_drag_handler(GdkEvent* event)
 	static double last_x            = 0;
 	static double last_y            = 0;
 
+	GanvItem* root = ganv_canvas_root(_gcanvas);
+
 	if (event->type == GDK_BUTTON_PRESS && event->button.button == 2) {
-		ganv_item_grab(
-			GANV_ITEM(root()),
+		ganv_canvas_grab_item(
+			root,
 			GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 			NULL, event->button.time);
 		ganv_canvas_get_scroll_offsets(GANV_CANVAS(_gcanvas), &original_scroll_x, &original_scroll_y);
@@ -1226,12 +1180,12 @@ GanvCanvasImpl::scroll_drag_handler(GdkEvent* event)
 		scroll_offset_x += x_offset;
 		scroll_offset_y += y_offset;
 		ganv_canvas_scroll_to(GANV_CANVAS(_gcanvas),
-		                       lrint(original_scroll_x + scroll_offset_x),
-		                       lrint(original_scroll_y + scroll_offset_y));
+		                      lrint(original_scroll_x + scroll_offset_x),
+		                      lrint(original_scroll_y + scroll_offset_y));
 		last_x = x;
 		last_y = y;
 	} else if (event->type == GDK_BUTTON_RELEASE && _drag_state == SCROLL) {
-		ganv_item_ungrab(GANV_ITEM(root()), event->button.time);
+		ganv_canvas_ungrab_item(root, event->button.time);
 		_drag_state = NOT_DRAGGING;
 	} else {
 		handled = false;
@@ -1259,14 +1213,15 @@ get_motion_coords(GdkEventMotion* motion, double* x, double* y)
 bool
 GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 {
+	GanvItem* root = ganv_canvas_root(_gcanvas);
 	if (event->type == GDK_BUTTON_PRESS && event->button.button == 1) {
 		assert(_select_rect == NULL);
 		_drag_state = SELECT;
 		if ( !(event->button.state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK)) )
-			clear_selection();
+			ganv_canvas_clear_selection(_gcanvas);
 		_select_rect = GANV_BOX(
 			ganv_item_new(
-				GANV_ITEM(root()),
+				root,
 				ganv_box_get_type(),
 				"x1", event->button.x,
 				"y1", event->button.y,
@@ -1277,8 +1232,8 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 				NULL));
 		_select_start_x = event->button.x;
 		_select_start_y = event->button.y;
-		ganv_item_grab(
-			GANV_ITEM(root()), GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
+		ganv_canvas_grab_item(
+			root, GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 			NULL, event->button.time);
 		return true;
 	} else if (event->type == GDK_MOTION_NOTIFY && _drag_state == SELECT) {
@@ -1308,9 +1263,9 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 				gboolean selected;
 				g_object_get(G_OBJECT(node), "selected", &selected, NULL);
 				if (selected) {
-					unselect_item(node);
+					ganv_canvas_unselect_node(_gcanvas, node);
 				} else {
-					select_item(node);
+					ganv_canvas_select_node(_gcanvas, node);
 				}
 			}
 		}
@@ -1323,11 +1278,11 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 				    ganv_box_get_y1(_select_rect),
 				    ganv_box_get_x2(_select_rect),
 				    ganv_box_get_y2(_select_rect))) {
-				select_edge(*i);
+				ganv_canvas_select_edge(_gcanvas, *i);
 			}
 		}
 
-		ganv_item_ungrab(GANV_ITEM(root()), event->button.time);
+		ganv_canvas_ungrab_item(root, event->button.time);
 
 		gtk_object_destroy(GTK_OBJECT(_select_rect));
 		_select_rect = NULL;
@@ -1392,7 +1347,7 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 		return true;
 
 	} else if (event->type == GDK_BUTTON_RELEASE) {
-		ganv_item_ungrab(GANV_ITEM(root()), event->button.time);
+		ganv_canvas_ungrab_item(root, event->button.time);
 
 		double x = event->button.x;
 		double y = event->button.y;
@@ -1473,23 +1428,25 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 					control_start_x     = event->button.x_root;
 					control_start_y     = event->button.y_root;
 					control_start_value = ganv_port_get_control_value(port);
-					ganv_item_grab(GANV_ITEM(port),
-					               GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
-					               NULL, event->button.time);
+					ganv_canvas_grab_item(
+						GANV_ITEM(port),
+						GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
+						NULL, event->button.time);
 					GANV_NODE(port)->impl->grabbed = TRUE;
 
 				}
 			} else if (!port->impl->is_input) {
 				port_dragging = port_pressed = true;
-				ganv_item_grab(GANV_ITEM(port),
-				               GDK_BUTTON_RELEASE_MASK|GDK_POINTER_MOTION_MASK|
-				               GDK_ENTER_NOTIFY_MASK|GDK_LEAVE_NOTIFY_MASK,
-				               NULL, event->button.time);
+				ganv_canvas_grab_item(
+					GANV_ITEM(port),
+					GDK_BUTTON_RELEASE_MASK|GDK_POINTER_MOTION_MASK|
+					GDK_ENTER_NOTIFY_MASK|GDK_LEAVE_NOTIFY_MASK,
+					NULL, event->button.time);
 			} else {
 				port_pressed = true;
-				ganv_item_grab(GANV_ITEM(port),
-				               GDK_BUTTON_RELEASE_MASK,
-				               NULL, event->button.time);
+				ganv_canvas_grab_item(GANV_ITEM(port),
+				                      GDK_BUTTON_RELEASE_MASK,
+				                      NULL, event->button.time);
 			}
 			return true;
 		}
@@ -1540,7 +1497,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 
 	case GDK_BUTTON_RELEASE:
 		if (port_pressed) {
-			ganv_item_ungrab(GANV_ITEM(port), event->button.time);
+			ganv_canvas_ungrab_item(GANV_ITEM(port), event->button.time);
 		}
 
 		if (port_dragging) {
@@ -1585,9 +1542,9 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			_drag_state = GanvCanvasImpl::EDGE;
 			_connect_port = port;
 			port_dragging = false;
-			ganv_item_ungrab(GANV_ITEM(port), event->crossing.time);
-			ganv_item_grab(
-				GANV_ITEM(root()),
+			ganv_canvas_ungrab_item(GANV_ITEM(port), event->crossing.time);
+			ganv_canvas_grab_item(
+				root,
 				GDK_BUTTON_PRESS_MASK|GDK_POINTER_MOTION_MASK|GDK_BUTTON_RELEASE_MASK,
 				NULL, event->crossing.time);
 			return true;
@@ -1629,7 +1586,7 @@ GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 		return;
 	}
 
-	if (!are_connected(src_node, dst_node)) {
+	if (!ganv_canvas_get_edge(_gcanvas, src_node, dst_node)) {
 		g_signal_emit(_gcanvas, signal_connect, 0,
 		              src_node, dst_node, NULL);
 	} else {
@@ -1639,9 +1596,11 @@ GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 }
 
 /** Update animated "rubber band" selection effect. */
-bool
-GanvCanvasImpl::animate_selected()
+gboolean
+GanvCanvasImpl::on_animate_timeout(gpointer data)
 {
+	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
+
 #ifdef g_get_monotonic_time
 	// Only available in glib 2.28
 	const double seconds = g_get_monotonic_time() / 1000000.0;
@@ -1651,19 +1610,21 @@ GanvCanvasImpl::animate_selected()
 	const double seconds = time.tv_sec + time.tv_usec / (double)G_USEC_PER_SEC;
 #endif
 
-	FOREACH_ITEM(_selected_items, s) {
+	FOREACH_ITEM(impl->_selected_items, s) {
 		ganv_node_tick(*s, seconds);
 	}
 
-	FOREACH_SELECTED_PORT(p) {
+	for (SelectedPorts::iterator p = impl->_selected_ports.begin();
+	     p != impl->_selected_ports.end();
+	     ++p) {
 		ganv_node_tick(GANV_NODE(*p), seconds);
 	}
 
-	FOREACH_EDGE(_selected_edges, c) {
+	FOREACH_EDGE(impl->_selected_edges, c) {
 		ganv_edge_tick(*c, seconds);
 	}
 
-	return true;
+	return TRUE;
 }
 
 void
@@ -1677,52 +1638,6 @@ GanvCanvasImpl::move_contents_to_internal(double x, double y, double min_x, doub
 }
 
 void
-GanvCanvasImpl::for_each_node(GanvNodeFunc f,
-                              void*        data)
-{
-	FOREACH_ITEM(_items, i) {
-		f(*i, data);
-	}
-}
-
-void
-GanvCanvasImpl::for_each_edge_from(const GanvNode* tail,
-                                   GanvEdgeFunc    f,
-                                   void*           data)
-{
-	for (GanvCanvasImpl::Edges::const_iterator i = first_edge_from(tail);
-	     i != _edges.end() && (*i)->impl->tail == tail;) {
-		GanvCanvasImpl::Edges::const_iterator next = i;
-		++next;
-		f((*i), data);
-		i = next;
-	}
-}
-
-void
-GanvCanvasImpl::for_each_edge_to(const GanvNode* head,
-                                 GanvEdgeFunc    f,
-                                 void*           data)
-{
-	for (GanvCanvasImpl::Edges::const_iterator i = first_edge_to(head);
-	     i != _dst_edges.end() && (*i)->impl->head == head;) {
-		GanvCanvasImpl::Edges::const_iterator next = i;
-		++next;
-		f((*i), data);
-		i = next;
-	}
-}
-
-void
-GanvCanvasImpl::for_each_edge_on(const GanvNode* node,
-                                 GanvEdgeFunc    f,
-                                 void*           data)
-{
-	for_each_edge_from(node, f, data);
-	for_each_edge_to(node, f, data);
-}
-
-void
 GanvCanvasImpl::unselect_ports()
 {
 	for (GanvCanvasImpl::SelectedPorts::iterator i = _selected_ports.begin();
@@ -1731,70 +1646,6 @@ GanvCanvasImpl::unselect_ports()
 
 	_selected_ports.clear();
 	_last_selected_port = NULL;
-}
-
-void
-GanvCanvasImpl::clear_selection()
-{
-	unselect_ports();
-
-	Items items(_selected_items);
-	_selected_items.clear();
-	FOREACH_ITEM(items, i) {
-		ganv_item_set(GANV_ITEM(*i), "selected", FALSE, NULL);
-	}
-
-	SelectedEdges edges(_selected_edges);
-	FOREACH_SELECTED_EDGE(edges, c) {
-		ganv_item_set(GANV_ITEM(*c), "selected", FALSE, NULL);
-	}
-}
-
-void
-GanvCanvasImpl::resize(double width, double height)
-{
-	if (width != _gcanvas->width || height != _gcanvas->height) {
-		_gcanvas->width  = width;
-		_gcanvas->height = height;
-		ganv_canvas_set_scroll_region(GANV_CANVAS(_gcanvas),
-		                               0.0, 0.0, width, height);
-	}
-}
-
-void
-GanvCanvasImpl::contents_changed()
-{
-#ifdef GANV_FDGL
-	if (!_layout_idle_id) {
-		_layout_idle_id = g_timeout_add_full(
-			G_PRIORITY_DEFAULT_IDLE,
-			33,
-			on_layout_timeout,
-			this,
-			on_layout_done);
-	}
-#endif
-}
-
-void
-GanvCanvasImpl::set_zoom_and_font_size(double zoom, double points)
-{
-	points = std::max(points, 1.0);
-	zoom   = std::max(zoom, 0.01);
-
-	if (zoom == _zoom && points == _font_size)
-		return;
-
-	if (zoom != _zoom) {
-		_zoom = zoom;
-		ganv_canvas_set_pixels_per_unit(GANV_CANVAS(_gcanvas), zoom);
-	}
-
-	_font_size = points;
-
-	FOREACH_ITEM(_items, i) {
-		ganv_node_redraw_text(*i);
-	}
 }
 
 namespace Ganv {
@@ -1824,45 +1675,40 @@ on_disconnect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
 Canvas::Canvas(double width, double height)
 	: _gobj(GANV_CANVAS(ganv_canvas_new(width, height)))
 {
-	g_object_set_qdata(G_OBJECT(impl()->_gcanvas), wrapper_key(), this);
+	g_object_set_qdata(G_OBJECT(_gobj->impl->_gcanvas), wrapper_key(), this);
 
-	g_signal_connect_after(impl()->root(), "event",
+	g_signal_connect_after(ganv_canvas_root(_gobj), "event",
 	                       G_CALLBACK(on_event_after), this);
 	g_signal_connect(gobj(), "connect",
 	                 G_CALLBACK(on_connect), this);
 	g_signal_connect(gobj(), "disconnect",
 	                 G_CALLBACK(on_disconnect), this);
-
-	_animate_connection = Glib::signal_timeout().connect(
-		sigc::mem_fun(impl(), &GanvCanvasImpl::animate_selected), 120);
 }
 
 Canvas::~Canvas()
 {
-	_animate_connection.disconnect();
-	clear();
-	delete impl();
+	delete _gobj->impl;
 }
 
 void
 Canvas::remove_edge(Node* item1, Node* item2)
 {
-	Edge* edge = get_edge(item1, item2);
+	GanvEdge* edge = ganv_canvas_get_edge(_gobj, item1->gobj(), item2->gobj());
 	if (edge) {
-		impl()->remove_edge(edge->gobj());
+		ganv_canvas_remove_edge(_gobj, edge);
 	}
 }
 
 void
 Canvas::remove_edge(Edge* edge)
 {
-	impl()->remove_edge(edge->gobj());
+	ganv_canvas_remove_edge(_gobj, edge->gobj());
 }
 
 Edge*
 Canvas::get_edge(Node* tail, Node* head) const
 {
-	GanvEdge* e = impl()->get_edge_between(tail->gobj(), head->gobj());
+	GanvEdge* e = ganv_canvas_get_edge(_gobj, tail->gobj(), head->gobj());
 	if (e) {
 		return Glib::wrap(e);
 	} else {
@@ -1870,68 +1716,10 @@ Canvas::get_edge(Node* tail, Node* head) const
 	}
 }
 
-void
-Canvas::for_each_edge(GanvEdgeFunc f, void* data)
-{
-	for (GanvCanvasImpl::Edges::iterator i = impl()->_edges.begin();
-	     i != impl()->_edges.end();) {
-		GanvCanvasImpl::Edges::iterator next = i;
-		++next;
-
-		f((*i), data);
-
-		i = next;
-	}
-}
-
-void
-Canvas::for_each_selected_edge(GanvEdgeFunc f, void* data)
-{
-	FOREACH_EDGE(impl()->_selected_edges, i) {
-		f((*i), data);
-	}
-}
-
-GanvItem*
-Canvas::root()
-{
-	return ganv_canvas_root(GANV_CANVAS(impl()->_gcanvas));
-}
-
-Gtk::Layout&
-Canvas::widget()
-{
-	return *Glib::wrap(impl()->_layout);
-}
-
-void
-Canvas::get_scroll_offsets(int& cx, int& cy) const
-{
-	ganv_canvas_get_scroll_offsets(GANV_CANVAS(impl()->_gcanvas), &cx, &cy);
-}
-
-void
-Canvas::scroll_to(int x, int y)
-{
-	ganv_canvas_scroll_to(GANV_CANVAS(impl()->_gcanvas), x, y);
-}
-
 GQuark
 Canvas::wrapper_key()
 {
-	return impl()->_wrapper_key;
-}
-
-GanvCanvas*
-Canvas::gobj()
-{
-	return impl()->_gcanvas;
-}
-
-const GanvCanvas*
-Canvas::gobj() const
-{
-	return impl()->_gcanvas;
+	return _gobj->impl->_wrapper_key;
 }
 
 } // namespace Ganv
@@ -1956,13 +1744,12 @@ enum {
 	PROP_FOCUSED_ITEM
 };
 
-/* Callback used when the root item of a canvas is destroyed.  The user should
- * never ever do this, so we panic if this happens.
- */
-static void
-panic_root_destroyed(GtkObject* object, gpointer data)
+static gboolean
+on_canvas_event(GanvItem* canvasitem,
+                GdkEvent* ev,
+                void*     impl)
 {
-	g_error("Eeeek, root item %p of canvas %p was destroyed!", (void*)object, data);
+	return ((GanvCanvasImpl*)impl)->on_event(ev);
 }
 
 static void
@@ -1970,44 +1757,10 @@ ganv_canvas_init(GanvCanvas* canvas)
 {
 	GTK_WIDGET_SET_FLAGS(canvas, GTK_CAN_FOCUS);
 
-	canvas->need_update   = FALSE;
-	canvas->need_redraw   = FALSE;
-	canvas->redraw_region = NULL;
-	canvas->idle_id       = 0;
-
-	canvas->scroll_x1 = 0.0;
-	canvas->scroll_y1 = 0.0;
-	canvas->scroll_x2 = canvas->layout.width;
-	canvas->scroll_y2 = canvas->layout.height;
-
-	canvas->pixels_per_unit = 1.0;
-
-	canvas->pick_event.type       = GDK_LEAVE_NOTIFY;
-	canvas->pick_event.crossing.x = 0;
-	canvas->pick_event.crossing.y = 0;
-
-	canvas->center_scroll_region = TRUE;
-
-	gtk_layout_set_hadjustment(GTK_LAYOUT(canvas), NULL);
-	gtk_layout_set_vadjustment(GTK_LAYOUT(canvas), NULL);
-
-	/* Create the root item as a special case */
-	canvas->root         = GANV_ITEM(g_object_new(ganv_group_get_type(), NULL));
-	canvas->root->canvas = canvas;
-
-	g_object_ref_sink(canvas->root);
-
-	canvas->root_destroy_id = g_signal_connect(canvas->root, "destroy",
-	                                           G_CALLBACK(panic_root_destroyed),
-	                                           canvas);
-
-	canvas->need_repick = TRUE;
-	
-	/*************************/
-
-	canvas->direction = GANV_DIRECTION_RIGHT;
 	canvas->impl = new GanvCanvasImpl(canvas);
-	canvas->impl->_font_size = ganv_canvas_get_default_font_size(canvas);
+	
+	g_signal_connect(G_OBJECT(ganv_canvas_root(GANV_CANVAS(canvas))),
+	                 "event", G_CALLBACK(on_canvas_event), canvas->impl);
 }
 
 static void
@@ -2023,10 +1776,10 @@ ganv_canvas_set_property(GObject*      object,
 
 	switch (prop_id) {
 	case PROP_WIDTH:
-		ganv_canvas_resize(canvas, g_value_get_double(value), canvas->height);
+		ganv_canvas_resize(canvas, g_value_get_double(value), canvas->impl->height);
 		break;
 	case PROP_HEIGHT:
-		ganv_canvas_resize(canvas, canvas->width, g_value_get_double(value));
+		ganv_canvas_resize(canvas, canvas->impl->width, g_value_get_double(value));
 		break;
 	case PROP_DIRECTION:
 		ganv_canvas_set_direction(canvas, (GanvDirection)g_value_get_enum(value));
@@ -2035,10 +1788,10 @@ ganv_canvas_set_property(GObject*      object,
 		ganv_canvas_set_font_size(canvas, g_value_get_double(value));
 		break;
 	case PROP_LOCKED:
-		canvas->locked = g_value_get_boolean(value);
+		canvas->impl->locked = g_value_get_boolean(value);
 		break;
 	case PROP_FOCUSED_ITEM:
-		canvas->focused_item = GANV_ITEM(g_value_get_object(value));
+		canvas->impl->focused_item = GANV_ITEM(g_value_get_object(value));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -2058,11 +1811,11 @@ ganv_canvas_get_property(GObject*    object,
 	GanvCanvas* canvas = GANV_CANVAS(object);
 
 	switch (prop_id) {
-		GET_CASE(WIDTH, double, canvas->width)
-		GET_CASE(HEIGHT, double, canvas->height)
-		GET_CASE(LOCKED, boolean, canvas->locked);
+		GET_CASE(WIDTH, double, canvas->impl->width)
+			GET_CASE(HEIGHT, double, canvas->impl->height)
+			GET_CASE(LOCKED, boolean, canvas->impl->locked);
 	case PROP_FOCUSED_ITEM:
-		g_value_set_object(value, GANV_CANVAS(object)->focused_item);
+		g_value_set_object(value, GANV_CANVAS(object)->impl->focused_item);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -2100,8 +1853,6 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	widget_class->focus_in_event       = ganv_canvas_focus_in;
 	widget_class->focus_out_event      = ganv_canvas_focus_out;
 	widget_class->scroll_event         = ganv_canvas_scroll;
-
-	klass->request_update = ganv_canvas_request_update_real;
 
 	g_object_class_install_property(
 		gobject_class, PROP_FOCUSED_ITEM, g_param_spec_object(
@@ -2194,13 +1945,27 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 void
 ganv_canvas_resize(GanvCanvas* canvas, double width, double height)
 {
-	canvas->impl->resize(width, height);
+	if (width != canvas->impl->width || height != canvas->impl->height) {
+		canvas->impl->width  = width;
+		canvas->impl->height = height;
+		ganv_canvas_set_scroll_region(
+			GANV_CANVAS(canvas), 0.0, 0.0, width, height);
+	}
 }
 
 void
 ganv_canvas_contents_changed(GanvCanvas* canvas)
 {
-	canvas->impl->contents_changed();
+#ifdef GANV_FDGL
+	if (!canvas->impl->layout_idle_id) {
+		canvas->impl->layout_idle_id = g_timeout_add_full(
+			G_PRIORITY_DEFAULT_IDLE,
+			33,
+			GanvCanvasImpl::on_layout_timeout,
+			canvas->impl,
+			GanvCanvasImpl::on_layout_done);
+	}
+#endif
 }
 
 /**
@@ -2219,25 +1984,74 @@ ganv_canvas_get_default_font_size(const GanvCanvas* canvas)
 double
 ganv_canvas_get_font_size(const GanvCanvas* canvas)
 {
-	return canvas->impl->_font_size;
+	return canvas->impl->font_size;
 }
 
+/**
+ * ganv_canvas_set_zoom:
+ * @canvas: A canvas.
+ * @zoom: The number of pixels that correspond to one canvas unit.
+ *
+ * The anchor point for zooming, i.e. the point that stays fixed and all others
+ * zoom inwards or outwards from it, depends on whether the canvas is set to
+ * center the scrolling region or not.  You can control this using the
+ * ganv_canvas_set_center_scroll_region() function.  If the canvas is set to
+ * center the scroll region, then the center of the canvas window is used as
+ * the anchor point for zooming.  Otherwise, the upper-left corner of the
+ * canvas window is used as the anchor point.
+ */
 void
 ganv_canvas_set_zoom(GanvCanvas* canvas, double zoom)
 {
-	canvas->impl->set_zoom_and_font_size(zoom, canvas->impl->_font_size);
+	g_return_if_fail(GANV_IS_CANVAS(canvas));
+
+	zoom = std::max(zoom, 0.01);
+	if (zoom == canvas->impl->pixels_per_unit) {
+		return;
+	}
+
+	const int anchor_x = (canvas->impl->center_scroll_region)
+		? GTK_WIDGET(canvas)->allocation.width / 2
+		: 0;
+	const int anchor_y = (canvas->impl->center_scroll_region)
+		? GTK_WIDGET(canvas)->allocation.height / 2
+		: 0;
+
+	/* Find the coordinates of the anchor point in units. */
+	const double ax = (canvas->layout.hadjustment)
+		? ((canvas->layout.hadjustment->value + anchor_x)
+		   / canvas->impl->pixels_per_unit
+		   + canvas->impl->scroll_x1 + canvas->impl->zoom_xofs)
+		: ((0.0 + anchor_x) / canvas->impl->pixels_per_unit
+		   + canvas->impl->scroll_x1 + canvas->impl->zoom_xofs);
+	const double ay = (canvas->layout.hadjustment)
+		? ((canvas->layout.vadjustment->value + anchor_y)
+		   / canvas->impl->pixels_per_unit
+		   + canvas->impl->scroll_y1 + canvas->impl->zoom_yofs)
+		: ((0.0 + anchor_y) / canvas->impl->pixels_per_unit
+		   + canvas->impl->scroll_y1 + canvas->impl->zoom_yofs);
+
+	/* Now calculate the new offset of the upper left corner. */
+	const int x1 = ((ax - canvas->impl->scroll_x1) * zoom) - anchor_x;
+	const int y1 = ((ay - canvas->impl->scroll_y1) * zoom) - anchor_y;
+
+	canvas->impl->pixels_per_unit = zoom;
+	ganv_canvas_scroll_to(canvas, x1, y1);
+
+	ganv_canvas_request_update(canvas);
+	canvas->impl->need_repick = TRUE;
 }
 
 void
 ganv_canvas_set_font_size(GanvCanvas* canvas, double points)
 {
-	canvas->impl->set_zoom_and_font_size(canvas->impl->_zoom, points);
-}
-
-void
-ganv_canvas_set_scale(GanvCanvas* canvas, double zoom, double points)
-{
-	canvas->impl->set_zoom_and_font_size(zoom, points);
+	points = std::max(points, 1.0);
+	if (points != canvas->impl->font_size) {
+		canvas->impl->font_size = points;
+		FOREACH_ITEM(canvas->impl->_items, i) {
+			ganv_node_redraw_text(*i);
+		}
+	}
 }
 
 void
@@ -2285,11 +2099,11 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 
 	int scroll_x, scroll_y;
 	ganv_canvas_w2c(GANV_CANVAS(canvas->impl->_gcanvas),
-	                     lrintf(left - pad), lrintf(bottom - pad),
-	                     &scroll_x, &scroll_y);
+	                lrintf(left - pad), lrintf(bottom - pad),
+	                &scroll_x, &scroll_y);
 
 	ganv_canvas_scroll_to(GANV_CANVAS(canvas->impl->_gcanvas),
-	                           scroll_x, scroll_y);
+	                      scroll_x, scroll_y);
 }
 
 static void
@@ -2300,11 +2114,17 @@ set_node_direction(GanvNode* node, void* data)
 	}
 }
 
+GanvDirection
+ganv_canvas_get_direction(GanvCanvas* canvas)
+{
+	return canvas->impl->direction;
+}
+
 void
 ganv_canvas_set_direction(GanvCanvas* canvas, GanvDirection dir)
 {
-	if (canvas->direction != dir) {
-		canvas->direction = dir;
+	if (canvas->impl->direction != dir) {
+		canvas->impl->direction = dir;
 		ganv_canvas_for_each_node(canvas, set_node_direction, &dir);
 		ganv_canvas_contents_changed(canvas);
 	}
@@ -2313,7 +2133,18 @@ ganv_canvas_set_direction(GanvCanvas* canvas, GanvDirection dir)
 void
 ganv_canvas_clear_selection(GanvCanvas* canvas)
 {
-	canvas->impl->clear_selection();
+	canvas->impl->unselect_ports();
+
+	Items items(canvas->impl->_selected_items);
+	canvas->impl->_selected_items.clear();
+	FOREACH_ITEM(items, i) {
+		ganv_item_set(GANV_ITEM(*i), "selected", FALSE, NULL);
+	}
+
+	GanvCanvasImpl::SelectedEdges edges(canvas->impl->_selected_edges);
+	FOREACH_SELECTED_EDGE(edges, c) {
+		ganv_item_set(GANV_ITEM(*c), "selected", FALSE, NULL);
+	}
 }
 
 void
@@ -2321,34 +2152,116 @@ ganv_canvas_move_selected_items(GanvCanvas* canvas,
                                 double      dx,
                                 double      dy)
 {
-	return canvas->impl->move_selected_items(dx, dy);
+	FOREACH_ITEM(canvas->impl->_selected_items, i) {
+		ganv_node_move(*i, dx, dy);
+	}
 }
 
 void
 ganv_canvas_selection_move_finished(GanvCanvas* canvas)
 {
-	return canvas->impl->selection_move_finished();
+	FOREACH_ITEM(canvas->impl->_selected_items, i) {
+		const double x = GANV_ITEM(*i)->x;
+		const double y = GANV_ITEM(*i)->y;
+		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
+	}
+}
+
+static void
+select_if_ends_are_selected(GanvEdge* edge, void* data)
+{
+	if (ganv_node_is_selected(ganv_edge_get_tail(edge)) &&
+	    ganv_node_is_selected(ganv_edge_get_head(edge))) {
+		ganv_edge_select(edge);
+	}
+}
+	    
+static void
+unselect_edges(GanvPort* port, void* data)
+{
+	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
+	if (port->impl->is_input) {
+		ganv_canvas_for_each_edge_to(impl->_gcanvas,
+		                             GANV_NODE(port),
+		                             (GanvEdgeFunc)ganv_edge_unselect,
+		                             NULL);
+	} else {
+		ganv_canvas_for_each_edge_from(impl->_gcanvas,
+		                               GANV_NODE(port),
+		                               (GanvEdgeFunc)ganv_edge_unselect,
+		                               NULL);
+	}
 }
 
 void
 ganv_canvas_select_node(GanvCanvas* canvas,
                         GanvNode*   node)
 {
-	canvas->impl->select_item(node);
+	canvas->impl->_selected_items.insert(node);
+
+	// Select any connections to or from this node
+	if (GANV_IS_MODULE(node)) {
+		ganv_module_for_each_port(GANV_MODULE(node), select_edges, canvas->impl);
+	} else {
+		ganv_canvas_for_each_edge_on(
+			canvas, node, select_if_ends_are_selected, canvas->impl);
+	}
+
+	g_object_set(node, "selected", TRUE, NULL);
 }
 
 void
 ganv_canvas_unselect_node(GanvCanvas* canvas,
                           GanvNode*   node)
 {
-	canvas->impl->unselect_item(node);
+	// Unselect any connections to or from canvas->impl node
+	if (GANV_IS_MODULE(node)) {
+		ganv_module_for_each_port(GANV_MODULE(node), unselect_edges, canvas->impl);
+	} else {
+		ganv_canvas_for_each_edge_on(
+			canvas, node, (GanvEdgeFunc)ganv_edge_unselect, NULL);
+	}
+
+	// Unselect item
+	canvas->impl->_selected_items.erase(node);
+	g_object_set(node, "selected", FALSE, NULL);
 }
 
 void
 ganv_canvas_add_node(GanvCanvas* canvas,
                      GanvNode*   node)
 {
-	canvas->impl->add_item(node);
+	GanvItem* item = GANV_ITEM(node);
+	if (item->parent == ganv_canvas_root(canvas)) {
+		canvas->impl->_items.insert(node);
+	}
+}
+
+void
+ganv_canvas_remove_node(GanvCanvas* canvas,
+                        GanvNode*   node)
+{
+	if (node == (GanvNode*)canvas->impl->_connect_port) {
+		if (canvas->impl->_drag_state == GanvCanvasImpl::EDGE) {
+			ganv_canvas_ungrab_item(ganv_canvas_root(canvas), 0);
+			canvas->impl->end_connect_drag();
+		}
+		canvas->impl->_connect_port = NULL;
+	}
+
+	// Remove from selection
+	canvas->impl->_selected_items.erase(node);
+
+	// Remove children ports from selection if item is a module
+	if (GANV_IS_MODULE(node)) {
+		GanvModule* const module = GANV_MODULE(node);
+		for (unsigned i = 0; i < ganv_module_num_ports(module); ++i) {
+			canvas->impl->unselect_port(ganv_module_get_port(module, i));
+		}
+	}
+
+	// Remove from items
+	canvas->impl->_items.erase(node);
 }
 
 /**
@@ -2362,7 +2275,10 @@ ganv_canvas_get_edge(GanvCanvas* canvas,
                      GanvNode*   tail,
                      GanvNode*   head)
 {
-	return canvas->impl->get_edge_between(tail, head);
+	GanvEdgeKey key;
+	make_edge_search_key(&key, tail, head);
+	GanvCanvasImpl::Edges::const_iterator i = canvas->impl->_edges.find((GanvEdge*)&key);
+	return (i != canvas->impl->_edges.end()) ? *i : NULL;
 }
 
 void
@@ -2370,7 +2286,7 @@ ganv_canvas_remove_edge_between(GanvCanvas* canvas,
                                 GanvNode*   tail,
                                 GanvNode*   head)
 {
-	canvas->impl->remove_edge(canvas->impl->get_edge_between(tail, head));
+	ganv_canvas_remove_edge(canvas, ganv_canvas_get_edge(canvas, tail, head));
 }
 
 void
@@ -2382,40 +2298,42 @@ ganv_canvas_disconnect_edge(GanvCanvas* canvas,
 }
 
 void
-ganv_canvas_remove_node(GanvCanvas* canvas,
-                        GanvNode*   node)
-{
-	canvas->impl->remove_item(node);
-}
-
-void
 ganv_canvas_add_edge(GanvCanvas* canvas,
                      GanvEdge*   edge)
 {
 	canvas->impl->_edges.insert(edge);
 	canvas->impl->_dst_edges.insert(edge);
-	canvas->impl->contents_changed();
+	ganv_canvas_contents_changed(canvas);
 }
 
 void
 ganv_canvas_remove_edge(GanvCanvas* canvas,
                         GanvEdge*   edge)
 {
-	canvas->impl->remove_edge(edge);
+	if (edge) {
+		canvas->impl->_selected_edges.erase(edge);
+		canvas->impl->_edges.erase(edge);
+		canvas->impl->_dst_edges.erase(edge);
+		ganv_edge_request_redraw(GANV_ITEM(edge)->canvas, &edge->impl->coords);
+		gtk_object_destroy(GTK_OBJECT(edge));
+		ganv_canvas_contents_changed(canvas);
+	}
 }
 
 void
 ganv_canvas_select_edge(GanvCanvas* canvas,
                         GanvEdge*   edge)
 {
-	canvas->impl->select_edge(edge);
+	ganv_item_set(GANV_ITEM(edge), "selected", TRUE, NULL);
+	canvas->impl->_selected_edges.insert(edge);
 }
 
 void
 ganv_canvas_unselect_edge(GanvCanvas* canvas,
                           GanvEdge*   edge)
 {
-	canvas->impl->unselect_edge(edge);
+	ganv_item_set(GANV_ITEM(edge), "selected", FALSE, NULL);
+	canvas->impl->_selected_edges.erase(edge);
 }
 
 void
@@ -2423,7 +2341,9 @@ ganv_canvas_for_each_node(GanvCanvas*  canvas,
                           GanvNodeFunc f,
                           void*        data)
 {
-	canvas->impl->for_each_node(f, data);
+	FOREACH_ITEM(canvas->impl->_items, i) {
+		f(*i, data);
+	}
 }
 
 void
@@ -2443,12 +2363,35 @@ ganv_canvas_empty(const GanvCanvas* canvas)
 }
 
 void
+ganv_canvas_for_each_edge(GanvCanvas*  canvas,
+                          GanvEdgeFunc f,
+                          void*        data)
+{
+	GanvCanvasImpl* impl = canvas->impl;
+	for (GanvCanvasImpl::Edges::const_iterator i = impl->_edges.begin();
+	     i != impl->_edges.end();
+	     ++i) {
+		GanvCanvasImpl::Edges::const_iterator next = i;
+		++next;
+		f((*i), data);
+		i = next;
+	}
+}
+
+void
 ganv_canvas_for_each_edge_from(GanvCanvas*     canvas,
                                const GanvNode* tail,
                                GanvEdgeFunc    f,
                                void*           data)
 {
-	canvas->impl->for_each_edge_from(tail, f, data);
+	GanvCanvasImpl* impl = canvas->impl;
+	for (GanvCanvasImpl::Edges::const_iterator i = impl->first_edge_from(tail);
+	     i != impl->_edges.end() && (*i)->impl->tail == tail;) {
+		GanvCanvasImpl::Edges::const_iterator next = i;
+		++next;
+		f((*i), data);
+		i = next;
+	}
 }
 
 void
@@ -2457,7 +2400,14 @@ ganv_canvas_for_each_edge_to(GanvCanvas*     canvas,
                              GanvEdgeFunc    f,
                              void*           data)
 {
-	canvas->impl->for_each_edge_to(head, f, data);
+	GanvCanvasImpl* impl = canvas->impl;
+	for (GanvCanvasImpl::Edges::const_iterator i = impl->first_edge_to(head);
+	     i != impl->_dst_edges.end() && (*i)->impl->head == head;) {
+		GanvCanvasImpl::Edges::const_iterator next = i;
+		++next;
+		f((*i), data);
+		i = next;
+	}
 }
 
 void
@@ -2466,7 +2416,18 @@ ganv_canvas_for_each_edge_on(GanvCanvas*     canvas,
                              GanvEdgeFunc    f,
                              void*           data)
 {
-	canvas->impl->for_each_edge_on(node, f, data);
+	ganv_canvas_for_each_edge_from(canvas, node, f, data);
+	ganv_canvas_for_each_edge_to(canvas, node, f, data);
+}
+
+void
+ganv_canvas_for_each_selected_edge(GanvCanvas*  canvas,
+                                   GanvEdgeFunc f,
+                                   void*        data)
+{
+	FOREACH_EDGE(canvas->impl->_selected_edges, i) {
+		f((*i), data);
+	}
 }
 
 GdkCursor*
@@ -2509,15 +2470,15 @@ void
 ganv_canvas_select_all(GanvCanvas* canvas)
 {
 	ganv_canvas_clear_selection(canvas);
-	FOREACH_ITEM(canvas->impl->_items, m) {
-		canvas->impl->select_item(*m);
+	FOREACH_ITEM(canvas->impl->_items, i) {
+		ganv_canvas_select_node(canvas, *i);
 	}
 }
 
 double
 ganv_canvas_get_zoom(GanvCanvas* canvas)
 {
-	return canvas->impl->_zoom;
+	return canvas->impl->pixels_per_unit;
 }
 
 void
@@ -2553,11 +2514,11 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 		if (GANV_ITEM(i->first)->parent != GANV_ITEM(ganv_canvas_root(canvas))) {
 			continue;
 		}
-		const string pos   = agget(i->second, (char*)"pos");
-		const string x_str = pos.substr(0, pos.find(","));
-		const string y_str = pos.substr(pos.find(",") + 1);
-		const double cx    = lrint(strtod(x_str.c_str(), NULL) * dpp);
-		const double cy    = lrint(strtod(y_str.c_str(), NULL) * dpp);
+		const std::string pos   = agget(i->second, (char*)"pos");
+		const std::string x_str = pos.substr(0, pos.find(","));
+		const std::string y_str = pos.substr(pos.find(",") + 1);
+		const double      cx    = lrint(strtod(x_str.c_str(), NULL) * dpp);
+		const double      cy    = lrint(strtod(y_str.c_str(), NULL) * dpp);
 
 		double w, h;
 		if (GANV_IS_BOX(i->first)) {
@@ -2604,7 +2565,7 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 	}
 	nodes.cleanup();
 
-	static const double border_width = canvas->impl->_font_size * 2.0;
+	static const double border_width = canvas->impl->font_size * 2.0;
 	canvas->impl->move_contents_to_internal(border_width, border_width, least_x, least_y);
 	ganv_canvas_scroll_to(GANV_CANVAS(canvas->impl->_gcanvas), 0, 0);
 
@@ -2630,19 +2591,22 @@ ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename)
 #endif
 }
 
-
-/***************************************************************************/
+gboolean
+ganv_canvas_get_locked(GanvCanvas* canvas)
+{
+	return canvas->impl->locked;
+}
 
 /* Convenience function to remove the idle handler of a canvas */
 static void
 remove_idle(GanvCanvas* canvas)
 {
-	if (canvas->idle_id == 0) {
+	if (canvas->impl->idle_id == 0) {
 		return;
 	}
 
-	g_source_remove(canvas->idle_id);
-	canvas->idle_id = 0;
+	g_source_remove(canvas->impl->idle_id);
+	canvas->impl->idle_id = 0;
 }
 
 /* Removes the transient state of the canvas (idle handler, grabs). */
@@ -2654,19 +2618,19 @@ shutdown_transients(GanvCanvas* canvas)
 	 * flag, though, because updates are not queued when the canvas remaps
 	 * itself.
 	 */
-	if (canvas->need_redraw) {
-		canvas->need_redraw = FALSE;
-		g_slist_foreach(canvas->redraw_region, (GFunc)g_free, NULL);
-		g_slist_free(canvas->redraw_region);
-		canvas->redraw_region = NULL;
-		canvas->redraw_x1   = 0;
-		canvas->redraw_y1   = 0;
-		canvas->redraw_x2   = 0;
-		canvas->redraw_y2   = 0;
+	if (canvas->impl->need_redraw) {
+		canvas->impl->need_redraw = FALSE;
+		g_slist_foreach(canvas->impl->redraw_region, (GFunc)g_free, NULL);
+		g_slist_free(canvas->impl->redraw_region);
+		canvas->impl->redraw_region = NULL;
+		canvas->impl->redraw_x1   = 0;
+		canvas->impl->redraw_y1   = 0;
+		canvas->impl->redraw_x2   = 0;
+		canvas->impl->redraw_y2   = 0;
 	}
 
-	if (canvas->grabbed_item) {
-		canvas->grabbed_item = NULL;
+	if (canvas->impl->grabbed_item) {
+		canvas->impl->grabbed_item = NULL;
 		gdk_pointer_ungrab(GDK_CURRENT_TIME);
 	}
 
@@ -2677,22 +2641,20 @@ shutdown_transients(GanvCanvas* canvas)
 static void
 ganv_canvas_destroy(GtkObject* object)
 {
-	GanvCanvas* canvas;
-
 	g_return_if_fail(GANV_IS_CANVAS(object));
 
 	/* remember, destroy can be run multiple times! */
 
-	canvas = GANV_CANVAS(object);
+	GanvCanvas* canvas = GANV_CANVAS(object);
 
-	if (canvas->root_destroy_id) {
-		g_signal_handler_disconnect(canvas->root, canvas->root_destroy_id);
-		canvas->root_destroy_id = 0;
+	if (canvas->impl->root_destroy_id) {
+		g_signal_handler_disconnect(canvas->impl->root, canvas->impl->root_destroy_id);
+		canvas->impl->root_destroy_id = 0;
 	}
-	if (canvas->root) {
-		gtk_object_destroy(GTK_OBJECT(canvas->root));
-		g_object_unref(G_OBJECT(canvas->root));
-		canvas->root = NULL;
+	if (canvas->impl->root) {
+		gtk_object_destroy(GTK_OBJECT(canvas->impl->root));
+		g_object_unref(G_OBJECT(canvas->impl->root));
+		canvas->impl->root = NULL;
 	}
 
 	shutdown_transients(canvas);
@@ -2717,7 +2679,7 @@ ganv_canvas_new(double width, double height)
 		             NULL));
 
 	ganv_canvas_set_scroll_region(GANV_CANVAS(canvas),
-	                                   0.0, 0.0, width, height);
+	                              0.0, 0.0, width, height);
 
 	return canvas;
 }
@@ -2738,14 +2700,14 @@ ganv_canvas_map(GtkWidget* widget)
 
 	canvas = GANV_CANVAS(widget);
 
-	if (canvas->need_update) {
+	if (canvas->impl->need_update) {
 		add_idle(canvas);
 	}
 
 	/* Map items */
 
-	if (GANV_ITEM_GET_CLASS(canvas->root)->map) {
-		(*GANV_ITEM_GET_CLASS(canvas->root)->map)(canvas->root);
+	if (GANV_ITEM_GET_CLASS(canvas->impl->root)->map) {
+		(*GANV_ITEM_GET_CLASS(canvas->impl->root)->map)(canvas->impl->root);
 	}
 }
 
@@ -2763,8 +2725,8 @@ ganv_canvas_unmap(GtkWidget* widget)
 
 	/* Unmap items */
 
-	if (GANV_ITEM_GET_CLASS(canvas->root)->unmap) {
-		(*GANV_ITEM_GET_CLASS(canvas->root)->unmap)(canvas->root);
+	if (GANV_ITEM_GET_CLASS(canvas->impl->root)->unmap) {
+		(*GANV_ITEM_GET_CLASS(canvas->impl->root)->unmap)(canvas->impl->root);
 	}
 
 	/* Normal widget unmapping stuff */
@@ -2805,9 +2767,9 @@ ganv_canvas_realize(GtkWidget* widget)
 
 	/* Create our own temporary pixmap gc and realize all the items */
 
-	canvas->pixmap_gc = gdk_gc_new(canvas->layout.bin_window);
+	canvas->impl->pixmap_gc = gdk_gc_new(canvas->layout.bin_window);
 
-	(*GANV_ITEM_GET_CLASS(canvas->root)->realize)(canvas->root);
+	(*GANV_ITEM_GET_CLASS(canvas->impl->root)->realize)(canvas->impl->root);
 }
 
 /* Unrealize handler for the canvas */
@@ -2824,10 +2786,10 @@ ganv_canvas_unrealize(GtkWidget* widget)
 
 	/* Unrealize items and parent widget */
 
-	(*GANV_ITEM_GET_CLASS(canvas->root)->unrealize)(canvas->root);
+	(*GANV_ITEM_GET_CLASS(canvas->impl->root)->unrealize)(canvas->impl->root);
 
-	g_object_unref(canvas->pixmap_gc);
-	canvas->pixmap_gc = NULL;
+	g_object_unref(canvas->impl->pixmap_gc);
+	canvas->impl->pixmap_gc = NULL;
 
 	if (GTK_WIDGET_CLASS(canvas_parent_class)->unrealize) {
 		(*GTK_WIDGET_CLASS(canvas_parent_class)->unrealize)(widget);
@@ -2849,56 +2811,56 @@ scroll_to(GanvCanvas* canvas, int cx, int cy)
 	canvas_width  = GTK_WIDGET(canvas)->allocation.width;
 	canvas_height = GTK_WIDGET(canvas)->allocation.height;
 
-	scroll_width = floor((canvas->scroll_x2 - canvas->scroll_x1) * canvas->pixels_per_unit
+	scroll_width = floor((canvas->impl->scroll_x2 - canvas->impl->scroll_x1) * canvas->impl->pixels_per_unit
 	                     + 0.5);
-	scroll_height = floor((canvas->scroll_y2 - canvas->scroll_y1) * canvas->pixels_per_unit
+	scroll_height = floor((canvas->impl->scroll_y2 - canvas->impl->scroll_y1) * canvas->impl->pixels_per_unit
 	                      + 0.5);
 
 	right_limit  = scroll_width - canvas_width;
 	bottom_limit = scroll_height - canvas_height;
 
-	old_zoom_xofs = canvas->zoom_xofs;
-	old_zoom_yofs = canvas->zoom_yofs;
+	old_zoom_xofs = canvas->impl->zoom_xofs;
+	old_zoom_yofs = canvas->impl->zoom_yofs;
 
 	if (right_limit < 0) {
 		cx = 0;
 
-		if (canvas->center_scroll_region) {
-			canvas->zoom_xofs = (canvas_width - scroll_width) / 2;
+		if (canvas->impl->center_scroll_region) {
+			canvas->impl->zoom_xofs = (canvas_width - scroll_width) / 2;
 			scroll_width      = canvas_width;
 		} else {
-			canvas->zoom_xofs = 0;
+			canvas->impl->zoom_xofs = 0;
 		}
 	} else if (cx < 0) {
 		cx                = 0;
-		canvas->zoom_xofs = 0;
+		canvas->impl->zoom_xofs = 0;
 	} else if (cx > right_limit) {
 		cx                = right_limit;
-		canvas->zoom_xofs = 0;
+		canvas->impl->zoom_xofs = 0;
 	} else {
-		canvas->zoom_xofs = 0;
+		canvas->impl->zoom_xofs = 0;
 	}
 
 	if (bottom_limit < 0) {
 		cy = 0;
 
-		if (canvas->center_scroll_region) {
-			canvas->zoom_yofs = (canvas_height - scroll_height) / 2;
+		if (canvas->impl->center_scroll_region) {
+			canvas->impl->zoom_yofs = (canvas_height - scroll_height) / 2;
 			scroll_height     = canvas_height;
 		} else {
-			canvas->zoom_yofs = 0;
+			canvas->impl->zoom_yofs = 0;
 		}
 	} else if (cy < 0) {
 		cy                = 0;
-		canvas->zoom_yofs = 0;
+		canvas->impl->zoom_yofs = 0;
 	} else if (cy > bottom_limit) {
 		cy                = bottom_limit;
-		canvas->zoom_yofs = 0;
+		canvas->impl->zoom_yofs = 0;
 	} else {
-		canvas->zoom_yofs = 0;
+		canvas->impl->zoom_yofs = 0;
 	}
 
-	if ((canvas->zoom_xofs != old_zoom_xofs) || (canvas->zoom_yofs != old_zoom_yofs)) {
+	if ((canvas->impl->zoom_xofs != old_zoom_xofs) || (canvas->impl->zoom_yofs != old_zoom_yofs)) {
 		ganv_canvas_request_update(canvas);
 		gtk_widget_queue_draw(GTK_WIDGET(canvas));
 	}
@@ -2988,8 +2950,8 @@ ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 
 	/* Perform checks for grabbed items */
 
-	if (canvas->grabbed_item
-	    && !is_descendant(canvas->current_item, canvas->grabbed_item)) {
+	if (canvas->impl->grabbed_item
+	    && !is_descendant(canvas->impl->current_item, canvas->impl->grabbed_item)) {
 		/* I think this warning is annoying and I don't know what it's for
 		 * so I'll disable it for now.
 		 */
@@ -2997,7 +2959,7 @@ ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 		return FALSE;
 	}
 
-	if (canvas->grabbed_item) {
+	if (canvas->impl->grabbed_item) {
 		switch (event->type) {
 		case GDK_ENTER_NOTIFY:
 			mask = GDK_ENTER_NOTIFY_MASK;
@@ -3038,7 +3000,7 @@ ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 			break;
 		}
 
-		if (!(mask & canvas->grabbed_event_mask)) {
+		if (!(mask & canvas->impl->grabbed_event_mask)) {
 			return FALSE;
 		}
 	}
@@ -3053,8 +3015,8 @@ ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 	case GDK_ENTER_NOTIFY:
 	case GDK_LEAVE_NOTIFY:
 		ganv_canvas_window_to_world(canvas,
-		                                 ev->crossing.x, ev->crossing.y,
-		                                 &ev->crossing.x, &ev->crossing.y);
+		                            ev->crossing.x, ev->crossing.y,
+		                            &ev->crossing.x, &ev->crossing.y);
 		break;
 
 	case GDK_MOTION_NOTIFY:
@@ -3063,8 +3025,8 @@ ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 	case GDK_3BUTTON_PRESS:
 	case GDK_BUTTON_RELEASE:
 		ganv_canvas_window_to_world(canvas,
-		                                 ev->motion.x, ev->motion.y,
-		                                 &ev->motion.x, &ev->motion.y);
+		                            ev->motion.x, ev->motion.y,
+		                            &ev->motion.x, &ev->motion.y);
 		break;
 
 	default:
@@ -3073,13 +3035,13 @@ ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 
 	/* Choose where we send the event */
 
-	item = canvas->current_item;
+	item = canvas->impl->current_item;
 
-	if (canvas->focused_item
+	if (canvas->impl->focused_item
 	    && ((event->type == GDK_KEY_PRESS)
 	        || (event->type == GDK_KEY_RELEASE)
 	        || (event->type == GDK_FOCUS_CHANGE))) {
-		item = canvas->focused_item;
+		item = canvas->impl->focused_item;
 	}
 
 	/* The event is propagated up the hierarchy (for if someone connected to
@@ -3105,6 +3067,145 @@ ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 	return finished;
 }
 
+void
+ganv_canvas_set_need_repick(GanvCanvas* canvas)
+{
+	canvas->impl->need_repick = TRUE;
+}
+
+void
+ganv_canvas_forget_item(GanvCanvas* canvas, GanvItem* item)
+{
+	if (canvas->impl && item == canvas->impl->current_item) {
+		canvas->impl->current_item = NULL;
+		canvas->impl->need_repick  = TRUE;
+	}
+
+	if (canvas->impl && item == canvas->impl->new_current_item) {
+		canvas->impl->new_current_item = NULL;
+		canvas->impl->need_repick      = TRUE;
+	}
+
+	if (canvas->impl && item == canvas->impl->grabbed_item) {
+		canvas->impl->grabbed_item = NULL;
+		gdk_pointer_ungrab(GDK_CURRENT_TIME);
+	}
+
+	if (canvas->impl && item == canvas->impl->focused_item) {
+		canvas->impl->focused_item = NULL;
+	}
+}
+
+void
+ganv_canvas_grab_focus(GanvCanvas* canvas, GanvItem* item)
+{
+	g_return_if_fail(GANV_IS_ITEM(item));
+	g_return_if_fail(GTK_WIDGET_CAN_FOCUS(GTK_WIDGET(canvas)));
+
+	GanvItem* focused_item = canvas->impl->focused_item;
+	GdkEvent  ev;
+
+	if (focused_item) {
+		ev.focus_change.type       = GDK_FOCUS_CHANGE;
+		ev.focus_change.window     = canvas->layout.bin_window;
+		ev.focus_change.send_event = FALSE;
+		ev.focus_change.in         = FALSE;
+
+		ganv_canvas_emit_event(canvas, &ev);
+	}
+
+	canvas->impl->focused_item = item;
+	gtk_widget_grab_focus(GTK_WIDGET(canvas));
+
+	if (focused_item) {
+		ev.focus_change.type       = GDK_FOCUS_CHANGE;
+		ev.focus_change.window     = canvas->layout.bin_window;
+		ev.focus_change.send_event = FALSE;
+		ev.focus_change.in         = TRUE;
+
+		ganv_canvas_emit_event(canvas, &ev);
+	}
+}
+
+/**
+ * ganv_canvas_grab_item:
+ * @item: A canvas item.
+ * @event_mask: Mask of events that will be sent to this item.
+ * @cursor: If non-NULL, the cursor that will be used while the grab is active.
+ * @etime: The timestamp required for grabbing the mouse, or GDK_CURRENT_TIME.
+ *
+ * Specifies that all events that match the specified event mask should be sent
+ * to the specified item, and also grabs the mouse by calling
+ * gdk_pointer_grab().  The event mask is also used when grabbing the pointer.
+ * If @cursor is not NULL, then that cursor is used while the grab is active.
+ * The @etime parameter is the timestamp required for grabbing the mouse.
+ *
+ * Return value: If an item was already grabbed, it returns %GDK_GRAB_ALREADY_GRABBED.  If
+ * the specified item was hidden by calling ganv_item_hide(), then it
+ * returns %GDK_GRAB_NOT_VIEWABLE.  Else, it returns the result of calling
+ * gdk_pointer_grab().
+ **/
+int
+ganv_canvas_grab_item(GanvItem* item, guint event_mask, GdkCursor* cursor, guint32 etime)
+{
+	g_return_val_if_fail(GANV_IS_ITEM(item), GDK_GRAB_NOT_VIEWABLE);
+	g_return_val_if_fail(GTK_WIDGET_MAPPED(item->canvas), GDK_GRAB_NOT_VIEWABLE);
+
+	if (item->canvas->impl->grabbed_item) {
+		return GDK_GRAB_ALREADY_GRABBED;
+	}
+
+	if (!(item->object.flags & GANV_ITEM_VISIBLE)) {
+		return GDK_GRAB_NOT_VIEWABLE;
+	}
+
+	int retval = gdk_pointer_grab(item->canvas->layout.bin_window,
+	                              FALSE,
+	                              (GdkEventMask)event_mask,
+	                              NULL,
+	                              cursor,
+	                              etime);
+
+	if (retval != GDK_GRAB_SUCCESS) {
+		return retval;
+	}
+
+	item->canvas->impl->grabbed_item       = item;
+	item->canvas->impl->grabbed_event_mask = event_mask;
+	item->canvas->impl->current_item       = item; /* So that events go to the grabbed item */
+
+	return retval;
+}
+
+/**
+ * ganv_canvas_ungrab_item:
+ * @item: A canvas item that holds a grab.
+ * @etime: The timestamp for ungrabbing the mouse.
+ *
+ * Ungrabs the item, which must have been grabbed in the canvas, and ungrabs the
+ * mouse.
+ **/
+void
+ganv_canvas_ungrab_item(GanvItem* item, guint32 etime)
+{
+	g_return_if_fail(GANV_IS_ITEM(item));
+
+	if (item->canvas->impl->grabbed_item != item) {
+		return;
+	}
+
+	item->canvas->impl->grabbed_item = NULL;
+
+	gdk_pointer_ungrab(etime);
+}
+
+void
+ganv_canvas_get_zoom_offsets(GanvCanvas* canvas, int* x, int* y)
+{
+	*x = canvas->impl->zoom_xofs;
+	*y = canvas->impl->zoom_yofs;
+}
+
 /* Re-picks the current item in the canvas, based on the event's coordinates.
  * Also emits enter/leave events for items as appropriate.
  */
@@ -3122,13 +3223,13 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 	 * current item, but not enter on any other item.  This is more or less
 	 * like X pointer grabbing for canvas items.
 	 */
-	button_down = canvas->state & (GDK_BUTTON1_MASK
-	                               | GDK_BUTTON2_MASK
-	                               | GDK_BUTTON3_MASK
-	                               | GDK_BUTTON4_MASK
-	                               | GDK_BUTTON5_MASK);
+	button_down = canvas->impl->state & (GDK_BUTTON1_MASK
+	                                     | GDK_BUTTON2_MASK
+	                                     | GDK_BUTTON3_MASK
+	                                     | GDK_BUTTON4_MASK
+	                                     | GDK_BUTTON5_MASK);
 	if (!button_down) {
-		canvas->left_grabbed_item = FALSE;
+		canvas->impl->left_grabbed_item = FALSE;
 	}
 
 	/* Save the event in the canvas.  This is used to synthesize enter and
@@ -3136,52 +3237,52 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 	 * re-pick the current item if the current one gets deleted.  Also,
 	 * synthesize an enter event.
 	 */
-	if (event != &canvas->pick_event) {
+	if (event != &canvas->impl->pick_event) {
 		if ((event->type == GDK_MOTION_NOTIFY) || (event->type == GDK_BUTTON_RELEASE)) {
 			/* these fields have the same offsets in both types of events */
 
-			canvas->pick_event.crossing.type       = GDK_ENTER_NOTIFY;
-			canvas->pick_event.crossing.window     = event->motion.window;
-			canvas->pick_event.crossing.send_event = event->motion.send_event;
-			canvas->pick_event.crossing.subwindow  = NULL;
-			canvas->pick_event.crossing.x          = event->motion.x;
-			canvas->pick_event.crossing.y          = event->motion.y;
-			canvas->pick_event.crossing.mode       = GDK_CROSSING_NORMAL;
-			canvas->pick_event.crossing.detail     = GDK_NOTIFY_NONLINEAR;
-			canvas->pick_event.crossing.focus      = FALSE;
-			canvas->pick_event.crossing.state      = event->motion.state;
+			canvas->impl->pick_event.crossing.type       = GDK_ENTER_NOTIFY;
+			canvas->impl->pick_event.crossing.window     = event->motion.window;
+			canvas->impl->pick_event.crossing.send_event = event->motion.send_event;
+			canvas->impl->pick_event.crossing.subwindow  = NULL;
+			canvas->impl->pick_event.crossing.x          = event->motion.x;
+			canvas->impl->pick_event.crossing.y          = event->motion.y;
+			canvas->impl->pick_event.crossing.mode       = GDK_CROSSING_NORMAL;
+			canvas->impl->pick_event.crossing.detail     = GDK_NOTIFY_NONLINEAR;
+			canvas->impl->pick_event.crossing.focus      = FALSE;
+			canvas->impl->pick_event.crossing.state      = event->motion.state;
 
 			/* these fields don't have the same offsets in both types of events */
 
 			if (event->type == GDK_MOTION_NOTIFY) {
-				canvas->pick_event.crossing.x_root = event->motion.x_root;
-				canvas->pick_event.crossing.y_root = event->motion.y_root;
+				canvas->impl->pick_event.crossing.x_root = event->motion.x_root;
+				canvas->impl->pick_event.crossing.y_root = event->motion.y_root;
 			} else {
-				canvas->pick_event.crossing.x_root = event->button.x_root;
-				canvas->pick_event.crossing.y_root = event->button.y_root;
+				canvas->impl->pick_event.crossing.x_root = event->button.x_root;
+				canvas->impl->pick_event.crossing.y_root = event->button.y_root;
 			}
 		} else {
-			canvas->pick_event = *event;
+			canvas->impl->pick_event = *event;
 		}
 	}
 
 	/* Don't do anything else if this is a recursive call */
 
-	if (canvas->in_repick) {
+	if (canvas->impl->in_repick) {
 		return retval;
 	}
 
 	/* LeaveNotify means that there is no current item, so we don't look for one */
 
-	if (canvas->pick_event.type != GDK_LEAVE_NOTIFY) {
+	if (canvas->impl->pick_event.type != GDK_LEAVE_NOTIFY) {
 		/* these fields don't have the same offsets in both types of events */
 
-		if (canvas->pick_event.type == GDK_ENTER_NOTIFY) {
-			x = canvas->pick_event.crossing.x - canvas->zoom_xofs;
-			y = canvas->pick_event.crossing.y - canvas->zoom_yofs;
+		if (canvas->impl->pick_event.type == GDK_ENTER_NOTIFY) {
+			x = canvas->impl->pick_event.crossing.x - canvas->impl->zoom_xofs;
+			y = canvas->impl->pick_event.crossing.y - canvas->impl->zoom_yofs;
 		} else {
-			x = canvas->pick_event.motion.x - canvas->zoom_xofs;
-			y = canvas->pick_event.motion.y - canvas->zoom_yofs;
+			x = canvas->impl->pick_event.motion.x - canvas->impl->zoom_xofs;
+			y = canvas->impl->pick_event.motion.y - canvas->impl->zoom_yofs;
 		}
 
 		/* canvas pixel coords */
@@ -3191,61 +3292,61 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 
 		/* world coords */
 
-		x = canvas->scroll_x1 + x / canvas->pixels_per_unit;
-		y = canvas->scroll_y1 + y / canvas->pixels_per_unit;
+		x = canvas->impl->scroll_x1 + x / canvas->impl->pixels_per_unit;
+		y = canvas->impl->scroll_y1 + y / canvas->impl->pixels_per_unit;
 
 		/* find the closest item */
 
-		if (canvas->root->object.flags & GANV_ITEM_VISIBLE) {
-			GANV_ITEM_GET_CLASS(canvas->root)->point(
-				canvas->root,
-				x - canvas->root->x, y - canvas->root->y,
+		if (canvas->impl->root->object.flags & GANV_ITEM_VISIBLE) {
+			GANV_ITEM_GET_CLASS(canvas->impl->root)->point(
+				canvas->impl->root,
+				x - canvas->impl->root->x, y - canvas->impl->root->y,
 				cx, cy,
-				&canvas->new_current_item);
+				&canvas->impl->new_current_item);
 		} else {
-			canvas->new_current_item = NULL;
+			canvas->impl->new_current_item = NULL;
 		}
 	} else {
-		canvas->new_current_item = NULL;
+		canvas->impl->new_current_item = NULL;
 	}
 
-	if ((canvas->new_current_item == canvas->current_item) && !canvas->left_grabbed_item) {
+	if ((canvas->impl->new_current_item == canvas->impl->current_item) && !canvas->impl->left_grabbed_item) {
 		return retval; /* current item did not change */
 
 	}
 	/* Synthesize events for old and new current items */
 
-	if ((canvas->new_current_item != canvas->current_item)
-	    && (canvas->current_item != NULL)
-	    && !canvas->left_grabbed_item) {
+	if ((canvas->impl->new_current_item != canvas->impl->current_item)
+	    && (canvas->impl->current_item != NULL)
+	    && !canvas->impl->left_grabbed_item) {
 		GdkEvent new_event;
 
-		new_event      = canvas->pick_event;
+		new_event      = canvas->impl->pick_event;
 		new_event.type = GDK_LEAVE_NOTIFY;
 
 		new_event.crossing.detail    = GDK_NOTIFY_ANCESTOR;
 		new_event.crossing.subwindow = NULL;
-		canvas->in_repick            = TRUE;
+		canvas->impl->in_repick      = TRUE;
 		retval                       = ganv_canvas_emit_event(canvas, &new_event);
-		canvas->in_repick            = FALSE;
+		canvas->impl->in_repick      = FALSE;
 	}
 
 	/* new_current_item may have been set to NULL during the call to ganv_canvas_emit_event() above */
 
-	if ((canvas->new_current_item != canvas->current_item) && button_down) {
-		canvas->left_grabbed_item = TRUE;
+	if ((canvas->impl->new_current_item != canvas->impl->current_item) && button_down) {
+		canvas->impl->left_grabbed_item = TRUE;
 		return retval;
 	}
 
 	/* Handle the rest of cases */
 
-	canvas->left_grabbed_item = FALSE;
-	canvas->current_item      = canvas->new_current_item;
+	canvas->impl->left_grabbed_item = FALSE;
+	canvas->impl->current_item      = canvas->impl->new_current_item;
 
-	if (canvas->current_item != NULL) {
+	if (canvas->impl->current_item != NULL) {
 		GdkEvent new_event;
 
-		new_event                    = canvas->pick_event;
+		new_event                    = canvas->impl->pick_event;
 		new_event.type               = GDK_ENTER_NOTIFY;
 		new_event.crossing.detail    = GDK_NOTIFY_ANCESTOR;
 		new_event.crossing.subwindow = NULL;
@@ -3274,7 +3375,7 @@ ganv_canvas_button(GtkWidget* widget, GdkEventButton* event)
 	 * dispatch normally regardless of the event's window if an item has
 	 * has a pointer grab in effect
 	 */
-	if (!canvas->grabbed_item && ( event->window != canvas->layout.bin_window) ) {
+	if (!canvas->impl->grabbed_item && ( event->window != canvas->layout.bin_window) ) {
 		return retval;
 	}
 
@@ -3305,9 +3406,9 @@ ganv_canvas_button(GtkWidget* widget, GdkEventButton* event)
 		/* Pick the current item as if the button were not pressed, and
 		 * then process the event.
 		 */
-		canvas->state = event->state;
+		canvas->impl->state = event->state;
 		pick_current_item(canvas, (GdkEvent*)event);
-		canvas->state ^= mask;
+		canvas->impl->state ^= mask;
 		retval         = ganv_canvas_emit_event(canvas, (GdkEvent*)event);
 		break;
 
@@ -3315,10 +3416,10 @@ ganv_canvas_button(GtkWidget* widget, GdkEventButton* event)
 		/* Process the event as if the button were pressed, then repick
 		 * after the button has been released
 		 */
-		canvas->state = event->state;
+		canvas->impl->state = event->state;
 		retval        = ganv_canvas_emit_event(canvas, (GdkEvent*)event);
 		event->state ^= mask;
-		canvas->state = event->state;
+		canvas->impl->state = event->state;
 		pick_current_item(canvas, (GdkEvent*)event);
 		event->state ^= mask;
 		break;
@@ -3345,7 +3446,7 @@ ganv_canvas_motion(GtkWidget* widget, GdkEventMotion* event)
 		return FALSE;
 	}
 
-	canvas->state = event->state;
+	canvas->impl->state = event->state;
 	pick_current_item(canvas, (GdkEvent*)event);
 	return ganv_canvas_emit_event(canvas, (GdkEvent*)event);
 }
@@ -3364,7 +3465,7 @@ ganv_canvas_scroll(GtkWidget* widget, GdkEventScroll* event)
 		return FALSE;
 	}
 
-	canvas->state = event->state;
+	canvas->impl->state = event->state;
 	pick_current_item(canvas, (GdkEvent*)event);
 	return ganv_canvas_emit_event(canvas, (GdkEvent*)event);
 }
@@ -3418,7 +3519,7 @@ ganv_canvas_crossing(GtkWidget* widget, GdkEventCrossing* event)
 		return FALSE;
 	}
 
-	canvas->state = event->state;
+	canvas->impl->state = event->state;
 	return pick_current_item(canvas, (GdkEvent*)event);
 }
 
@@ -3432,7 +3533,7 @@ ganv_canvas_focus_in(GtkWidget* widget, GdkEventFocus* event)
 
 	canvas = GANV_CANVAS(widget);
 
-	if (canvas->focused_item) {
+	if (canvas->impl->focused_item) {
 		return ganv_canvas_emit_event(canvas, (GdkEvent*)event);
 	} else {
 		return FALSE;
@@ -3449,7 +3550,7 @@ ganv_canvas_focus_out(GtkWidget* widget, GdkEventFocus* event)
 
 	canvas = GANV_CANVAS(widget);
 
-	if (canvas->focused_item) {
+	if (canvas->impl->focused_item) {
 		return ganv_canvas_emit_event(canvas, (GdkEvent*)event);
 	} else {
 		return FALSE;
@@ -3465,10 +3566,10 @@ ganv_canvas_paint_rect(GanvCanvas* canvas, gint x0, gint y0, gint x1, gint y1)
 	gint draw_x2, draw_y2;
 	gint draw_width, draw_height;
 
-	g_return_if_fail(!canvas->need_update);
+	g_return_if_fail(!canvas->impl->need_update);
 
-	draw_x1 = MAX(x0, canvas->layout.hadjustment->value - canvas->zoom_xofs);
-	draw_y1 = MAX(y0, canvas->layout.vadjustment->value - canvas->zoom_yofs);
+	draw_x1 = MAX(x0, canvas->layout.hadjustment->value - canvas->impl->zoom_xofs);
+	draw_y1 = MAX(y0, canvas->layout.vadjustment->value - canvas->impl->zoom_yofs);
 	draw_x2 = MIN(draw_x1 + GTK_WIDGET(canvas)->allocation.width, x1);
 	draw_y2 = MIN(draw_y1 + GTK_WIDGET(canvas)->allocation.height, y1);
 
@@ -3479,12 +3580,12 @@ ganv_canvas_paint_rect(GanvCanvas* canvas, gint x0, gint y0, gint x1, gint y1)
 		return;
 	}
 
-	canvas->redraw_x1 = draw_x1;
-	canvas->redraw_y1 = draw_y1;
-	canvas->redraw_x2 = draw_x2;
-	canvas->redraw_y2 = draw_y2;
-	canvas->draw_xofs = draw_x1;
-	canvas->draw_yofs = draw_y1;
+	canvas->impl->redraw_x1 = draw_x1;
+	canvas->impl->redraw_y1 = draw_y1;
+	canvas->impl->redraw_x2 = draw_x2;
+	canvas->impl->redraw_y2 = draw_y2;
+	canvas->impl->draw_xofs = draw_x1;
+	canvas->impl->draw_yofs = draw_y1;
 
 	cairo_t* cr = gdk_cairo_create(canvas->layout.bin_window);
 
@@ -3492,11 +3593,11 @@ ganv_canvas_paint_rect(GanvCanvas* canvas, gint x0, gint y0, gint x1, gint y1)
 	ganv_canvas_window_to_world(canvas, 0, 0, &wx, &wy);
 	cairo_translate(cr, -wx, -wy);
 
-	if (canvas->root->object.flags & GANV_ITEM_VISIBLE) {
-		(*GANV_ITEM_GET_CLASS(canvas->root)->draw)(
-		    canvas->root, cr,
-		    draw_x1, draw_y1,
-		    draw_width, draw_height);
+	if (canvas->impl->root->object.flags & GANV_ITEM_VISIBLE) {
+		(*GANV_ITEM_GET_CLASS(canvas->impl->root)->draw)(
+			canvas->impl->root, cr,
+			draw_x1, draw_y1,
+			draw_width, draw_height);
 	}
 
 	cairo_destroy(cr);
@@ -3523,7 +3624,7 @@ ganv_canvas_expose(GtkWidget* widget, GdkEventExpose* event)
 	const int x2 = clip.x + clip.width;
 	const int y2 = clip.y + clip.height;
 	
-	if (canvas->need_update || canvas->need_redraw) {
+	if (canvas->impl->need_update || canvas->impl->need_redraw) {
 		/* Update or drawing is scheduled, so just mark exposed area as dirty */
 		ganv_canvas_request_redraw(canvas, clip.x, clip.y, x2, y2);
 	} else {
@@ -3544,12 +3645,12 @@ ganv_canvas_expose(GtkWidget* widget, GdkEventExpose* event)
 static void
 paint(GanvCanvas* canvas)
 {
-	for (GSList* l = canvas->redraw_region; l; l = l->next) {
+	for (GSList* l = canvas->impl->redraw_region; l; l = l->next) {
 		IRect* rect = (IRect*)l->data;
 
 		const GdkRectangle gdkrect = {
-			rect->x + canvas->zoom_xofs,
-			rect->y + canvas->zoom_yofs,
+			rect->x + canvas->impl->zoom_xofs,
+			rect->y + canvas->impl->zoom_yofs,
 			rect->width,
 			rect->height
 		};
@@ -3558,14 +3659,14 @@ paint(GanvCanvas* canvas)
 		g_free(rect);
 	}
 
-	g_slist_free(canvas->redraw_region);
-	canvas->redraw_region = NULL;
-	canvas->need_redraw = FALSE;
+	g_slist_free(canvas->impl->redraw_region);
+	canvas->impl->redraw_region = NULL;
+	canvas->impl->need_redraw = FALSE;
 
-	canvas->redraw_x1 = 0;
-	canvas->redraw_y1 = 0;
-	canvas->redraw_x2 = 0;
-	canvas->redraw_y2 = 0;
+	canvas->impl->redraw_x1 = 0;
+	canvas->impl->redraw_y1 = 0;
+	canvas->impl->redraw_x2 = 0;
+	canvas->impl->redraw_y2 = 0;
 }
 
 static void
@@ -3574,17 +3675,17 @@ do_update(GanvCanvas* canvas)
 	/* Cause the update if necessary */
 
 update_again:
-	if (canvas->need_update) {
-		ganv_item_invoke_update(canvas->root, 0);
+	if (canvas->impl->need_update) {
+		ganv_item_invoke_update(canvas->impl->root, 0);
 
-		canvas->need_update = FALSE;
+		canvas->impl->need_update = FALSE;
 	}
 
 	/* Pick new current item */
 
-	while (canvas->need_repick) {
-		canvas->need_repick = FALSE;
-		pick_current_item(canvas, &canvas->pick_event);
+	while (canvas->impl->need_repick) {
+		canvas->impl->need_repick = FALSE;
+		pick_current_item(canvas, &canvas->impl->pick_event);
 	}
 
 	/* it is possible that during picking we emitted an event in which
@@ -3592,13 +3693,13 @@ update_again:
 	   of something.  Without this we'd be left in a state where
 	   need_update would have been left TRUE and the canvas would have
 	   been left unpainted. */
-	if (canvas->need_update) {
+	if (canvas->impl->need_update) {
 		goto update_again;
 	}
 
 	/* Paint if able to */
 
-	if (GTK_WIDGET_DRAWABLE(canvas) && canvas->need_redraw) {
+	if (GTK_WIDGET_DRAWABLE(canvas) && canvas->impl->need_redraw) {
 		paint(canvas);
 	}
 }
@@ -3616,7 +3717,7 @@ idle_handler(gpointer data)
 	do_update(canvas);
 
 	/* Reset idle id */
-	canvas->idle_id = 0;
+	canvas->impl->idle_id = 0;
 
 	GDK_THREADS_LEAVE();
 
@@ -3627,13 +3728,13 @@ idle_handler(gpointer data)
 static void
 add_idle(GanvCanvas* canvas)
 {
-	g_assert(canvas->need_update || canvas->need_redraw);
+	g_assert(canvas->impl->need_update || canvas->impl->need_redraw);
 
-	if (!canvas->idle_id) {
-		canvas->idle_id = g_idle_add_full(CANVAS_IDLE_PRIORITY,
-		                                  idle_handler,
-		                                  canvas,
-		                                  NULL);
+	if (!canvas->impl->idle_id) {
+		canvas->impl->idle_id = g_idle_add_full(CANVAS_IDLE_PRIORITY,
+		                                        idle_handler,
+		                                        canvas,
+		                                        NULL);
 	}
 
 	/*      canvas->idle_id = gtk_idle_add (idle_handler, canvas); */
@@ -3650,7 +3751,7 @@ ganv_canvas_root(GanvCanvas* canvas)
 {
 	g_return_val_if_fail(GANV_IS_CANVAS(canvas), NULL);
 
-	return canvas->root;
+	return canvas->impl->root;
 }
 
 /**
@@ -3667,7 +3768,7 @@ ganv_canvas_root(GanvCanvas* canvas)
  **/
 void
 ganv_canvas_set_scroll_region(GanvCanvas* canvas, double x1, double y1, double x2,
-                                   double y2)
+                              double y2)
 {
 	double wxofs, wyofs;
 	int    xofs, yofs;
@@ -3680,26 +3781,26 @@ ganv_canvas_set_scroll_region(GanvCanvas* canvas, double x1, double y1, double x
 	 */
 
 	ganv_canvas_c2w(canvas,
-	                     GTK_LAYOUT(canvas)->hadjustment->value + canvas->zoom_xofs,
-	                     GTK_LAYOUT(canvas)->vadjustment->value + canvas->zoom_yofs,
-	                     /*canvas->zoom_xofs,
-	                        canvas->zoom_yofs,*/
-	                     &wxofs, &wyofs);
+	                GTK_LAYOUT(canvas)->hadjustment->value + canvas->impl->zoom_xofs,
+	                GTK_LAYOUT(canvas)->vadjustment->value + canvas->impl->zoom_yofs,
+	                /*canvas->impl->zoom_xofs,
+	                  canvas->impl->zoom_yofs,*/
+	                &wxofs, &wyofs);
 
-	canvas->scroll_x1 = x1;
-	canvas->scroll_y1 = y1;
-	canvas->scroll_x2 = x2;
-	canvas->scroll_y2 = y2;
+	canvas->impl->scroll_x1 = x1;
+	canvas->impl->scroll_y1 = y1;
+	canvas->impl->scroll_x2 = x2;
+	canvas->impl->scroll_y2 = y2;
 
 	ganv_canvas_w2c(canvas, wxofs, wyofs, &xofs, &yofs);
 
 	scroll_to(canvas, xofs, yofs);
 
-	canvas->need_repick = TRUE;
+	canvas->impl->need_repick = TRUE;
 #if 0
 	/* todo: should be requesting update */
-	(*GANV_ITEM_CLASS(canvas->root->object.klass)->update)(
-	    canvas->root, NULL, NULL, 0);
+	(*GANV_ITEM_CLASS(canvas->impl->root->object.klass)->update)(
+		canvas->impl->root, NULL, NULL, 0);
 #endif
 }
 
@@ -3715,24 +3816,24 @@ ganv_canvas_set_scroll_region(GanvCanvas* canvas, double x1, double y1, double x
  **/
 void
 ganv_canvas_get_scroll_region(GanvCanvas* canvas, double* x1, double* y1, double* x2,
-                                   double* y2)
+                              double* y2)
 {
 	g_return_if_fail(GANV_IS_CANVAS(canvas));
 
 	if (x1) {
-		*x1 = canvas->scroll_x1;
+		*x1 = canvas->impl->scroll_x1;
 	}
 
 	if (y1) {
-		*y1 = canvas->scroll_y1;
+		*y1 = canvas->impl->scroll_y1;
 	}
 
 	if (x2) {
-		*x2 = canvas->scroll_x2;
+		*x2 = canvas->impl->scroll_x2;
 	}
 
 	if (y2) {
-		*y2 = canvas->scroll_y2;
+		*y2 = canvas->impl->scroll_y2;
 	}
 }
 
@@ -3752,7 +3853,7 @@ ganv_canvas_set_center_scroll_region(GanvCanvas* canvas, gboolean center_scroll_
 {
 	g_return_if_fail(GANV_IS_CANVAS(canvas));
 
-	canvas->center_scroll_region = center_scroll_region != 0;
+	canvas->impl->center_scroll_region = center_scroll_region != 0;
 
 	scroll_to(canvas,
 	          canvas->layout.hadjustment->value,
@@ -3773,68 +3874,7 @@ ganv_canvas_get_center_scroll_region(GanvCanvas* canvas)
 {
 	g_return_val_if_fail(GANV_IS_CANVAS(canvas), FALSE);
 
-	return canvas->center_scroll_region ? TRUE : FALSE;
-}
-
-/**
- * ganv_canvas_set_pixels_per_unit:
- * @canvas: A canvas.
- * @n: The number of pixels that correspond to one canvas unit.
- *
- * Sets the zooming factor of a canvas by specifying the number of pixels that
- * correspond to one canvas unit.
- *
- * The anchor point for zooming, i.e. the point that stays fixed and all others
- * zoom inwards or outwards from it, depends on whether the canvas is set to
- * center the scrolling region or not.  You can control this using the
- * ganv_canvas_set_center_scroll_region() function.  If the canvas is set to
- * center the scroll region, then the center of the canvas window is used as the
- * anchor point for zooming.  Otherwise, the upper-left corner of the canvas
- * window is used as the anchor point.
- **/
-void
-ganv_canvas_set_pixels_per_unit(GanvCanvas* canvas, double n)
-{
-	double ax, ay;
-	int    x1, y1;
-	int    anchor_x, anchor_y;
-
-	g_return_if_fail(GANV_IS_CANVAS(canvas));
-	g_return_if_fail(n > 1e-10);
-
-	if (canvas->center_scroll_region) {
-		anchor_x = GTK_WIDGET(canvas)->allocation.width / 2;
-		anchor_y = GTK_WIDGET(canvas)->allocation.height / 2;
-	} else {
-		anchor_x = anchor_y = 0;
-	}
-
-	/* Find the coordinates of the anchor point in units. */
-	if (canvas->layout.hadjustment) {
-		ax
-		    = (canvas->layout.hadjustment->value
-		       + anchor_x) / canvas->pixels_per_unit + canvas->scroll_x1 + canvas->zoom_xofs;
-	} else {
-		ax = (0.0 + anchor_x) / canvas->pixels_per_unit + canvas->scroll_x1 + canvas->zoom_xofs;
-	}
-	if (canvas->layout.hadjustment) {
-		ay
-		    = (canvas->layout.vadjustment->value
-		       + anchor_y) / canvas->pixels_per_unit + canvas->scroll_y1 + canvas->zoom_yofs;
-	} else {
-		ay = (0.0 + anchor_y) / canvas->pixels_per_unit + canvas->scroll_y1 + canvas->zoom_yofs;
-	}
-
-	/* Now calculate the new offset of the upper left corner. */
-	x1 = ((ax - canvas->scroll_x1) * n) - anchor_x;
-	y1 = ((ay - canvas->scroll_y1) * n) - anchor_y;
-
-	canvas->pixels_per_unit = n;
-
-	scroll_to(canvas, x1, y1);
-
-	ganv_canvas_request_update(canvas);
-	canvas->need_repick = TRUE;
+	return canvas->impl->center_scroll_region ? TRUE : FALSE;
 }
 
 /**
@@ -3866,7 +3906,7 @@ ganv_canvas_scroll_to(GanvCanvas* canvas, int cx, int cy)
  * pixel units.
  **/
 void
-ganv_canvas_get_scroll_offsets(GanvCanvas* canvas, int* cx, int* cy)
+ganv_canvas_get_scroll_offsets(const GanvCanvas* canvas, int* cx, int* cy)
 {
 	g_return_if_fail(GANV_IS_CANVAS(canvas));
 
@@ -3902,33 +3942,26 @@ ganv_canvas_get_item_at(GanvCanvas* canvas, double x, double y)
 
 	ganv_canvas_w2c(canvas, x, y, &cx, &cy);
 
-	dist = GANV_ITEM_GET_CLASS(canvas->root)->point(
-		canvas->root,
-		x - canvas->root->x, y - canvas->root->y,
+	dist = GANV_ITEM_GET_CLASS(canvas->impl->root)->point(
+		canvas->impl->root,
+		x - canvas->impl->root->x, y - canvas->impl->root->y,
 		cx, cy,
 		&item);
-	if ((int)(dist * canvas->pixels_per_unit + 0.5) <= canvas->close_enough) {
+	if ((int)(dist * canvas->impl->pixels_per_unit + 0.5) <= GANV_CLOSE_ENOUGH) {
 		return item;
 	} else {
 		return NULL;
 	}
 }
 
-/* Queues an update of the canvas */
 void
 ganv_canvas_request_update(GanvCanvas* canvas)
 {
-	GANV_CANVAS_GET_CLASS(canvas)->request_update(canvas);
-}
-
-static void
-ganv_canvas_request_update_real(GanvCanvas* canvas)
-{
-	if (canvas->need_update) {
+	if (canvas->impl->need_update) {
 		return;
 	}
 
-	canvas->need_update = TRUE;
+	canvas->impl->need_update = TRUE;
 	if (GTK_WIDGET_MAPPED((GtkWidget*)canvas)) {
 		add_idle(canvas);
 	}
@@ -3950,8 +3983,8 @@ static inline gboolean
 rect_is_visible(GanvCanvas* canvas, const IRect* r)
 {
 	const IRect rect = {
-		(int)(canvas->layout.hadjustment->value - canvas->zoom_xofs),
-		(int)(canvas->layout.vadjustment->value - canvas->zoom_yofs),
+		(int)(canvas->layout.hadjustment->value - canvas->impl->zoom_xofs),
+		(int)(canvas->layout.vadjustment->value - canvas->impl->zoom_yofs),
 		GTK_WIDGET(canvas)->allocation.width,
 		GTK_WIDGET(canvas)->allocation.height
 	};
@@ -3988,10 +4021,10 @@ ganv_canvas_request_redraw(GanvCanvas* canvas, int x1, int y1, int x2, int y2)
 	IRect* r = (IRect*)g_malloc(sizeof(IRect));
 	*r = rect;
 
-	canvas->redraw_region = g_slist_prepend(canvas->redraw_region, r);
-	canvas->need_redraw   = TRUE;
+	canvas->impl->redraw_region = g_slist_prepend(canvas->impl->redraw_region, r);
+	canvas->impl->need_redraw   = TRUE;
 
-	if (canvas->idle_id == 0) {
+	if (canvas->impl->idle_id == 0) {
 		add_idle(canvas);
 	}
 }
@@ -4011,12 +4044,12 @@ ganv_canvas_w2c_affine(GanvCanvas* canvas, cairo_matrix_t* matrix)
 	g_return_if_fail(matrix != NULL);
 
 	cairo_matrix_init_translate(matrix,
-	                            -canvas->scroll_x1,
-	                            -canvas->scroll_y1);
+	                            -canvas->impl->scroll_x1,
+	                            -canvas->impl->scroll_y1);
 
 	cairo_matrix_scale(matrix,
-	                   canvas->pixels_per_unit,
-	                   canvas->pixels_per_unit);
+	                   canvas->impl->pixels_per_unit,
+	                   canvas->impl->pixels_per_unit);
 }
 
 /**
@@ -4122,18 +4155,18 @@ ganv_canvas_c2w(GanvCanvas* canvas, int cx, int cy, double* wx, double* wy)
  **/
 void
 ganv_canvas_window_to_world(GanvCanvas* canvas, double winx, double winy,
-                                 double* worldx, double* worldy)
+                            double* worldx, double* worldy)
 {
 	g_return_if_fail(GANV_IS_CANVAS(canvas));
 
 	if (worldx) {
-		*worldx = canvas->scroll_x1 + ((winx - canvas->zoom_xofs)
-		                               / canvas->pixels_per_unit);
+		*worldx = canvas->impl->scroll_x1 + ((winx - canvas->impl->zoom_xofs)
+		                                     / canvas->impl->pixels_per_unit);
 	}
 
 	if (worldy) {
-		*worldy = canvas->scroll_y1 + ((winy - canvas->zoom_yofs)
-		                               / canvas->pixels_per_unit);
+		*worldy = canvas->impl->scroll_y1 + ((winy - canvas->impl->zoom_yofs)
+		                                     / canvas->impl->pixels_per_unit);
 	}
 }
 
@@ -4149,16 +4182,16 @@ ganv_canvas_window_to_world(GanvCanvas* canvas, double winx, double winy,
  **/
 void
 ganv_canvas_world_to_window(GanvCanvas* canvas, double worldx, double worldy,
-                                 double* winx, double* winy)
+                            double* winx, double* winy)
 {
 	g_return_if_fail(GANV_IS_CANVAS(canvas));
 
 	if (winx) {
-		*winx = (canvas->pixels_per_unit) * (worldx - canvas->scroll_x1) + canvas->zoom_xofs;
+		*winx = (canvas->impl->pixels_per_unit) * (worldx - canvas->impl->scroll_x1) + canvas->impl->zoom_xofs;
 	}
 
 	if (winy) {
-		*winy = (canvas->pixels_per_unit) * (worldy - canvas->scroll_y1) + canvas->zoom_yofs;
+		*winy = (canvas->impl->pixels_per_unit) * (worldy - canvas->impl->scroll_y1) + canvas->impl->zoom_yofs;
 	}
 }
 

@@ -26,6 +26,8 @@ extern "C" {
 #include "ganv/text.h"
 #include "ganv/types.h"
 
+#define GANV_CLOSE_ENOUGH 1
+
 extern guint signal_moved;
 
 /* Box */
@@ -199,6 +201,9 @@ ganv_canvas_port_event(GanvCanvas* canvas,
                        GdkEvent*   event);
 
 void
+ganv_canvas_contents_changed(GanvCanvas* canvas);
+
+void
 ganv_item_i2w_offset(GanvItem* item, double* px, double* py);
 
 void
@@ -215,6 +220,24 @@ ganv_canvas_request_update(GanvCanvas* canvas);
 
 int
 ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event);
+
+void
+ganv_canvas_set_need_repick(GanvCanvas* canvas);
+
+void
+ganv_canvas_forget_item(GanvCanvas* canvas, GanvItem* item);
+
+void
+ganv_canvas_grab_focus(GanvCanvas* canvas, GanvItem* item);
+
+void
+ganv_canvas_get_zoom_offsets(GanvCanvas* canvas, int* x, int* y);
+
+int
+ganv_canvas_grab_item(GanvItem* item, guint event_mask, GdkCursor* cursor, guint32 etime);
+
+void
+ganv_canvas_ungrab_item(GanvItem* item, guint32 etime);
 
 /* For use only by item type implementations.  Request that the canvas
  * eventually redraw the specified region, specified in canvas pixel

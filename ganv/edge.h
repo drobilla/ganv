@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 #define GANV_EDGE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_EDGE, GanvEdgeClass))
 
 typedef struct _GanvEdgeClass GanvEdgeClass;
-typedef struct _GanvEdgeImpl GanvEdgeImpl;
+typedef struct _GanvEdgeImpl  GanvEdgeImpl;
 
 struct _GanvEdge {
 	GanvItem      item;
@@ -39,9 +39,12 @@ struct _GanvEdge {
 
 struct _GanvEdgeClass {
 	GanvItemClass parent_class;
+
+	/* Reserved for future expansion */
+	gpointer spare_vmethods [4];
 };
 
-GType ganv_edge_get_type(void);
+GType ganv_edge_get_type(void) G_GNUC_CONST;
 
 GanvEdge*
 ganv_edge_new(GanvCanvas* canvas,

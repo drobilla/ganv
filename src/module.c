@@ -152,7 +152,7 @@ measure(GanvModule* module, Metrics* m)
 	GanvText*       canvas_title = GANV_NODE(module)->impl->label;
 	GanvModuleImpl* impl         = module->impl;
 
-	if (canvas->direction == GANV_DIRECTION_DOWN) {
+	if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_DOWN) {
 		static const double PAD = 2.0;
 
 		double contents_width = PAD;
@@ -430,7 +430,7 @@ layout(GanvNode* self)
 	ganv_box_set_width(GANV_BOX(module), label_w + (MODULE_LABEL_PAD * 2.0));
 	ganv_box_set_height(GANV_BOX(module), label_h);
 
-	switch (canvas->direction) {
+	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
 		resize_right(module);
 		break;
@@ -481,7 +481,7 @@ ganv_module_add_port(GanvModule* module,
 	impl->must_resize = TRUE;
 
 	g_ptr_array_add(impl->ports, port);
-	place_title(module, canvas->direction);
+	place_title(module, ganv_canvas_get_direction(canvas));
 	ganv_item_request_update(GANV_ITEM(module));
 }
 

@@ -30,7 +30,7 @@ G_BEGIN_DECLS
 #define GANV_NODE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_NODE, GanvNodeClass))
 
 typedef struct _GanvNodeClass GanvNodeClass;
-typedef struct _GanvNodeImpl GanvNodeImpl;
+typedef struct _GanvNodeImpl  GanvNodeImpl;
 
 struct _GanvNode {
 	GanvItem      item;
@@ -76,9 +76,12 @@ struct _GanvNodeClass {
 	                    double*         y,
 	                    double*         dx,
 	                    double*         dy);
+
+	/* Reserved for future expansion */
+	gpointer spare_vmethods [4];
 };
 
-GType ganv_node_get_type(void);
+GType ganv_node_get_type(void) G_GNUC_CONST;
 
 /**
  * ganv_node_can_tail:

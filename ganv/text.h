@@ -38,9 +38,12 @@ struct _GanvText {
 
 struct _GanvTextClass {
 	GanvItemClass parent_class;
+
+	/* Reserved for future expansion */
+	gpointer spare_vmethods [4];
 };
 
-GType ganv_text_get_type(void);
+GType ganv_text_get_type(void) G_GNUC_CONST;
 
 void ganv_text_layout(GanvText* text);
 

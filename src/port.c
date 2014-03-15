@@ -143,7 +143,7 @@ ganv_port_draw(GanvItem* item,
 		GANV_ITEM_GET_CLASS(rect)->draw(rect, cr, cx, cy, width, height);
 	}
 
-	if (canvas->direction == GANV_DIRECTION_DOWN ||
+	if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_DOWN ||
 	    !GANV_NODE(port)->impl->show_label) {
 		return;
 	}
@@ -175,7 +175,7 @@ ganv_port_tail_vector(const GanvNode* self,
 	const double px = item->x;
 	const double py = item->y;
 
-	switch (canvas->direction) {
+	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
 		*x  = px + ganv_box_get_width(&port->box);
 		*y  = py + ganv_box_get_height(&port->box) / 2.0;
@@ -208,7 +208,7 @@ ganv_port_head_vector(const GanvNode* self,
 	const double px = item->x;
 	const double py = item->y;
 
-	switch (canvas->direction) {
+	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
 		*x  = px;
 		*y  = py + ganv_box_get_height(&port->box) / 2.0;
@@ -234,7 +234,7 @@ ganv_port_place_value_label(GanvPort* port)
 		GanvCanvas*  canvas  = GANV_CANVAS(GANV_ITEM(port)->canvas);
 		const double port_w  = ganv_box_get_width(&port->box);
 		const double label_w = control->label->impl->coords.width;
-		if (canvas->direction == GANV_DIRECTION_RIGHT) {
+		if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_RIGHT) {
 			ganv_item_set(GANV_ITEM(control->label),
 			              "x", port_w - label_w - PORT_LABEL_HPAD,
 			              "y", PORT_LABEL_VPAD,
@@ -417,7 +417,7 @@ ganv_port_new(GanvModule* module,
 	node->impl->border_width = 1.0;
 
 	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(port)->canvas);
-	ganv_port_set_direction(port, canvas->direction);
+	ganv_port_set_direction(port, ganv_canvas_get_direction(canvas));
 
 	return port;
 }
@@ -638,7 +638,7 @@ ganv_port_get_natural_width(const GanvPort* port)
 	GanvCanvas* const canvas = GANV_CANVAS(GANV_ITEM(port)->canvas);
 	GanvText* const   label  = port->box.node.impl->label;
 	double            w      = 0.0;
-	if (canvas->direction == GANV_DIRECTION_DOWN) {
+	if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_DOWN) {
 		w = ganv_module_get_empty_port_breadth(ganv_port_get_module(port));
 	} else if (label && (GANV_ITEM(label)->object.flags & GANV_ITEM_VISIBLE)) {
 		double label_w;

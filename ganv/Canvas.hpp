@@ -61,7 +61,6 @@ public:
 	METHOD0(ganv_canvas, get_zoom);
 	METHOD1(ganv_canvas, set_zoom, double, pix_per_unit);
 	METHOD1(ganv_canvas, set_font_size, double, points);
-	METHOD2(ganv_canvas, set_scale, double, zoom, double, points);
 	METHOD0(ganv_canvas, zoom_full);
 	METHODRET0(ganv_canvas, double, get_font_size)
 	METHODRET0(ganv_canvas, double, get_default_font_size)
@@ -71,7 +70,10 @@ public:
 	METHOD2(ganv_canvas, resize, double, width, double, height);
 	METHOD2(ganv_canvas, for_each_node, GanvNodeFunc, f, void*, data)
 	METHOD2(ganv_canvas, for_each_selected_node, GanvNodeFunc, f, void*, data)
+	METHOD2(ganv_canvas, for_each_edge, GanvEdgeFunc, f, void*, data)
+	METHOD2(ganv_canvas, for_each_selected_edge, GanvEdgeFunc, f, void*, data)
 	METHODRET0(ganv_canvas, gboolean, empty)
+	METHOD2(ganv_canvas, scroll_to, int, x, int, y);
 
 	METHOD3(ganv_canvas, for_each_edge_from,
 	        const GanvNode*, tail,
@@ -95,7 +97,9 @@ public:
 	RW_PROPERTY(double, height)
 	RW_PROPERTY(GanvDirection, direction);
 
-	Gtk::Layout& widget();
+	Gtk::Layout& widget() {
+		return *Glib::wrap(&_gobj->layout);
+	}
 
 	/** Get the edge from @c tail to @c head if one exists. */
 	Edge* get_edge(Node* tail, Node* head) const;
@@ -105,18 +109,18 @@ public:
 
 	void remove_edge(Edge* edge);
 
-	void for_each_edge(GanvEdgeFunc f, void* data);
-	void for_each_selected_edge(GanvEdgeFunc f, void* data);
-
-	void get_scroll_offsets(int& cx, int& cy) const;
-	void scroll_to(int x, int y);
+	void get_scroll_offsets(int& cx, int& cy) const {
+		ganv_canvas_get_scroll_offsets(gobj(), &cx, &cy);
+	}
 
 	GQuark wrapper_key();
 
-	GanvItem* root();
+	GanvItem* root() {
+		return ganv_canvas_root(gobj());
+	}
 
-	GanvCanvas*       gobj();
-	const GanvCanvas* gobj() const;
+	GanvCanvas*       gobj()       { return GANV_CANVAS(_gobj); }
+	const GanvCanvas* gobj() const { return GANV_CANVAS(_gobj); }
 
 	sigc::signal<bool, GdkEvent*>    signal_event;
 	sigc::signal<void, Node*, Node*> signal_connect;
@@ -125,11 +129,6 @@ public:
 private:
 	Canvas(const Canvas&);  ///< Noncopyable
 	const Canvas& operator=(const Canvas&);  ///< Noncopyable
-
-	inline       GanvCanvasImpl* impl()       { return _gobj->impl; }
-	inline const GanvCanvasImpl* impl() const { return _gobj->impl; }
-
-	sigc::connection _animate_connection;
 
 	GanvCanvas* const _gobj;
 };

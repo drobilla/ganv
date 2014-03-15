@@ -129,7 +129,7 @@ item_post_create_setup(GanvItem* item)
 	ganv_canvas_request_redraw(item->canvas,
 	                           item->x1, item->y1,
 	                           item->x2 + 1, item->y2 + 1);
-	item->canvas->need_repick = TRUE;
+	ganv_canvas_set_need_repick(item->canvas);
 }
 
 static void
@@ -230,8 +230,9 @@ static void
 redraw_if_visible(GanvItem* item)
 {
 	if (item->object.flags & GANV_ITEM_VISIBLE) {
-		ganv_canvas_request_redraw(item->canvas, item->x1, item->y1, item->x2 + 1,
-		                           item->y2 + 1);
+		ganv_canvas_request_redraw(item->canvas,
+		                           item->x1, item->y1,
+		                           item->x2 + 1, item->y2 + 1);
 	}
 }
 
@@ -247,27 +248,7 @@ ganv_item_dispose(GObject* object)
 
 	if (item->canvas) {
 		redraw_if_visible(item);
-	}
-
-	/* Make the canvas forget about us */
-
-	if (item->canvas && item == item->canvas->current_item) {
-		item->canvas->current_item = NULL;
-		item->canvas->need_repick  = TRUE;
-	}
-
-	if (item->canvas && item == item->canvas->new_current_item) {
-		item->canvas->new_current_item = NULL;
-		item->canvas->need_repick      = TRUE;
-	}
-
-	if (item->canvas && item == item->canvas->grabbed_item) {
-		item->canvas->grabbed_item = NULL;
-		gdk_pointer_ungrab(GDK_CURRENT_TIME);
-	}
-
-	if (item->canvas && item == item->canvas->focused_item) {
-		item->canvas->focused_item = NULL;
+		ganv_canvas_forget_item(item->canvas, item);
 	}
 
 	/* Normal destroy stuff */
@@ -402,7 +383,7 @@ ganv_item_set_valist(GanvItem* item, const gchar* first_arg_name, va_list args)
 
 	g_object_set_valist(G_OBJECT(item), first_arg_name, args);
 
-	item->canvas->need_repick = TRUE;
+	ganv_canvas_set_need_repick(item->canvas);
 }
 
 void
@@ -434,7 +415,7 @@ ganv_item_move(GanvItem* item, double dx, double dy)
 	item->y += dy;
 
 	ganv_item_request_update(item);
-	item->canvas->need_repick = TRUE;
+	ganv_canvas_set_need_repick(item->canvas);
 }
 
 /**
@@ -450,9 +431,10 @@ ganv_item_show(GanvItem* item)
 
 	if (!(item->object.flags & GANV_ITEM_VISIBLE)) {
 		item->object.flags |= GANV_ITEM_VISIBLE;
-		ganv_canvas_request_redraw(item->canvas, item->x1, item->y1, item->x2 + 1,
-		                           item->y2 + 1);
-		item->canvas->need_repick = TRUE;
+		ganv_canvas_request_redraw(item->canvas,
+		                           item->x1, item->y1,
+		                           item->x2 + 1, item->y2 + 1);
+		ganv_canvas_set_need_repick(item->canvas);
 	}
 }
 
@@ -470,84 +452,11 @@ ganv_item_hide(GanvItem* item)
 
 	if (item->object.flags & GANV_ITEM_VISIBLE) {
 		item->object.flags &= ~GANV_ITEM_VISIBLE;
-		ganv_canvas_request_redraw(item->canvas, item->x1, item->y1, item->x2 + 1,
-		                           item->y2 + 1);
-		item->canvas->need_repick = TRUE;
+		ganv_canvas_request_redraw(item->canvas,
+		                           item->x1, item->y1,
+		                           item->x2 + 1, item->y2 + 1);
+		ganv_canvas_set_need_repick(item->canvas);
 	}
-}
-
-/**
- * ganv_item_grab:
- * @item: A canvas item.
- * @event_mask: Mask of events that will be sent to this item.
- * @cursor: If non-NULL, the cursor that will be used while the grab is active.
- * @etime: The timestamp required for grabbing the mouse, or GDK_CURRENT_TIME.
- *
- * Specifies that all events that match the specified event mask should be sent
- * to the specified item, and also grabs the mouse by calling
- * gdk_pointer_grab().  The event mask is also used when grabbing the pointer.
- * If @cursor is not NULL, then that cursor is used while the grab is active.
- * The @etime parameter is the timestamp required for grabbing the mouse.
- *
- * Return value: If an item was already grabbed, it returns %GDK_GRAB_ALREADY_GRABBED.  If
- * the specified item was hidden by calling ganv_item_hide(), then it
- * returns %GDK_GRAB_NOT_VIEWABLE.  Else, it returns the result of calling
- * gdk_pointer_grab().
- **/
-int
-ganv_item_grab(GanvItem* item, guint event_mask, GdkCursor* cursor, guint32 etime)
-{
-	int retval;
-
-	g_return_val_if_fail(GANV_IS_ITEM(item), GDK_GRAB_NOT_VIEWABLE);
-	g_return_val_if_fail(GTK_WIDGET_MAPPED(item->canvas), GDK_GRAB_NOT_VIEWABLE);
-
-	if (item->canvas->grabbed_item) {
-		return GDK_GRAB_ALREADY_GRABBED;
-	}
-
-	if (!(item->object.flags & GANV_ITEM_VISIBLE)) {
-		return GDK_GRAB_NOT_VIEWABLE;
-	}
-
-	retval = gdk_pointer_grab(item->canvas->layout.bin_window,
-	                          FALSE,
-	                          event_mask,
-	                          NULL,
-	                          cursor,
-	                          etime);
-
-	if (retval != GDK_GRAB_SUCCESS) {
-		return retval;
-	}
-
-	item->canvas->grabbed_item       = item;
-	item->canvas->grabbed_event_mask = event_mask;
-	item->canvas->current_item       = item; /* So that events go to the grabbed item */
-
-	return retval;
-}
-
-/**
- * ganv_item_ungrab:
- * @item: A canvas item that holds a grab.
- * @etime: The timestamp for ungrabbing the mouse.
- *
- * Ungrabs the item, which must have been grabbed in the canvas, and ungrabs the
- * mouse.
- **/
-void
-ganv_item_ungrab(GanvItem* item, guint32 etime)
-{
-	g_return_if_fail(GANV_IS_ITEM(item));
-
-	if (item->canvas->grabbed_item != item) {
-		return;
-	}
-
-	item->canvas->grabbed_item = NULL;
-
-	gdk_pointer_ungrab(etime);
 }
 
 void
@@ -632,34 +541,7 @@ ganv_item_w2i(GanvItem* item, double* x, double* y)
 void
 ganv_item_grab_focus(GanvItem* item)
 {
-	GanvItem* focused_item;
-	GdkEvent  ev;
-
-	g_return_if_fail(GANV_IS_ITEM(item));
-	g_return_if_fail(GTK_WIDGET_CAN_FOCUS(GTK_WIDGET(item->canvas)));
-
-	focused_item = item->canvas->focused_item;
-
-	if (focused_item) {
-		ev.focus_change.type       = GDK_FOCUS_CHANGE;
-		ev.focus_change.window     = GTK_LAYOUT(item->canvas)->bin_window;
-		ev.focus_change.send_event = FALSE;
-		ev.focus_change.in         = FALSE;
-
-		ganv_canvas_emit_event(item->canvas, &ev);
-	}
-
-	item->canvas->focused_item = item;
-	gtk_widget_grab_focus(GTK_WIDGET(item->canvas));
-
-	if (focused_item) {
-		ev.focus_change.type       = GDK_FOCUS_CHANGE;
-		ev.focus_change.window     = GTK_LAYOUT(item->canvas)->bin_window;
-		ev.focus_change.send_event = FALSE;
-		ev.focus_change.in         = TRUE;
-
-		ganv_canvas_emit_event(item->canvas, &ev);
-	}
+	ganv_canvas_grab_focus(item->canvas, item);
 }
 
 void

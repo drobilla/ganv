@@ -35,8 +35,7 @@ G_BEGIN_DECLS
 #define GANV_IS_CANVAS_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_CANVAS))
 #define GANV_CANVAS_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_CANVAS, GanvCanvasClass))
 
-struct GanvCanvasImpl;
-
+typedef struct GanvCanvasImpl   GanvCanvasImpl;
 typedef struct _GanvCanvasClass GanvCanvasClass;
 
 /**
@@ -53,110 +52,12 @@ typedef enum {
 } GanvDirection;
 
 struct _GanvCanvas {
-	GtkLayout layout;
-
-	struct GanvCanvasImpl* impl;
-
-	/* Root canvas item */
-	GanvItem* root;
-
-	/* Region that needs redrawing (list of rectangles) */
-	GSList* redraw_region;
-
-	/* The item containing the mouse pointer, or NULL if none */
-	GanvItem* current_item;
-
-	/* Item that is about to become current (used to track deletions and such) */
-	GanvItem* new_current_item;
-
-	/* Item that holds a pointer grab, or NULL if none */
-	GanvItem* grabbed_item;
-
-	/* If non-NULL, the currently focused item */
-	GanvItem* focused_item;
-
-	/* GC for temporary draw pixmap */
-	GdkGC* pixmap_gc;
-
-	/* Event on which selection of current item is based */
-	GdkEvent pick_event;
-
-	/* Scrolling region */
-	double scroll_x1, scroll_y1;
-	double scroll_x2, scroll_y2;
-
-	/* Scaling factor to be used for display */
-	double pixels_per_unit;
-
-	/* Idle handler ID */
-	guint idle_id;
-
-	/* Signal handler ID for destruction of the root item */
-	guint root_destroy_id;
-
-	/* Area that is being redrawn.  Contains (x1, y1) but not (x2, y2).
-	 * Specified in canvas pixel coordinates.
-	 */
-	int redraw_x1, redraw_y1;
-	int redraw_x2, redraw_y2;
-
-	/* Offsets of the temprary drawing pixmap */
-	int draw_xofs, draw_yofs;
-
-	/* Internal pixel offsets when zoomed out */
-	int zoom_xofs, zoom_yofs;
-
-	/* Last known modifier state, for deferred repick when a button is down */
-	int state;
-
-	/* Event mask specified when grabbing an item */
-	guint grabbed_event_mask;
-
-	/* Tolerance distance for picking items */
-	int close_enough;
-
-	/* Whether the canvas should center the scroll region in the middle of
-	 * the window if the scroll region is smaller than the window.
-	 */
-	unsigned int center_scroll_region : 1;
-
-	/* Whether items need update at next idle loop iteration */
-	unsigned int need_update : 1;
-
-	/* Whether the canvas needs redrawing at the next idle loop iteration */
-	unsigned int need_redraw : 1;
-
-	/* Whether current item will be repicked at next idle loop iteration */
-	unsigned int need_repick : 1;
-
-	/* For use by internal pick_current_item() function */
-	unsigned int left_grabbed_item : 1;
-
-	/* For use by internal pick_current_item() function */
-	unsigned int in_repick : 1;
-
-	/* Flow direction */
-	GanvDirection direction;
-
-	/* Canvas width */
-	double width;
-
-	/* Canvas height */
-	double height;
-
-	/* Disable changes to canvas */
-	gboolean locked;
-
-#ifdef GANV_FDGL
-	guint layout_idle_id;
-#endif
+	GtkLayout       layout;
+	GanvCanvasImpl* impl;
 };
 
 struct _GanvCanvasClass {
 	GtkLayoutClass parent_class;
-
-	/* Private Virtual methods for groping the canvas inside bonobo */
-	void (* request_update)(GanvCanvas* canvas);
 
 	/* Reserved for future expansion */
 	gpointer spare_vmethods [4];
@@ -178,11 +79,9 @@ void ganv_canvas_set_center_scroll_region(GanvCanvas* canvas, gboolean center_sc
 
 gboolean ganv_canvas_get_center_scroll_region(GanvCanvas* canvas);
 
-void ganv_canvas_set_pixels_per_unit(GanvCanvas* canvas, double n);
-
 void ganv_canvas_scroll_to(GanvCanvas* canvas, int cx, int cy);
 
-void ganv_canvas_get_scroll_offsets(GanvCanvas* canvas, int* cx, int* cy);
+void ganv_canvas_get_scroll_offsets(const GanvCanvas* canvas, int* cx, int* cy);
 
 GanvItem* ganv_canvas_get_item_at(GanvCanvas* canvas, double x, double y);
 
@@ -202,9 +101,6 @@ void ganv_canvas_world_to_window(GanvCanvas* canvas,
 
 void
 ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
-
-void
-ganv_canvas_contents_changed(GanvCanvas* canvas);
 
 void
 ganv_canvas_add_node(GanvCanvas* canvas,
@@ -231,6 +127,9 @@ ganv_canvas_remove_edge_between(GanvCanvas* canvas,
 double
 ganv_canvas_get_default_font_size(const GanvCanvas* canvas);
 
+GanvDirection
+ganv_canvas_get_direction(GanvCanvas* canvas);
+
 void
 ganv_canvas_set_direction(GanvCanvas* canvas, GanvDirection dir);
 
@@ -242,6 +141,9 @@ ganv_canvas_arrange(GanvCanvas* canvas);
 
 void
 ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename);
+
+gboolean
+ganv_canvas_get_locked(GanvCanvas* canvas);
 
 /**
  * GanvEdgeFunc:
@@ -341,6 +243,17 @@ ganv_canvas_for_each_edge_on(GanvCanvas*     canvas,
                              void*           data);
 
 /**
+ * ganv_canvas_for_each_selected_edge:
+ * @canvas: The canvas.
+ * @f: (scope call): A function to call on every edge attached to @node.
+ * @data: Data to pass to @f.
+ */
+void
+ganv_canvas_for_each_selected_edge(GanvCanvas*  canvas,
+                                   GanvEdgeFunc f,
+                                   void*        data);
+
+/**
  * ganv_canvas_clear:
  * Remove all items from the canvas.
  */
@@ -381,13 +294,6 @@ ganv_canvas_get_font_size(const GanvCanvas* canvas);
  */
 void
 ganv_canvas_set_font_size(GanvCanvas* canvas, double points);
-
-/**
- * ganv_canvas_set_scale:
- * Set the zoom and font size for the canvas.
- */
-void
-ganv_canvas_set_scale(GanvCanvas* canvas, double zoom, double points);
 
 /**
  * ganv_canvas_zoom_full:

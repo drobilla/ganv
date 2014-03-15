@@ -45,6 +45,9 @@ struct _GanvGroup {
 
 struct _GanvGroupClass {
 	GanvItemClass parent_class;
+
+	/* Reserved for future expansion */
+	gpointer spare_vmethods [4];
 };
 
 GType ganv_group_get_type(void) G_GNUC_CONST;

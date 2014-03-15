@@ -31,7 +31,7 @@ G_BEGIN_DECLS
 #define GANV_MODULE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_MODULE, GanvModuleClass))
 
 typedef struct _GanvModuleClass GanvModuleClass;
-typedef struct _GanvModuleImpl GanvModuleImpl;
+typedef struct _GanvModuleImpl  GanvModuleImpl;
 
 typedef void (*GanvPortFunc)(GanvPort* port, void* data);
 
@@ -42,9 +42,12 @@ struct _GanvModule {
 
 struct _GanvModuleClass {
 	GanvBoxClass parent_class;
+
+	/* Reserved for future expansion */
+	gpointer spare_vmethods [4];
 };
 
-GType ganv_module_get_type(void);
+GType ganv_module_get_type(void) G_GNUC_CONST;
 
 GanvModule*
 ganv_module_new(GanvCanvas* canvas,

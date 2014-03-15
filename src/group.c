@@ -242,10 +242,10 @@ ganv_group_point(GanvItem* item, double x, double y, int cx, int cy,
 
 	group = GANV_GROUP(item);
 
-	x1 = cx - item->canvas->close_enough;
-	y1 = cy - item->canvas->close_enough;
-	x2 = cx + item->canvas->close_enough;
-	y2 = cy + item->canvas->close_enough;
+	x1 = cx - GANV_CLOSE_ENOUGH;
+	y1 = cy - GANV_CLOSE_ENOUGH;
+	x2 = cx + GANV_CLOSE_ENOUGH;
+	y2 = cy + GANV_CLOSE_ENOUGH;
 
 	best         = 0.0;
 	*actual_item = NULL;
@@ -278,8 +278,8 @@ ganv_group_point(GanvItem* item, double x, double y, int cx, int cy,
 
 		if (has_point
 		    && point_item
-		    && ((int)(dist * item->canvas->pixels_per_unit + 0.5)
-		        <= item->canvas->close_enough)) {
+		    && ((int)(dist * ganv_canvas_get_zoom(item->canvas) + 0.5)
+		        <= GANV_CLOSE_ENOUGH)) {
 			best         = dist;
 			*actual_item = point_item;
 		}

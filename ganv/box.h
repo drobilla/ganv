@@ -48,9 +48,12 @@ struct _GanvBoxClass {
 
 	void (*set_height)(GanvBox* box,
 	                   double   height);
+
+	/* Reserved for future expansion */
+	gpointer spare_vmethods [4];
 };
 
-GType  ganv_box_get_type(void);
+GType  ganv_box_get_type(void) G_GNUC_CONST;
 double ganv_box_get_x1(const GanvBox* box);
 double ganv_box_get_y1(const GanvBox* box);
 double ganv_box_get_x2(const GanvBox* box);

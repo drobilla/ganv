@@ -25,6 +25,7 @@
 #include "ganv/widget.h"
 
 #include "./gettext.h"
+#include "./ganv-private.h"
 
 G_DEFINE_TYPE(GanvWidget, ganv_widget, GANV_TYPE_ITEM)
 
@@ -130,10 +131,12 @@ recalc_bounds(GanvWidget* witem)
 	item->x2 = witem->cx + witem->cwidth;
 	item->y2 = witem->cy + witem->cheight;
 
+	int zoom_xofs, zoom_yofs;
+	ganv_canvas_get_zoom_offsets(item->canvas, &zoom_xofs, &zoom_yofs);
 	if (witem->widget) {
 		gtk_layout_move(GTK_LAYOUT(item->canvas), witem->widget,
-		                witem->cx + item->canvas->zoom_xofs,
-		                witem->cy + item->canvas->zoom_yofs);
+		                witem->cx + zoom_xofs,
+		                witem->cy + zoom_yofs);
 	}
 }
 
@@ -171,9 +174,12 @@ ganv_widget_set_property(GObject*      object,
 			witem->destroy_id = g_signal_connect(obj, "destroy",
 			                                     G_CALLBACK(do_destroy),
 			                                     witem);
+			int zoom_xofs, zoom_yofs;
+			ganv_canvas_get_zoom_offsets(item->canvas, &zoom_xofs, &zoom_yofs);
+
 			gtk_layout_put(GTK_LAYOUT(item->canvas), witem->widget,
-			               witem->cx + item->canvas->zoom_xofs,
-			               witem->cy + item->canvas->zoom_yofs);
+			               witem->cx + zoom_xofs,
+			               witem->cy + zoom_yofs);
 		}
 
 		update = TRUE;
@@ -291,12 +297,13 @@ ganv_widget_update(GanvItem* item, int flags)
 	}
 
 	if (witem->widget) {
+		const double pixels_per_unit = ganv_canvas_get_zoom(item->canvas);
 		if (witem->size_pixels) {
 			witem->cwidth  = (int)(witem->width + 0.5);
 			witem->cheight = (int)(witem->height + 0.5);
 		} else {
-			witem->cwidth  = (int)(witem->width * item->canvas->pixels_per_unit + 0.5);
-			witem->cheight = (int)(witem->height * item->canvas->pixels_per_unit + 0.5);
+			witem->cwidth  = (int)(witem->width * pixels_per_unit + 0.5);
+			witem->cheight = (int)(witem->height * pixels_per_unit + 0.5);
 		}
 
 		gtk_widget_set_size_request(witem->widget, witem->cwidth, witem->cheight);
@@ -332,8 +339,10 @@ ganv_widget_point(GanvItem* item, double x, double y,
 	double x1, y1;
 	ganv_canvas_c2w(item->canvas, witem->cx, witem->cy, &x1, &y1);
 
-	double x2 = x1 + (witem->cwidth - 1) / item->canvas->pixels_per_unit;
-	double y2 = y1 + (witem->cheight - 1) / item->canvas->pixels_per_unit;
+	const double pixels_per_unit = ganv_canvas_get_zoom(item->canvas);
+
+	double x2 = x1 + (witem->cwidth - 1) / pixels_per_unit;
+	double y2 = y1 + (witem->cheight - 1) / pixels_per_unit;
 
 	/* Is point inside widget bounds? */
 
