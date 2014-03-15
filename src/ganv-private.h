@@ -100,6 +100,13 @@ struct _GanvModuleImpl
 
 /* Node */
 
+#ifdef GANV_FDGL
+typedef struct {
+	double x;
+	double y;
+} Vector;
+#endif
+
 struct _GanvNodeImpl {
 	struct _GanvNode* partner;
 	GanvText*         label;
@@ -172,6 +179,14 @@ void
 ganv_canvas_selection_move_finished(GanvCanvas* canvas);
 
 void
+ganv_canvas_add_node(GanvCanvas* canvas,
+                     GanvNode*   node);
+
+void
+ganv_canvas_remove_node(GanvCanvas* canvas,
+                        GanvNode*   node);
+
+void
 ganv_canvas_select_node(GanvCanvas* canvas,
                         GanvNode*   node);
 
@@ -194,6 +209,10 @@ ganv_canvas_select_edge(GanvCanvas* canvas,
 void
 ganv_canvas_unselect_edge(GanvCanvas* canvas,
                           GanvEdge*   edge);
+
+void
+ganv_canvas_disconnect_edge(GanvCanvas* canvas,
+                            GanvEdge*   edge);
 
 gboolean
 ganv_canvas_port_event(GanvCanvas* canvas,

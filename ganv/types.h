@@ -23,12 +23,5 @@ typedef struct _GanvNode   GanvNode;
 typedef struct _GanvPort   GanvPort;
 typedef struct _GanvBox    GanvBox;
 
-#ifdef GANV_FDGL
-typedef struct {
-	double x;
-	double y;
-} Vector;
-#endif  // GANV_FDGL
-
 #endif  /* GANV_TYPES_H */
 

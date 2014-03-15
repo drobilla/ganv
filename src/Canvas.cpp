@@ -64,8 +64,6 @@
 #    include "./fdgl.hpp"
 #endif
 
-/*** GanvCanvas ***/
-
 #define CANVAS_IDLE_PRIORITY (GDK_PRIORITY_REDRAW - 5)
 
 typedef struct {
@@ -103,8 +101,6 @@ static gint ganv_canvas_focus_out(GtkWidget*     widget,
 
 static GtkLayoutClass* canvas_parent_class;
 }
-
-/*** end GanvCanvas ***/
 
 static guint signal_connect;
 static guint signal_disconnect;
@@ -1561,8 +1557,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 	return false;
 }
 
-/** Called when two ports are 'joined' (connected or disconnected)
- */
+/** Called when two ports are 'joined' (connected or disconnected) */
 void
 GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 {
@@ -1938,10 +1933,6 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	                                 0);
 }
 
-/**
- * ganv_canvas_resize:
- * Resize the canvas to the given dimensions.
- */
 void
 ganv_canvas_resize(GanvCanvas* canvas, double width, double height)
 {
@@ -1968,11 +1959,6 @@ ganv_canvas_contents_changed(GanvCanvas* canvas)
 #endif
 }
 
-/**
- * ganv_canvas_get_default_font_size:
- *
- * Get the default font size in points.
- */
 double
 ganv_canvas_get_default_font_size(const GanvCanvas* canvas)
 {
@@ -1987,19 +1973,6 @@ ganv_canvas_get_font_size(const GanvCanvas* canvas)
 	return canvas->impl->font_size;
 }
 
-/**
- * ganv_canvas_set_zoom:
- * @canvas: A canvas.
- * @zoom: The number of pixels that correspond to one canvas unit.
- *
- * The anchor point for zooming, i.e. the point that stays fixed and all others
- * zoom inwards or outwards from it, depends on whether the canvas is set to
- * center the scrolling region or not.  You can control this using the
- * ganv_canvas_set_center_scroll_region() function.  If the canvas is set to
- * center the scroll region, then the center of the canvas window is used as
- * the anchor point for zooming.  Otherwise, the upper-left corner of the
- * canvas window is used as the anchor point.
- */
 void
 ganv_canvas_set_zoom(GanvCanvas* canvas, double zoom)
 {
@@ -2264,12 +2237,6 @@ ganv_canvas_remove_node(GanvCanvas* canvas,
 	canvas->impl->_items.erase(node);
 }
 
-/**
- * ganv_canvas_get_edge:
- * Get the edge between two nodes, or NULL if none exists.
- *
- * Return value: (transfer none): The root group of @canvas.
- */
 GanvEdge*
 ganv_canvas_get_edge(GanvCanvas* canvas,
                      GanvNode*   tail,
@@ -2577,11 +2544,6 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 #endif
 }
 
-/**
- * ganv_canvas_export_dot:
- *
- * Write a Graphviz DOT description of the canvas to a file.
- */
 void
 ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename)
 {
@@ -2664,11 +2626,6 @@ ganv_canvas_destroy(GtkObject* object)
 	}
 }
 
-/**
- * ganv_canvas_new:
- *
- * Return value: A newly-created canvas.
- */
 GanvCanvas*
 ganv_canvas_new(double width, double height)
 {
@@ -3740,12 +3697,6 @@ add_idle(GanvCanvas* canvas)
 	/*      canvas->idle_id = gtk_idle_add (idle_handler, canvas); */
 }
 
-/**
- * ganv_canvas_root:
- * @canvas: A canvas.
- *
- * Return value: (transfer none): The root group of the canvas.
- */
 GanvItem*
 ganv_canvas_root(GanvCanvas* canvas)
 {
@@ -3754,21 +3705,9 @@ ganv_canvas_root(GanvCanvas* canvas)
 	return canvas->impl->root;
 }
 
-/**
- * ganv_canvas_set_scroll_region:
- * @canvas: A canvas.
- * @x1: Leftmost limit of the scrolling region.
- * @y1: Upper limit of the scrolling region.
- * @x2: Rightmost limit of the scrolling region.
- * @y2: Lower limit of the scrolling region.
- *
- * Sets the scrolling region of a canvas to the specified rectangle.  The canvas
- * will then be able to scroll only within this region.  The view of the canvas
- * is adjusted as appropriate to display as much of the new region as possible.
- **/
 void
-ganv_canvas_set_scroll_region(GanvCanvas* canvas, double x1, double y1, double x2,
-                              double y2)
+ganv_canvas_set_scroll_region(GanvCanvas* canvas,
+                              double x1, double y1, double x2, double y2)
 {
 	double wxofs, wyofs;
 	int    xofs, yofs;
@@ -3804,19 +3743,9 @@ ganv_canvas_set_scroll_region(GanvCanvas* canvas, double x1, double y1, double x
 #endif
 }
 
-/**
- * ganv_canvas_get_scroll_region:
- * @canvas: A canvas.
- * @x1: Leftmost limit of the scrolling region (return value).
- * @y1: Upper limit of the scrolling region (return value).
- * @x2: Rightmost limit of the scrolling region (return value).
- * @y2: Lower limit of the scrolling region (return value).
- *
- * Queries the scrolling region of a canvas.
- **/
 void
-ganv_canvas_get_scroll_region(GanvCanvas* canvas, double* x1, double* y1, double* x2,
-                              double* y2)
+ganv_canvas_get_scroll_region(GanvCanvas* canvas,
+                              double* x1, double* y1, double* x2, double* y2)
 {
 	g_return_if_fail(GANV_IS_CANVAS(canvas));
 
@@ -3837,17 +3766,6 @@ ganv_canvas_get_scroll_region(GanvCanvas* canvas, double* x1, double* y1, double
 	}
 }
 
-/**
- * ganv_canvas_set_center_scroll_region:
- * @canvas: A canvas.
- * @center_scroll_region: Whether to center the scrolling region in the canvas
- * window when it is smaller than the canvas' allocation.
- *
- * When the scrolling region of the canvas is smaller than the canvas window,
- * e.g.  the allocation of the canvas, it can be either centered on the window
- * or simply made to be on the upper-left corner on the window.  This function
- * lets you configure this property.
- **/
 void
 ganv_canvas_set_center_scroll_region(GanvCanvas* canvas, gboolean center_scroll_region)
 {
@@ -3860,15 +3778,6 @@ ganv_canvas_set_center_scroll_region(GanvCanvas* canvas, gboolean center_scroll_
 	          canvas->layout.vadjustment->value);
 }
 
-/**
- * ganv_canvas_get_center_scroll_region:
- * @canvas: A canvas.
- *
- * Returns whether the canvas is set to center the scrolling region in the window
- * if the former is smaller than the canvas' allocation.
- *
- * Return value: Whether the scroll region is being centered in the canvas window.
- **/
 gboolean
 ganv_canvas_get_center_scroll_region(GanvCanvas* canvas)
 {
@@ -3877,17 +3786,6 @@ ganv_canvas_get_center_scroll_region(GanvCanvas* canvas)
 	return canvas->impl->center_scroll_region ? TRUE : FALSE;
 }
 
-/**
- * ganv_canvas_scroll_to:
- * @canvas: A canvas.
- * @cx: Horizontal scrolling offset in canvas pixel units.
- * @cy: Vertical scrolling offset in canvas pixel units.
- *
- * Makes a canvas scroll to the specified offsets, given in canvas pixel units.
- * The canvas will adjust the view so that it is not outside the scrolling
- * region.  This function is typically not used, as it is better to hook
- * scrollbars to the canvas layout's scrolling adjusments.
- **/
 void
 ganv_canvas_scroll_to(GanvCanvas* canvas, int cx, int cy)
 {
@@ -3896,15 +3794,6 @@ ganv_canvas_scroll_to(GanvCanvas* canvas, int cx, int cy)
 	scroll_to(canvas, cx, cy);
 }
 
-/**
- * ganv_canvas_get_scroll_offsets:
- * @canvas: A canvas.
- * @cx: Horizontal scrolling offset (return value).
- * @cy: Vertical scrolling offset (return value).
- *
- * Queries the scrolling offsets of a canvas.  The values are returned in canvas
- * pixel units.
- **/
 void
 ganv_canvas_get_scroll_offsets(const GanvCanvas* canvas, int* cx, int* cy)
 {
@@ -3919,18 +3808,6 @@ ganv_canvas_get_scroll_offsets(const GanvCanvas* canvas, int* cx, int* cy)
 	}
 }
 
-/**
- * ganv_canvas_get_item_at:
- * @canvas: A canvas.
- * @x: X position in world coordinates.
- * @y: Y position in world coordinates.
- *
- * Looks for the item that is under the specified position, which must be
- * specified in world coordinates.
- *
- * Return value: (transfer none): The sought item, or NULL if no item is at the
- * specified coordinates.
- **/
 GanvItem*
 ganv_canvas_get_item_at(GanvCanvas* canvas, double x, double y)
 {
@@ -4029,14 +3906,6 @@ ganv_canvas_request_redraw(GanvCanvas* canvas, int x1, int y1, int x2, int y2)
 	}
 }
 
-/**
- * ganv_canvas_w2c_affine:
- * @canvas: A canvas.
- * @matrix: An affine transformation matrix (return value).
- *
- * Gets the affine transform that converts from world coordinates to canvas
- * pixel coordinates.
- **/
 void
 ganv_canvas_w2c_affine(GanvCanvas* canvas, cairo_matrix_t* matrix)
 {
@@ -4052,16 +3921,6 @@ ganv_canvas_w2c_affine(GanvCanvas* canvas, cairo_matrix_t* matrix)
 	                   canvas->impl->pixels_per_unit);
 }
 
-/**
- * ganv_canvas_w2c:
- * @canvas: A canvas.
- * @wx: World X coordinate.
- * @wy: World Y coordinate.
- * @cx: X pixel coordinate (return value).
- * @cy: Y pixel coordinate (return value).
- *
- * Converts world coordinates into canvas pixel coordinates.
- **/
 void
 ganv_canvas_w2c(GanvCanvas* canvas, double wx, double wy, int* cx, int* cy)
 {
@@ -4080,18 +3939,6 @@ ganv_canvas_w2c(GanvCanvas* canvas, double wx, double wy, int* cx, int* cy)
 	}
 }
 
-/**
- * ganv_canvas_w2c_d:
- * @canvas: A canvas.
- * @wx: World X coordinate.
- * @wy: World Y coordinate.
- * @cx: X pixel coordinate (return value).
- * @cy: Y pixel coordinate (return value).
- *
- * Converts world coordinates into canvas pixel coordinates.  This
- * version returns coordinates in floating point coordinates, for
- * greater precision.
- **/
 void
 ganv_canvas_w2c_d(GanvCanvas* canvas, double wx, double wy, double* cx, double* cy)
 {
@@ -4110,16 +3957,6 @@ ganv_canvas_w2c_d(GanvCanvas* canvas, double wx, double wy, double* cx, double* 
 	}
 }
 
-/**
- * ganv_canvas_c2w:
- * @canvas: A canvas.
- * @cx: Canvas pixel X coordinate.
- * @cy: Canvas pixel Y coordinate.
- * @wx: X world coordinate (return value).
- * @wy: Y world coordinate (return value).
- *
- * Converts canvas pixel coordinates to world coordinates.
- **/
 void
 ganv_canvas_c2w(GanvCanvas* canvas, int cx, int cy, double* wx, double* wy)
 {
@@ -4141,18 +3978,6 @@ ganv_canvas_c2w(GanvCanvas* canvas, int cx, int cy, double* wx, double* wy)
 	}
 }
 
-/**
- * ganv_canvas_window_to_world:
- * @canvas: A canvas.
- * @winx: Window-relative X coordinate.
- * @winy: Window-relative Y coordinate.
- * @worldx: X world coordinate (return value).
- * @worldy: Y world coordinate (return value).
- *
- * Converts window-relative coordinates into world coordinates.  You can use
- * this when you need to convert mouse coordinates into world coordinates, for
- * example.
- **/
 void
 ganv_canvas_window_to_world(GanvCanvas* canvas, double winx, double winy,
                             double* worldx, double* worldy)
@@ -4170,16 +3995,6 @@ ganv_canvas_window_to_world(GanvCanvas* canvas, double winx, double winy,
 	}
 }
 
-/**
- * ganv_canvas_world_to_window:
- * @canvas: A canvas.
- * @worldx: World X coordinate.
- * @worldy: World Y coordinate.
- * @winx: X window-relative coordinate.
- * @winy: Y window-relative coordinate.
- *
- * Converts world coordinates into window-relative coordinates.
- **/
 void
 ganv_canvas_world_to_window(GanvCanvas* canvas, double worldx, double worldy,
                             double* winx, double* winy)
