@@ -247,6 +247,7 @@ struct GanvCanvasImpl {
 
 #ifdef GANV_FDGL
 		this->layout_idle_id = 0;
+		this->sprung_layout  = FALSE;
 #endif
 
 		_animate_idle_id = g_timeout_add(120, on_animate_timeout, this);
@@ -444,7 +445,8 @@ struct GanvCanvasImpl {
 	gboolean locked;
 
 #ifdef GANV_FDGL
-	guint layout_idle_id;
+	guint    layout_idle_id;
+	gboolean sprung_layout;
 #endif
 };
 
@@ -788,6 +790,9 @@ GanvCanvasImpl::layout_iteration()
 {
 	if (_drag_state == EDGE) {
 		return FALSE;  // Canvas is locked, halt layout process
+	}
+	if (!sprung_layout) {
+		return FALSE;  // We shouldn't be running at all
 	}
 
 	static const double T_PER_US = .0001;  // Sym time per real microsecond
@@ -1948,7 +1953,7 @@ void
 ganv_canvas_contents_changed(GanvCanvas* canvas)
 {
 #ifdef GANV_FDGL
-	if (!canvas->impl->layout_idle_id) {
+	if (!canvas->impl->layout_idle_id && canvas->impl->sprung_layout) {
 		canvas->impl->layout_idle_id = g_timeout_add_full(
 			G_PRIORITY_DEFAULT_IDLE,
 			33,
@@ -2550,6 +2555,28 @@ ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename)
 #if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
 	GVNodes nodes = canvas->impl->layout_dot(filename);
 	nodes.cleanup();
+#endif
+}
+
+gboolean
+ganv_canvas_supports_sprung_layout(GanvCanvas* canvas)
+{
+#ifdef GANV_FDGL
+	return TRUE;
+#else
+	return FALSE;
+#endif
+}
+
+gboolean
+ganv_canvas_set_sprung_layout(GanvCanvas* canvas, gboolean sprung_layout)
+{
+#ifndef GANV_FDGL
+	return FALSE;
+#else
+	canvas->impl->sprung_layout = sprung_layout;
+	ganv_canvas_contents_changed(canvas);
+	return TRUE;
 #endif
 }
 

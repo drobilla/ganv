@@ -368,6 +368,23 @@ ganv_canvas_arrange(GanvCanvas* canvas);
 void
 ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename);
 
+/**
+ * ganv_canvas_supports_sprung_layout:
+ *
+ * Returns: true iff ganv is compiled with sprung layout support.
+ */
+gboolean
+ganv_canvas_supports_sprung_layout(GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_set_sprung_layout:
+ *
+ * Enable or disable "live" force-directed canvas layout.
+ *
+ * Returns: true iff sprung layout was enabled.
+ */
+gboolean
+ganv_canvas_set_sprung_layout(GanvCanvas* canvas, gboolean sprung_layout);
 
 /**
  * ganv_canvas_get_locked:
