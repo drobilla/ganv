@@ -232,8 +232,7 @@ request_redraw(GanvItem*               item,
 		ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 	}
 
-	ganv_canvas_request_redraw(item->canvas, x1, y1, x2, y2);
-	ganv_canvas_request_redraw(item->canvas, 0, 0, 10000, 10000);
+	ganv_canvas_request_redraw_w(item->canvas, x1, y1, x2, y2);
 }
 
 static void
@@ -283,14 +282,9 @@ ganv_circle_update(GanvItem* item, int flags)
 	impl->old_coords = impl->coords;
 	coords_i2w(item, &impl->old_coords);
 
-	// Get bounding box
-	double x1, x2, y1, y2;
-	ganv_circle_bounds(item, &x1, &y1, &x2, &y2);
-	ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
-
-	// Update item canvas coordinates
-	ganv_canvas_w2c_d(item->canvas, x1, y1, &item->x1, &item->y1);
-	ganv_canvas_w2c_d(item->canvas, x2, y2, &item->x2, &item->y2);
+	// Update world-relative bounding box
+	ganv_circle_bounds(item, &item->x1, &item->y1, &item->x2, &item->y2);
+	ganv_item_i2w_pair(item, &item->x1, &item->y1, &item->x2, &item->y2);
 
 	// Request redraw of new location
 	request_redraw(item, &impl->coords, FALSE);
@@ -298,9 +292,7 @@ ganv_circle_update(GanvItem* item, int flags)
 
 static void
 ganv_circle_draw(GanvItem* item,
-                 cairo_t* cr,
-                 int x, int y,
-                 int width, int height)
+                 cairo_t* cr, double cx, double cy, double cw, double ch)
 {
 	GanvNode*       node   = GANV_NODE(item);
 	GanvCircle*     circle = GANV_CIRCLE(item);
@@ -308,17 +300,17 @@ ganv_circle_draw(GanvItem* item,
 
 	double r, g, b, a;
 
-	double cx = impl->coords.x;
-	double cy = impl->coords.y;
-	ganv_item_i2w(item, &cx, &cy);
+	double x = impl->coords.x;
+	double y = impl->coords.y;
+	ganv_item_i2w(item, &x, &y);
 
 	double dash_length, border_color, fill_color;
 	ganv_node_get_draw_properties(
 		&circle->node, &dash_length, &border_color, &fill_color);
 
 	cairo_arc(cr,
-	          cx,
-	          cy,
+	          x,
+	          y,
 	          impl->coords.radius,
 	          0, 2 * G_PI);
 
@@ -344,16 +336,13 @@ ganv_circle_draw(GanvItem* item,
 
 		if (label_item->object.flags & GANV_ITEM_VISIBLE) {
 			GANV_ITEM_GET_CLASS(label_item)->draw(
-				label_item, cr, cx, cy, width, height);
+				label_item, cr, cx, cy, cw, ch);
 		}
 	}
 }
 
 static double
-ganv_circle_point(GanvItem* item,
-                  double x, double y,
-                  int cx, int cy,
-                  GanvItem** actual_item)
+ganv_circle_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
 	const GanvCircle*       circle = GANV_CIRCLE(item);
 	const GanvCircleCoords* coords = &circle->impl->coords;

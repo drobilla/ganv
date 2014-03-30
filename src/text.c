@@ -233,26 +233,18 @@ ganv_text_bounds(GanvItem* item,
 static void
 ganv_text_update(GanvItem* item, int flags)
 {
-	double x1, y1, x2, y2;
-	ganv_text_bounds(item, &x1, &y1, &x2, &y2);
-	ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
-
-	// I have no idea why this is necessary
-	item->x1 = x1;
-	item->y1 = y1;
-	item->x2 = x2;
-	item->y2 = y2;
-
 	parent_class->update(item, flags);
 
-	ganv_canvas_request_redraw(item->canvas, x1, y1, x2, y2);
+	// Update world-relative bounding box
+	ganv_text_bounds(item, &item->x1, &item->y1, &item->x2, &item->y2);
+	ganv_item_i2w_pair(item, &item->x1, &item->y1, &item->x2, &item->y2);
+
+	ganv_canvas_request_redraw_w(
+		item->canvas, item->x1, item->y1, item->x2, item->y2);
 }
 
 static double
-ganv_text_point(GanvItem* item,
-                double x, double y,
-                int cx, int cy,
-                GanvItem** actual_item)
+ganv_text_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
 	*actual_item = NULL;
 
@@ -288,9 +280,7 @@ ganv_text_point(GanvItem* item,
 
 static void
 ganv_text_draw(GanvItem* item,
-               cairo_t* cr,
-               int x, int y,
-               int width, int height)
+               cairo_t* cr, double cx, double cy, double cw, double ch)
 {
 	GanvText*     text = GANV_TEXT(item);
 	GanvTextImpl* impl = text->impl;

@@ -58,7 +58,7 @@ public:
 	METHOD0(ganv_canvas, clear);
 	METHOD0(ganv_canvas, clear_selection);
 	METHOD0(ganv_canvas, select_all);
-	METHOD0(ganv_canvas, get_zoom);
+	METHODRET0(ganv_canvas, double, get_zoom);
 	METHOD1(ganv_canvas, set_zoom, double, pix_per_unit);
 	METHOD1(ganv_canvas, set_font_size, double, points);
 	METHOD0(ganv_canvas, zoom_full);

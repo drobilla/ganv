@@ -126,9 +126,9 @@ item_post_create_setup(GanvItem* item)
 			g_warning("item added to non-parent item\n");
 		}
 	}
-	ganv_canvas_request_redraw(item->canvas,
-	                           item->x1, item->y1,
-	                           item->x2 + 1, item->y2 + 1);
+	ganv_canvas_request_redraw_w(item->canvas,
+	                             item->x1, item->y1,
+	                             item->x2 + 1, item->y2 + 1);
 	ganv_canvas_set_need_repick(item->canvas);
 }
 
@@ -230,9 +230,9 @@ static void
 redraw_if_visible(GanvItem* item)
 {
 	if (item->object.flags & GANV_ITEM_VISIBLE) {
-		ganv_canvas_request_redraw(item->canvas,
-		                           item->x1, item->y1,
-		                           item->x2 + 1, item->y2 + 1);
+		ganv_canvas_request_redraw_w(item->canvas,
+		                             item->x1, item->y1,
+		                             item->x2 + 1, item->y2 + 1);
 	}
 }
 
@@ -315,10 +315,7 @@ ganv_item_update(GanvItem* item, int flags)
 
 /* Point handler for canvas items */
 static double
-ganv_item_point(GanvItem* item,
-                double x, double y,
-                int cx, int cy,
-                GanvItem** actual_item)
+ganv_item_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
 	*actual_item = NULL;
 	return G_MAXDOUBLE;
@@ -431,9 +428,9 @@ ganv_item_show(GanvItem* item)
 
 	if (!(item->object.flags & GANV_ITEM_VISIBLE)) {
 		item->object.flags |= GANV_ITEM_VISIBLE;
-		ganv_canvas_request_redraw(item->canvas,
-		                           item->x1, item->y1,
-		                           item->x2 + 1, item->y2 + 1);
+		ganv_canvas_request_redraw_w(item->canvas,
+		                             item->x1, item->y1,
+		                             item->x2 + 1, item->y2 + 1);
 		ganv_canvas_set_need_repick(item->canvas);
 	}
 }
@@ -452,9 +449,9 @@ ganv_item_hide(GanvItem* item)
 
 	if (item->object.flags & GANV_ITEM_VISIBLE) {
 		item->object.flags &= ~GANV_ITEM_VISIBLE;
-		ganv_canvas_request_redraw(item->canvas,
-		                           item->x1, item->y1,
-		                           item->x2 + 1, item->y2 + 1);
+		ganv_canvas_request_redraw_w(item->canvas,
+		                             item->x1, item->y1,
+		                             item->x2 + 1, item->y2 + 1);
 		ganv_canvas_set_need_repick(item->canvas);
 	}
 }

@@ -63,7 +63,7 @@ struct _GanvItem {
 	/* Position in parent-relative coordinates. */
 	double x, y;
 
-	/* Bounding box for this item (in canvas coordinates) */
+	/* Bounding box for this item (in world coordinates) */
 	double x1, y1, x2, y2;
 
 	/* True if parent manages this item (don't call add/remove) */
@@ -102,28 +102,25 @@ struct _GanvItemClass {
 
 	/* Draw an item of this type.
 	 *
-	 * (x, y) are the upper-left canvas pixel coordinates of the drawable.
-	 * (width, height) are the dimensions of the drawable.
+	 * (cx, cy) and (width, height) describe the rectangle being drawn in
+	 * world-relative coordinates.
 	 */
 	void (*draw)(GanvItem* item,
 	             cairo_t*  cr,
-	             int       x,
-	             int       y,
-	             int       width,
-	             int       height);
+	             double    cx,
+	             double    cy,
+	             double    cw,
+	             double    ch);
 
 	/* Calculate the distance from an item to the specified point.
 	 *
 	 * It also returns a canvas item which is actual item the point is within,
-	 * which may not be equal to @item if @item has children.  (cx, cy) are the
-	 * canvas pixel coordinates that correspond to the item-relative
-	 * coordinates (x, y).
+	 * which may not be equal to @item if @item has children.
+	 * (x, y) are item-relative coordinates.
 	 */
 	double (*point)(GanvItem*  item,
 	                double     x,
 	                double     y,
-	                int        cx,
-	                int        cy,
 	                GanvItem** actual_item);
 
 	/* Fetch the item's bounding box (need not be exactly tight).

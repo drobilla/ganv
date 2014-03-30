@@ -151,7 +151,7 @@ public:
 };
 #endif
 
-static const uint32_t SELECT_RECT_FILL_COLOUR   = 0x0E2425FF;
+static const uint32_t SELECT_RECT_FILL_COLOUR   = 0x2E444577;
 static const uint32_t SELECT_RECT_BORDER_COLOUR = 0x2E4445FF;
 
 /** Order edges by (tail, head) */
@@ -237,7 +237,7 @@ struct GanvCanvasImpl {
 		this->state              = 0;
 		this->grabbed_event_mask = 0;
 
-		this->center_scroll_region = TRUE;
+		this->center_scroll_region = FALSE;
 		this->need_update          = FALSE;
 		this->need_redraw          = FALSE;
 		this->need_repick          = TRUE;
@@ -1118,12 +1118,12 @@ GanvCanvasImpl::on_event(GdkEvent* event)
 
 	case GDK_SCROLL:
 		if ((event->scroll.state & GDK_CONTROL_MASK)) {
-			const double font_size = ganv_canvas_get_font_size(_gcanvas);
+			const double zoom = ganv_canvas_get_zoom(_gcanvas);
 			if (event->scroll.direction == GDK_SCROLL_UP) {
-				ganv_canvas_set_font_size(_gcanvas, font_size * 1.25);
+				ganv_canvas_set_zoom(_gcanvas, zoom * 1.25);
 				return true;
 			} else if (event->scroll.direction == GDK_SCROLL_DOWN) {
-				ganv_canvas_set_font_size(_gcanvas, font_size * 0.75);
+				ganv_canvas_set_zoom(_gcanvas, zoom * 0.75);
 				return true;
 			}
 		}
@@ -2017,6 +2017,8 @@ ganv_canvas_set_zoom(GanvCanvas* canvas, double zoom)
 	ganv_canvas_scroll_to(canvas, x1, y1);
 
 	ganv_canvas_request_update(canvas);
+	gtk_widget_queue_draw(GTK_WIDGET(canvas));
+
 	canvas->impl->need_repick = TRUE;
 }
 
@@ -2286,7 +2288,7 @@ ganv_canvas_remove_edge(GanvCanvas* canvas,
 		canvas->impl->_selected_edges.erase(edge);
 		canvas->impl->_edges.erase(edge);
 		canvas->impl->_dst_edges.erase(edge);
-		ganv_edge_request_redraw(GANV_ITEM(edge)->canvas, &edge->impl->coords);
+		ganv_edge_request_redraw(GANV_ITEM(edge), &edge->impl->coords);
 		gtk_object_destroy(GTK_OBJECT(edge));
 		ganv_canvas_contents_changed(canvas);
 	}
@@ -2448,7 +2450,7 @@ ganv_canvas_select_all(GanvCanvas* canvas)
 }
 
 double
-ganv_canvas_get_zoom(GanvCanvas* canvas)
+ganv_canvas_get_zoom(const GanvCanvas* canvas)
 {
 	return canvas->impl->pixels_per_unit;
 }
@@ -3196,22 +3198,17 @@ ganv_canvas_get_zoom_offsets(GanvCanvas* canvas, int* x, int* y)
 static int
 pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 {
-	int    button_down;
-	double x, y;
-	int    cx, cy;
-	int    retval;
-
-	retval = FALSE;
+	int retval = FALSE;
 
 	/* If a button is down, we'll perform enter and leave events on the
 	 * current item, but not enter on any other item.  This is more or less
 	 * like X pointer grabbing for canvas items.
 	 */
-	button_down = canvas->impl->state & (GDK_BUTTON1_MASK
-	                                     | GDK_BUTTON2_MASK
-	                                     | GDK_BUTTON3_MASK
-	                                     | GDK_BUTTON4_MASK
-	                                     | GDK_BUTTON5_MASK);
+	int button_down = canvas->impl->state & (GDK_BUTTON1_MASK
+	                                         | GDK_BUTTON2_MASK
+	                                         | GDK_BUTTON3_MASK
+	                                         | GDK_BUTTON4_MASK
+	                                         | GDK_BUTTON5_MASK);
 	if (!button_down) {
 		canvas->impl->left_grabbed_item = FALSE;
 	}
@@ -3261,6 +3258,7 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 	if (canvas->impl->pick_event.type != GDK_LEAVE_NOTIFY) {
 		/* these fields don't have the same offsets in both types of events */
 
+		double x, y;
 		if (canvas->impl->pick_event.type == GDK_ENTER_NOTIFY) {
 			x = canvas->impl->pick_event.crossing.x - canvas->impl->zoom_xofs;
 			y = canvas->impl->pick_event.crossing.y - canvas->impl->zoom_yofs;
@@ -3268,11 +3266,6 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 			x = canvas->impl->pick_event.motion.x - canvas->impl->zoom_xofs;
 			y = canvas->impl->pick_event.motion.y - canvas->impl->zoom_yofs;
 		}
-
-		/* canvas pixel coords */
-
-		cx = (int)(x + 0.5);
-		cy = (int)(y + 0.5);
 
 		/* world coords */
 
@@ -3285,7 +3278,6 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 			GANV_ITEM_GET_CLASS(canvas->impl->root)->point(
 				canvas->impl->root,
 				x - canvas->impl->root->x, y - canvas->impl->root->y,
-				cx, cy,
 				&canvas->impl->new_current_item);
 		} else {
 			canvas->impl->new_current_item = NULL;
@@ -3573,15 +3565,18 @@ ganv_canvas_paint_rect(GanvCanvas* canvas, gint x0, gint y0, gint x1, gint y1)
 
 	cairo_t* cr = gdk_cairo_create(canvas->layout.bin_window);
 
-	double wx, wy;
-	ganv_canvas_window_to_world(canvas, 0, 0, &wx, &wy);
-	cairo_translate(cr, -wx, -wy);
+	double win_x, win_y;
+	ganv_canvas_window_to_world(canvas, 0, 0, &win_x, &win_y);
+	cairo_translate(cr, -win_x, -win_y);
+	cairo_scale(cr, canvas->impl->pixels_per_unit, canvas->impl->pixels_per_unit);
 
 	if (canvas->impl->root->object.flags & GANV_ITEM_VISIBLE) {
+		double wx1, wy1, ww, wh;
+		ganv_canvas_c2w(canvas, draw_x1, draw_y1, &wx1, &wy1);
+		ganv_canvas_c2w(canvas, draw_width, draw_height, &ww, &wh);
 		(*GANV_ITEM_GET_CLASS(canvas->impl->root)->draw)(
 			canvas->impl->root, cr,
-			draw_x1, draw_y1,
-			draw_width, draw_height);
+			wx1, wy1, ww, wh);
 	}
 
 	cairo_destroy(cr);
@@ -3610,7 +3605,7 @@ ganv_canvas_expose(GtkWidget* widget, GdkEventExpose* event)
 	
 	if (canvas->impl->need_update || canvas->impl->need_redraw) {
 		/* Update or drawing is scheduled, so just mark exposed area as dirty */
-		ganv_canvas_request_redraw(canvas, clip.x, clip.y, x2, y2);
+		ganv_canvas_request_redraw_c(canvas, clip.x, clip.y, x2, y2);
 	} else {
 		/* No pending updates, draw exposed area immediately */
 		ganv_canvas_paint_rect(canvas, clip.x, clip.y, x2, y2);
@@ -3838,18 +3833,14 @@ ganv_canvas_get_scroll_offsets(const GanvCanvas* canvas, int* cx, int* cy)
 GanvItem*
 ganv_canvas_get_item_at(GanvCanvas* canvas, double x, double y)
 {
-	GanvItem* item;
-	double    dist;
-	int       cx, cy;
 
 	g_return_val_if_fail(GANV_IS_CANVAS(canvas), NULL);
 
-	ganv_canvas_w2c(canvas, x, y, &cx, &cy);
-
-	dist = GANV_ITEM_GET_CLASS(canvas->impl->root)->point(
+	GanvItem* item = NULL;
+	double dist    = GANV_ITEM_GET_CLASS(canvas->impl->root)->point(
 		canvas->impl->root,
-		x - canvas->impl->root->x, y - canvas->impl->root->y,
-		cx, cy,
+		x - canvas->impl->root->x,
+		y - canvas->impl->root->y,
 		&item);
 	if ((int)(dist * canvas->impl->pixels_per_unit + 0.5) <= GANV_CLOSE_ENOUGH) {
 		return item;
@@ -3896,19 +3887,9 @@ rect_is_visible(GanvCanvas* canvas, const IRect* r)
 	return rect_overlaps(&rect, r);
 }
 
-/**
- * ganv_canvas_request_redraw:
- * @canvas: A canvas.
- * @x1: Leftmost coordinate of the rectangle to be redrawn.
- * @y1: Upper coordinate of the rectangle to be redrawn.
- * @x2: Rightmost coordinate of the rectangle to be redrawn, plus 1.
- * @y2: Lower coordinate of the rectangle to be redrawn, plus 1.
- *
- * Informs a canvas that the specified area needs to be repainted.  To be used
- * only by item implementations.
- **/
 void
-ganv_canvas_request_redraw(GanvCanvas* canvas, int x1, int y1, int x2, int y2)
+ganv_canvas_request_redraw_c(GanvCanvas* canvas,
+                             int x1, int y1, int x2, int y2)
 {
 	g_return_if_fail(GANV_IS_CANVAS(canvas));
 
@@ -3931,6 +3912,17 @@ ganv_canvas_request_redraw(GanvCanvas* canvas, int x1, int y1, int x2, int y2)
 	if (canvas->impl->idle_id == 0) {
 		add_idle(canvas);
 	}
+}
+
+/* Request a redraw of the specified rectangle in world coordinates */
+void
+ganv_canvas_request_redraw_w(GanvCanvas* canvas,
+                             double x1, double y1, double x2, double y2)
+{
+	int cx1, cx2, cy1, cy2;
+	ganv_canvas_w2c(canvas, x1, y1, &cx1, &cy1);
+	ganv_canvas_w2c(canvas, x2, y2, &cx2, &cy2);
+	ganv_canvas_request_redraw_c(canvas, cx1, cy1, cx2, cy2);
 }
 
 void

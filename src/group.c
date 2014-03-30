@@ -196,90 +196,71 @@ ganv_group_unmap(GanvItem* item)
 }
 
 static void
-ganv_group_draw(GanvItem* item, cairo_t* cr,
-                int x, int y, int width, int height)
+ganv_group_draw(GanvItem* item,
+                cairo_t* cr, double cx, double cy, double cw, double ch)
 {
-	GanvGroup* group;
-	GList*     list;
+	GanvGroup* group = GANV_GROUP(item);
 	GanvItem*  child = NULL;
-
-	group = GANV_GROUP(item);
 
 	// Draw background
 	cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
-	cairo_rectangle(cr, x, y, width, height);
+	cairo_rectangle(cr, cx, cy, cw, ch);
 	cairo_fill(cr);
 
 	// TODO: Layered drawing
 
-	for (list = group->item_list; list; list = list->next) {
+	for (GList* list = group->item_list; list; list = list->next) {
 		child = (GanvItem*)list->data;
 
 		if (((child->object.flags & GANV_ITEM_VISIBLE)
-		     && ((child->x1 < (x + width))
-		         && (child->y1 < (y + height))
-		         && (child->x2 > x)
-		         && (child->y2 > y)))) {
+		     && ((child->x1 < (cx + cw))
+		         && (child->y1 < (cy + ch))
+		         && (child->x2 > cx)
+		         && (child->y2 > cy)))) {
 			if (GANV_ITEM_GET_CLASS(child)->draw) {
 				(*GANV_ITEM_GET_CLASS(child)->draw)(
-					child, cr, x, y, width, height);
+					child, cr, cx, cy, cw, ch);
 			}
 		}
 	}
 }
 
 static double
-ganv_group_point(GanvItem* item, double x, double y, int cx, int cy,
-                 GanvItem** actual_item)
+ganv_group_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
-	GanvGroup* group;
-	GList*     list;
-	GanvItem*  child, * point_item;
-	int        x1, y1, x2, y2;
-	double     gx, gy;
-	double     dist, best;
-	int        has_point;
+	GanvGroup* group = GANV_GROUP(item);
 
-	group = GANV_GROUP(item);
+	const double x1 = x - GANV_CLOSE_ENOUGH;
+	const double y1 = y - GANV_CLOSE_ENOUGH;
+	const double x2 = x + GANV_CLOSE_ENOUGH;
+	const double y2 = y + GANV_CLOSE_ENOUGH;
 
-	x1 = cx - GANV_CLOSE_ENOUGH;
-	y1 = cy - GANV_CLOSE_ENOUGH;
-	x2 = cx + GANV_CLOSE_ENOUGH;
-	y2 = cy + GANV_CLOSE_ENOUGH;
+	double dist = 0.0;
+	double best = 0.0;
 
-	best         = 0.0;
 	*actual_item = NULL;
 
-	gx = x;
-	gy = y;
-
-	dist = 0.0; /* keep gcc happy */
-
-	for (list = group->item_list; list; list = list->next) {
-		child = (GanvItem*)list->data;
-
+	for (GList* list = group->item_list; list; list = list->next) {
+		GanvItem* child = (GanvItem*)list->data;
 		if ((child->x1 > x2) || (child->y1 > y2) || (child->x2 < x1) || (child->y2 < y1)) {
 			continue;
 		}
 
-		point_item = NULL; /* cater for incomplete item implementations */
+		GanvItem* point_item = NULL;
 
+		int has_point = FALSE;
 		if ((child->object.flags & GANV_ITEM_VISIBLE)
 		    && GANV_ITEM_GET_CLASS(child)->point) {
 			dist = GANV_ITEM_GET_CLASS(child)->point(
 				child,
-				gx - child->x, gy - child->y,
-				cx, cy,
+				x - child->x, y - child->y,
 				&point_item);
 			has_point = TRUE;
-		} else {
-			has_point = FALSE;
 		}
 
 		if (has_point
 		    && point_item
-		    && ((int)(dist * ganv_canvas_get_zoom(item->canvas) + 0.5)
-		        <= GANV_CLOSE_ENOUGH)) {
+		    && ((int)(dist + 0.5) <= GANV_CLOSE_ENOUGH)) {
 			best         = dist;
 			*actual_item = point_item;
 		}

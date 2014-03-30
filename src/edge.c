@@ -163,9 +163,10 @@ ganv_edge_get_property(GObject*    object,
 }
 
 void
-ganv_edge_request_redraw(GanvCanvas*           canvas,
+ganv_edge_request_redraw(GanvItem*             item,
                          const GanvEdgeCoords* coords)
 {
+	GanvCanvas* canvas = item->canvas;
 	const double w = coords->width;
 	if (coords->curved) {
 		const double src_x  = coords->x1;
@@ -183,17 +184,17 @@ ganv_edge_request_redraw(GanvCanvas*           canvas,
 		const double r1y1 = MIN(MIN(src_y, join_y), src_y1);
 		const double r1x2 = MAX(MAX(src_x, join_x), src_x1);
 		const double r1y2 = MAX(MAX(src_y, join_y), src_y1);
-		ganv_canvas_request_redraw(canvas,
-		                           r1x1 - w, r1y1 - w,
-		                           r1x2 + w, r1y2 + w);
+		ganv_canvas_request_redraw_w(canvas,
+		                             r1x1 - w, r1y1 - w,
+		                             r1x2 + w, r1y2 + w);
 
 		const double r2x1 = MIN(MIN(dst_x, join_x), dst_x1);
 		const double r2y1 = MIN(MIN(dst_y, join_y), dst_y1);
 		const double r2x2 = MAX(MAX(dst_x, join_x), dst_x1);
 		const double r2y2 = MAX(MAX(dst_y, join_y), dst_y1);
-		ganv_canvas_request_redraw(canvas,
-		                           r2x1 - w, r2y1 - w,
-		                           r2x2 + w, r2y2 + w);
+		ganv_canvas_request_redraw_w(canvas,
+		                             r2x1 - w, r2y1 - w,
+		                             r2x2 + w, r2y2 + w);
 
 	} else {
 		const double x1 = MIN(coords->x1, coords->x2);
@@ -201,13 +202,13 @@ ganv_edge_request_redraw(GanvCanvas*           canvas,
 		const double x2 = MAX(coords->x1, coords->x2);
 		const double y2 = MAX(coords->y1, coords->y2);
 
-		ganv_canvas_request_redraw(canvas,
-		                           x1 - w, y1 - w,
-		                           x2 + w, y2 + w);
+		ganv_canvas_request_redraw_w(canvas,
+		                             x1 - w, y1 - w,
+		                             x2 + w, y2 + w);
 	}
 
 	if (coords->handle_radius > 0.0) {
-		ganv_canvas_request_redraw(
+		ganv_canvas_request_redraw_w(
 			canvas,
 			coords->handle_x - coords->handle_radius - w,
 			coords->handle_y - coords->handle_radius - w,
@@ -216,7 +217,7 @@ ganv_edge_request_redraw(GanvCanvas*           canvas,
 	}
 
 	if (coords->arrowhead) {
-		ganv_canvas_request_redraw(
+		ganv_canvas_request_redraw_w(
 			canvas,
 			coords->x2 - ARROW_DEPTH,
 			coords->y2 - ARROW_BREADTH,
@@ -286,7 +287,7 @@ ganv_edge_update(GanvItem* item, int flags)
 	}
 
 	// Request redraw of old location
-	ganv_edge_request_redraw(item->canvas, &impl->old_coords);
+	ganv_edge_request_redraw(item, &impl->old_coords);
 
 	// Calculate new coordinates from tail and head
 	ganv_edge_get_coords(edge, &impl->coords);
@@ -306,19 +307,20 @@ ganv_edge_update(GanvItem* item, int flags)
 		y2 += 1.0;
 	}
 
-	// Update item canvas coordinates
-	ganv_canvas_w2c_d(item->canvas, x1, y1, &item->x1, &item->y1);
-	ganv_canvas_w2c_d(item->canvas, x2, y2, &item->x2, &item->y2);
+	// Update world-relative bounding box
+	item->x1 = x1;
+	item->y1 = y1;
+	item->x2 = x2;
+	item->y2 = y2;
+	ganv_item_i2w_pair(item, &item->x1, &item->y1, &item->x2, &item->y2);
 
 	// Request redraw of new location
-	ganv_edge_request_redraw(item->canvas, &impl->coords);
+	ganv_edge_request_redraw(item, &impl->coords);
 }
 
 static void
 ganv_edge_draw(GanvItem* item,
-               cairo_t* cr,
-               int x, int y,
-               int width, int height)
+               cairo_t* cr, double cx, double cy, double cw, double ch)
 {
 	GanvEdge*     edge = GANV_EDGE(item);
 	GanvEdgeImpl* impl = edge->impl;
@@ -443,10 +445,7 @@ ganv_edge_draw(GanvItem* item,
 }
 
 static double
-ganv_edge_point(GanvItem* item,
-                double x, double y,
-                int cx, int cy,
-                GanvItem** actual_item)
+ganv_edge_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
 	const GanvEdge*       edge = GANV_EDGE(item);
 	const GanvEdgeCoords* coords = &edge->impl->coords;
@@ -657,14 +656,14 @@ void
 ganv_edge_highlight(GanvEdge* edge)
 {
 	edge->impl->highlighted = TRUE;
-	ganv_edge_request_redraw(GANV_ITEM(edge)->canvas, &edge->impl->coords);
+	ganv_edge_request_redraw(GANV_ITEM(edge), &edge->impl->coords);
 }
 
 void
 ganv_edge_unhighlight(GanvEdge* edge)
 {
 	edge->impl->highlighted = FALSE;
-	ganv_edge_request_redraw(GANV_ITEM(edge)->canvas, &edge->impl->coords);
+	ganv_edge_request_redraw(GANV_ITEM(edge), &edge->impl->coords);
 }
 
 void

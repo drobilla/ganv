@@ -127,20 +127,18 @@ ganv_port_get_property(GObject*    object,
 
 static void
 ganv_port_draw(GanvItem* item,
-               cairo_t* cr,
-               int cx, int cy,
-               int width, int height)
+               cairo_t* cr, double cx, double cy, double cw, double ch)
 {
 	GanvPort*   port   = GANV_PORT(item);
 	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
 
 	// Draw Box
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-	item_class->draw(item, cr, cx, cy, width, height);
+	item_class->draw(item, cr, cx, cy, cw, ch);
 
 	if (port->impl->control) {
 		GanvItem* const rect = GANV_ITEM(port->impl->control->rect);
-		GANV_ITEM_GET_CLASS(rect)->draw(rect, cr, cx, cy, width, height);
+		GANV_ITEM_GET_CLASS(rect)->draw(rect, cr, cx, cy, cw, ch);
 	}
 
 	if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_DOWN ||
@@ -155,7 +153,7 @@ ganv_port_draw(GanvItem* item,
 	for (int i = 0; i < 2; ++i) {
 		if (labels[i] && (labels[i]->object.flags & GANV_ITEM_VISIBLE)) {
 			GANV_ITEM_GET_CLASS(labels[i])->draw(
-				labels[i], cr, cx, cy, width, height);
+				labels[i], cr, cx, cy, cw, ch);
 		}
 	}
 }

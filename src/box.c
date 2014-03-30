@@ -153,7 +153,7 @@ ganv_box_request_redraw(GanvItem*            item,
 		ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 	}
 
-	ganv_canvas_request_redraw(item->canvas, x1, y1, x2, y2);
+	ganv_canvas_request_redraw_w(item->canvas, x1, y1, x2, y2);
 }
 
 static void
@@ -192,14 +192,9 @@ ganv_box_update(GanvItem* item, int flags)
 
 	ganv_box_normalize(box);
 
-	// Get bounding box
-	double x1, x2, y1, y2;
-	ganv_box_bounds(item, &x1, &y1, &x2, &y2);
-	ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
-
-	// Update item canvas coordinates
-	ganv_canvas_w2c_d(item->canvas, x1, y1, &item->x1, &item->y1);
-	ganv_canvas_w2c_d(item->canvas, x2, y2, &item->x2, &item->y2);
+	// Update world-relative bounding box
+	ganv_box_bounds(item, &item->x1, &item->y1, &item->x2, &item->y2);
+	ganv_item_i2w_pair(item, &item->x1, &item->y1, &item->x2, &item->y2);
 
 	// Request redraw of new location
 	ganv_box_request_redraw(item, &impl->coords, FALSE);
@@ -207,9 +202,7 @@ ganv_box_update(GanvItem* item, int flags)
 
 static void
 ganv_box_draw(GanvItem* item,
-              cairo_t* cr,
-              int cx, int cy,
-              int width, int height)
+              cairo_t* cr, double cx, double cy, double cw, double ch)
 {
 	GanvBox*     box  = GANV_BOX(item);
 	GanvBoxImpl* impl = box->impl;
@@ -275,14 +268,11 @@ ganv_box_draw(GanvItem* item,
 	}
 
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-	item_class->draw(item, cr, cx, cy, width, height);
+	item_class->draw(item, cr, cx, cy, cw, ch);
 }
 
 static double
-ganv_box_point(GanvItem* item,
-               double x, double y,
-               int cx, int cy,
-               GanvItem** actual_item)
+ganv_box_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
 	GanvBox*     box  = GANV_BOX(item);
 	GanvBoxImpl* impl = box->impl;

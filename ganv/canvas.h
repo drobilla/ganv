@@ -501,7 +501,7 @@ ganv_canvas_select_all(GanvCanvas* canvas);
  * Return the current zoom factor (pixels per unit).
  */
 double
-ganv_canvas_get_zoom(GanvCanvas* canvas);
+ganv_canvas_get_zoom(const GanvCanvas* canvas);
 
 /**
  * ganv_canvas_set_zoom:

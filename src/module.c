@@ -564,34 +564,32 @@ ganv_module_update(GanvItem* item, int flags)
 
 static void
 ganv_module_draw(GanvItem* item,
-                 cairo_t* cr,
-                 int cx, int cy,
-                 int width, int height)
+                 cairo_t* cr, double cx, double cy, double cw, double ch)
 {
 	GanvNode*   node   = GANV_NODE(item);
 	GanvModule* module = GANV_MODULE(item);
 
 	// Draw box
 	if (GANV_ITEM_CLASS(parent_class)->draw) {
-		(*GANV_ITEM_CLASS(parent_class)->draw)(item, cr, cx, cy, width, height);
+		(*GANV_ITEM_CLASS(parent_class)->draw)(item, cr, cx, cy, cw, ch);
 	}
 
 	// Draw label
 	if (node->impl->label) {
 		GanvItem* label_item = GANV_ITEM(node->impl->label);
-		GANV_ITEM_GET_CLASS(label_item)->draw(label_item, cr, cx, cy, width, height);
+		GANV_ITEM_GET_CLASS(label_item)->draw(label_item, cr, cx, cy, cw, ch);
 	}
 
 	// Draw ports
 	FOREACH_PORT(module->impl->ports, p) {
 		GANV_ITEM_GET_CLASS(GANV_ITEM(*p))->draw(
-			GANV_ITEM(*p), cr, cx, cy, width, height);
+			GANV_ITEM(*p), cr, cx, cy, cw, ch);
 	}
 
 	// Draw embed item
 	if (module->impl->embed_item) {
 		GANV_ITEM_GET_CLASS(module->impl->embed_item)->draw(
-			module->impl->embed_item, cr, cx, cy, width, height);
+			module->impl->embed_item, cr, cx, cy, cw, ch);
 	}
 }
 
@@ -626,15 +624,11 @@ ganv_module_move(GanvNode* node,
 }
 
 static double
-ganv_module_point(GanvItem* item,
-                  double x, double y,
-                  int cx, int cy,
-                  GanvItem** actual_item)
+ganv_module_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
 	GanvModule* module = GANV_MODULE(item);
 
-	double d = GANV_ITEM_CLASS(parent_class)->point(
-		item, x, y, cx, cy, actual_item);
+	double d = GANV_ITEM_CLASS(parent_class)->point(item, x, y, actual_item);
 
 	if (!*actual_item) {
 		// Point is not inside module at all, no point in checking children
@@ -646,10 +640,7 @@ ganv_module_point(GanvItem* item,
 
 		*actual_item = NULL;
 		d = GANV_ITEM_GET_CLASS(port)->point(
-			port,
-			x - port->x, y - port->y,
-			cx, cy,
-			actual_item);
+			port, x - port->x, y - port->y, actual_item);
 
 		if (*actual_item) {
 			// Point is inside a port

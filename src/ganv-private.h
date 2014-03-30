@@ -258,13 +258,15 @@ ganv_canvas_grab_item(GanvItem* item, guint event_mask, GdkCursor* cursor, guint
 void
 ganv_canvas_ungrab_item(GanvItem* item, guint32 etime);
 
-/* For use only by item type implementations.  Request that the canvas
- * eventually redraw the specified region, specified in canvas pixel
- * coordinates.  The region contains (x1, y1) but not (x2, y2).
- */
+/* Request a redraw of the specified rectangle in canvas coordinates */
 void
-ganv_canvas_request_redraw(GanvCanvas* canvas,
-                           int x1, int y1, int x2, int y2);
+ganv_canvas_request_redraw_c(GanvCanvas* canvas,
+                             int x1, int y1, int x2, int y2);
+
+/* Request a redraw of the specified rectangle in world coordinates */
+void
+ganv_canvas_request_redraw_w(GanvCanvas* canvas,
+                             double x1, double y1, double x2, double y2);
 
 /* Edge */
 
@@ -272,7 +274,7 @@ void
 ganv_edge_get_coords(const GanvEdge* edge, GanvEdgeCoords* coords);
 
 void
-ganv_edge_request_redraw(GanvCanvas*           canvas,
+ganv_edge_request_redraw(GanvItem*             item,
                          const GanvEdgeCoords* coords);
 
 /* Box */

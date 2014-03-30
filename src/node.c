@@ -117,9 +117,7 @@ ganv_node_destroy(GtkObject* object)
 
 static void
 ganv_node_draw(GanvItem* item,
-               cairo_t* cr,
-               int cx, int cy,
-               int width, int height)
+               cairo_t* cr, double cx, double cy, double cw, double ch)
 {
 	/* TODO: Label is not drawn here because ports need to draw control
 	   rects then the label on top.  I can't see a way of solving this since

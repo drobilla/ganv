@@ -317,9 +317,7 @@ ganv_widget_update(GanvItem* item, int flags)
 
 static void
 ganv_widget_draw(GanvItem* item,
-                 cairo_t* cr,
-                 int x, int y,
-                 int width, int height)
+                 cairo_t* cr, double cx, double cy, double cw, double ch)
 {
 	GanvWidget* witem = GANV_WIDGET(item);
 
@@ -329,8 +327,7 @@ ganv_widget_draw(GanvItem* item,
 }
 
 static double
-ganv_widget_point(GanvItem* item, double x, double y,
-                  int cx, int cy, GanvItem** actual_item)
+ganv_widget_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
 	GanvWidget* witem = GANV_WIDGET(item);
 
