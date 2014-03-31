@@ -2343,8 +2343,7 @@ ganv_canvas_for_each_edge(GanvCanvas*  canvas,
 {
 	GanvCanvasImpl* impl = canvas->impl;
 	for (GanvCanvasImpl::Edges::const_iterator i = impl->_edges.begin();
-	     i != impl->_edges.end();
-	     ++i) {
+	     i != impl->_edges.end();) {
 		GanvCanvasImpl::Edges::const_iterator next = i;
 		++next;
 		f((*i), data);
