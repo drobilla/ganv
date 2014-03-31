@@ -66,6 +66,8 @@
 
 #define CANVAS_IDLE_PRIORITY (GDK_PRIORITY_REDRAW - 5)
 
+static const double GANV_CANVAS_PAD = 8.0;
+
 typedef struct {
 	int x;
 	int y;
@@ -1462,12 +1464,11 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			const int    screen_height = gdk_screen_get_height(screen);
 			const double drag_dx       = mouse_x - control_start_x;
 			const double drag_dy       = mouse_y - control_start_y;
-			const double xpad          = 8.0;  // Pad from screen edge
 			const double ythresh       = 0.2;  // Minimum y fraction for fine
 
 			const double range_x = ((drag_dx > 0)
 			                        ? (screen_width - control_start_x)
-			                        : control_start_x) - xpad;
+			                        : control_start_x) - GANV_CANVAS_PAD;
 
 			const double range_y = ((drag_dy > 0)
 			                        ? (screen_height - control_start_y)
@@ -2069,7 +2070,7 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 		}
 	}
 
-	static const double pad = 8.0;
+	static const double pad = GANV_CANVAS_PAD;
 
 	const double new_zoom = std::min(
 		((double)win_width / (double)(right - left + pad*2.0)),
@@ -2538,7 +2539,7 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 	}
 	nodes.cleanup();
 
-	static const double border_width = canvas->impl->font_size * 2.0;
+	static const double border_width = GANV_CANVAS_PAD;
 	canvas->impl->move_contents_to_internal(border_width, border_width, least_x, least_y);
 	ganv_canvas_scroll_to(GANV_CANVAS(canvas->impl->_gcanvas), 0, 0);
 
