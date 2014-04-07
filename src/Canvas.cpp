@@ -1523,7 +1523,8 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			    event->button.y_root == control_start_y) {
 				select_port_toggle(port, event->button.state);
 			}
-		} else if (event->button.state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK)) {
+		} else if (_selected_ports.empty() ||
+		           (event->button.state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK))) {
 			select_port_toggle(port, event->button.state);
 		} else {
 			selection_joined_with(port);
