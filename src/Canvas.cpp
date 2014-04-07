@@ -739,7 +739,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 			GVNodes::iterator p = nodes.find(partner);
 			if (p != nodes.end()) {
 				Agedge_t* e = agedge(G, i->second, p->second, NULL, true);
-				agsafeset(e, (char*)"style", (char*)"dotted", (char*)"");
+				agsafeset(e, (char*)"style", (char*)"invis", (char*)"");
 			}
 		}
 	}
