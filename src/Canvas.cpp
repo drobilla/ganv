@@ -322,6 +322,7 @@ struct GanvCanvasImpl {
 	bool port_event(GdkEvent* event, GanvPort* port);
 
 	void ports_joined(GanvPort* port1, GanvPort* port2);
+	void port_clicked(GdkEvent* event, GanvPort* port);
 
 	void move_contents_to_internal(double x, double y, double min_x, double min_y);
 
@@ -1507,13 +1508,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 				ports_joined(port, _connect_port);
 				unselect_ports();
 			} else {
-				bool modded = event->button.state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK);
-				if (!modded && _last_selected_port && _last_selected_port->impl->is_input != port->impl->is_input) {
-					selection_joined_with(port);
-					unselect_ports();
-				} else {
-					select_port_toggle(port, event->button.state);
-				}
+				port_clicked(event, port);
 			}
 			port_dragging = false;
 		} else if (control_dragging) {
@@ -1523,11 +1518,8 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			    event->button.y_root == control_start_y) {
 				select_port_toggle(port, event->button.state);
 			}
-		} else if (_selected_ports.empty() ||
-		           (event->button.state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK))) {
-			select_port_toggle(port, event->button.state);
 		} else {
-			selection_joined_with(port);
+			port_clicked(event, port);
 		}
 		return true;
 
@@ -1594,6 +1586,19 @@ GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 	} else {
 		g_signal_emit(_gcanvas, signal_disconnect, 0,
 		              src_node, dst_node, NULL);
+	}
+}
+
+void
+GanvCanvasImpl::port_clicked(GdkEvent* event, GanvPort* port)
+{
+	const bool modded = event->button.state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK);
+	if (!modded && _last_selected_port &&
+	    _last_selected_port->impl->is_input != port->impl->is_input) {
+		selection_joined_with(port);
+		unselect_ports();
+	} else {
+		select_port_toggle(port, event->button.state);
 	}
 }
 
