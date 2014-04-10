@@ -2140,7 +2140,9 @@ ganv_canvas_move_selected_items(GanvCanvas* canvas,
                                 double      dy)
 {
 	FOREACH_ITEM(canvas->impl->_selected_items, i) {
-		ganv_node_move(*i, dx, dy);
+		if ((*i)->item.parent == canvas->impl->root) {
+			ganv_node_move(*i, dx, dy);
+		}
 	}
 }
 
