@@ -153,7 +153,7 @@ ganv_box_request_redraw(GanvItem*            item,
 		ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 	}
 
-	ganv_canvas_request_redraw_w(item->canvas, x1, y1, x2, y2);
+	ganv_canvas_request_redraw_w(item->impl->canvas, x1, y1, x2, y2);
 }
 
 static void
@@ -193,8 +193,8 @@ ganv_box_update(GanvItem* item, int flags)
 	ganv_box_normalize(box);
 
 	// Update world-relative bounding box
-	ganv_box_bounds(item, &item->x1, &item->y1, &item->x2, &item->y2);
-	ganv_item_i2w_pair(item, &item->x1, &item->y1, &item->x2, &item->y2);
+	ganv_box_bounds(item, &item->impl->x1, &item->impl->y1, &item->impl->x2, &item->impl->y2);
+	ganv_item_i2w_pair(item, &item->impl->x1, &item->impl->y1, &item->impl->x2, &item->impl->y2);
 
 	// Request redraw of new location
 	ganv_box_request_redraw(item, &impl->coords, FALSE);

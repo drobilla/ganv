@@ -33,21 +33,19 @@ G_BEGIN_DECLS
 #define GANV_GROUP_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GANV_TYPE_GROUP, GanvGroupClass))
 
 typedef struct _GanvGroup      GanvGroup;
+typedef struct _GanvGroupImpl  GanvGroupImpl;
 typedef struct _GanvGroupClass GanvGroupClass;
 
 struct _GanvGroup {
-	GanvItem item;
-
-	/* Children of the group */
-	GList* item_list;
-	GList* item_list_end;
+	GanvItem       item;
+	GanvGroupImpl* impl;
 };
 
 struct _GanvGroupClass {
 	GanvItemClass parent_class;
 
 	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
+	gpointer spare_vmethods[4];
 };
 
 GType ganv_group_get_type(void) G_GNUC_CONST;

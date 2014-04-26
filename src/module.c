@@ -148,7 +148,7 @@ measure(GanvModule* module, Metrics* m)
 	double title_w, title_h;
 	title_size(module, &title_w, &title_h);
 
-	GanvCanvas*     canvas       = GANV_CANVAS(GANV_ITEM(module)->canvas);
+	GanvCanvas*     canvas       = ganv_item_get_canvas(GANV_ITEM(module));
 	GanvText*       canvas_title = GANV_NODE(module)->impl->label;
 	GanvModuleImpl* impl         = module->impl;
 
@@ -253,7 +253,7 @@ place_title(GanvModule* module, GanvDirection dir)
 static void
 resize_right(GanvModule* module)
 {
-	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
+	GanvCanvas*     canvas = ganv_item_get_canvas(GANV_ITEM(module));
 	GanvModuleImpl* impl   = module->impl;
 
 	Metrics m;
@@ -331,7 +331,7 @@ resize_right(GanvModule* module)
 static void
 resize_down(GanvModule* module)
 {
-	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
+	GanvCanvas*     canvas = ganv_item_get_canvas(GANV_ITEM(module));
 	GanvModuleImpl* impl   = module->impl;
 
 	Metrics m;
@@ -414,7 +414,7 @@ layout(GanvNode* self)
 	GanvModule*     module = GANV_MODULE(self);
 	GanvModuleImpl* impl   = module->impl;
 	GanvNode*       node   = GANV_NODE(self);
-	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
+	GanvCanvas*     canvas = ganv_item_get_canvas(GANV_ITEM(module));
 
 	double label_w = 0.0;
 	double label_h = 0.0;
@@ -468,7 +468,7 @@ static void
 ganv_module_add_port(GanvModule* module,
                      GanvPort*   port)
 {
-	GanvCanvas*     canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
+	GanvCanvas*     canvas = ganv_item_get_canvas(GANV_ITEM(module));
 	GanvModuleImpl* impl   = module->impl;
 
 	const double width = ganv_port_get_natural_width(port);
@@ -640,7 +640,7 @@ ganv_module_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 
 		*actual_item = NULL;
 		d = GANV_ITEM_GET_CLASS(port)->point(
-			port, x - port->x, y - port->y, actual_item);
+			port, x - port->impl->x, y - port->impl->y, actual_item);
 
 		if (*actual_item) {
 			// Point is inside a port
@@ -719,7 +719,7 @@ ganv_module_get_empty_port_breadth(const GanvModule* module)
 double
 ganv_module_get_empty_port_depth(const GanvModule* module)
 {
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(module)->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(module));
 
 	return ganv_canvas_get_font_size(canvas) * 1.1;
 }

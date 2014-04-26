@@ -88,11 +88,11 @@ ganv_edge_destroy(GtkObject* object)
 	g_return_if_fail(GANV_IS_EDGE(object));
 
 	GanvEdge*   edge   = GANV_EDGE(object);
-	GanvCanvas* canvas = GANV_CANVAS(edge->item.canvas);
+	GanvCanvas* canvas = GANV_CANVAS(edge->item.impl->canvas);
 	if (canvas && !edge->impl->ghost) {
-		edge->item.canvas = NULL;
+		edge->item.impl->canvas = NULL;
 	}
-	edge->item.parent = NULL;
+	edge->item.impl->parent = NULL;
 
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {
 		(*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
@@ -166,7 +166,7 @@ void
 ganv_edge_request_redraw(GanvItem*             item,
                          const GanvEdgeCoords* coords)
 {
-	GanvCanvas* canvas = item->canvas;
+	GanvCanvas* canvas = item->impl->canvas;
 	const double w = coords->width;
 	if (coords->curved) {
 		const double src_x  = coords->x1;
@@ -308,11 +308,11 @@ ganv_edge_update(GanvItem* item, int flags)
 	}
 
 	// Update world-relative bounding box
-	item->x1 = x1;
-	item->y1 = y1;
-	item->x2 = x2;
-	item->y2 = y2;
-	ganv_item_i2w_pair(item, &item->x1, &item->y1, &item->x2, &item->y2);
+	item->impl->x1 = x1;
+	item->impl->y1 = y1;
+	item->impl->x2 = x2;
+	item->impl->y2 = y2;
+	ganv_item_i2w_pair(item, &item->impl->x1, &item->impl->y1, &item->impl->x2, &item->impl->y2);
 
 	// Request redraw of new location
 	ganv_edge_request_redraw(item, &impl->coords);
@@ -638,37 +638,51 @@ ganv_edge_update_location(GanvEdge* edge)
 	ganv_item_request_update(GANV_ITEM(edge));
 }
 
+gboolean
+ganv_edge_get_curved(const GanvEdge* edge)
+{
+	return edge->impl->coords.curved;
+}
+
+void
+ganv_edge_set_curved(GanvEdge* edge, gboolean curved)
+{
+	edge->impl->coords.curved = curved;
+	ganv_edge_request_redraw(GANV_ITEM(edge), &edge->impl->coords);
+}
+
+void
+ganv_edge_set_selected(GanvEdge* edge, gboolean selected)
+{
+	GanvCanvas* canvas = GANV_CANVAS(edge->item.impl->canvas);
+	if (selected) {
+		ganv_canvas_select_edge(canvas, edge);
+	} else {
+		ganv_canvas_unselect_edge(canvas, edge);
+	}
+}
+
 void
 ganv_edge_select(GanvEdge* edge)
 {
-	GanvCanvas* canvas = GANV_CANVAS(edge->item.canvas);
-	ganv_canvas_select_edge(canvas, edge);
+	ganv_edge_set_selected(edge, TRUE);
 }
 
 void
 ganv_edge_unselect(GanvEdge* edge)
 {
-	GanvCanvas* canvas = GANV_CANVAS(edge->item.canvas);
-	ganv_canvas_unselect_edge(canvas, edge);
+	ganv_edge_set_selected(edge, FALSE);
 }
 
 void
-ganv_edge_highlight(GanvEdge* edge)
+ganv_edge_set_highlighted(GanvEdge* edge, gboolean highlighted)
 {
-	edge->impl->highlighted = TRUE;
+	edge->impl->highlighted = highlighted;
 	ganv_edge_request_redraw(GANV_ITEM(edge), &edge->impl->coords);
 }
 
 void
-ganv_edge_unhighlight(GanvEdge* edge)
-{
-	edge->impl->highlighted = FALSE;
-	ganv_edge_request_redraw(GANV_ITEM(edge), &edge->impl->coords);
-}
-
-void
-ganv_edge_tick(GanvEdge* edge,
-               double    seconds)
+ganv_edge_tick(GanvEdge* edge, double seconds)
 {
 	ganv_item_set(GANV_ITEM(edge),
 	              "dash-offset", seconds * 8.0,
@@ -680,7 +694,7 @@ ganv_edge_disconnect(GanvEdge* edge)
 {
 	if (!edge->impl->ghost) {
 		ganv_canvas_disconnect_edge(
-			GANV_CANVAS(edge->item.canvas),
+			GANV_CANVAS(edge->item.impl->canvas),
 			edge);
 	}
 }
@@ -690,7 +704,7 @@ ganv_edge_remove(GanvEdge* edge)
 {
 	if (!edge->impl->ghost) {
 		ganv_canvas_remove_edge(
-			GANV_CANVAS(edge->item.canvas),
+			GANV_CANVAS(edge->item.impl->canvas),
 			edge);
 	}
 }

@@ -195,8 +195,8 @@ struct GanvCanvasImpl {
 		, _select_start_y(0.0)
 		, _drag_state(NOT_DRAGGING)
 	{
-		this->root         = GANV_ITEM(g_object_new(ganv_group_get_type(), NULL));
-		this->root->canvas = canvas;
+		this->root               = GANV_ITEM(g_object_new(ganv_group_get_type(), NULL));
+		this->root->impl->canvas = canvas;
 		g_object_ref_sink(this->root);
 
 		this->direction = GANV_DIRECTION_RIGHT;
@@ -514,7 +514,7 @@ select_if_head_is_selected(GanvEdge* edge, void* data)
 	}
 
 	if (selected) {
-		ganv_edge_select(edge);
+		ganv_edge_set_selected(edge, TRUE);
 	}
 }
 
@@ -774,8 +774,8 @@ get_region(GanvNode* node)
 	ganv_item_get_bounds(item, &reg.pos.x, &reg.pos.y, &reg.area.x, &reg.area.y);
 	reg.area.x = x2 - x1;
 	reg.area.y = y2 - y1;
-	reg.pos.x  = item->x + (reg.area.x / 2.0);
-	reg.pos.y  = item->y + (reg.area.y / 2.0);
+	reg.pos.x  = item->impl->x + (reg.area.x / 2.0);
+	reg.pos.y  = item->impl->y + (reg.area.y / 2.0);
 
 	// No need for i2w here since we only care about top-level items
 	return reg;
@@ -923,19 +923,19 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 				                           
 			// Update position
 			GanvItem*    item = &node->item;
-			const double x0   = item->x;
-			const double y0   = item->y;
+			const double x0   = item->impl->x;
+			const double y0   = item->impl->y;
 			const Vector dpos = vec_mult(node->impl->vel, dur);
 
-			item->x = std::max(MIN_COORD, item->x + dpos.x);
-			item->y = std::max(MIN_COORD, item->y + dpos.y);
+			item->impl->x = std::max(MIN_COORD, item->impl->x + dpos.x);
+			item->impl->y = std::max(MIN_COORD, item->impl->y + dpos.y);
 
 			if (update) {
 				ganv_item_request_update(item);
-				item->canvas->impl->need_repick = TRUE;
+				item->impl->canvas->impl->need_repick = TRUE;
 			}
 
-			if (lrint(x0) != lrint(item->x) || lrint(y0) != lrint(item->y)) {
+			if (lrint(x0) != lrint(item->impl->x) || lrint(y0) != lrint(item->impl->y)) {
 				++n_moved;
 			}
 		}
@@ -1073,7 +1073,7 @@ GanvCanvasImpl::get_node_at(double x, double y)
 		if (GANV_IS_NODE(item)) {
 			return GANV_NODE(item);
 		} else {
-			item = item->parent;
+			item = item->impl->parent;
 		}
 	}
 
@@ -1698,7 +1698,7 @@ Canvas::~Canvas()
 }
 
 void
-Canvas::remove_edge(Node* item1, Node* item2)
+Canvas::remove_edge_between(Node* item1, Node* item2)
 {
 	GanvEdge* edge = ganv_canvas_get_edge(_gobj, item1->gobj(), item2->gobj());
 	if (edge) {
@@ -1712,15 +1712,24 @@ Canvas::remove_edge(Edge* edge)
 	ganv_canvas_remove_edge(_gobj, edge->gobj());
 }
 
+Item*
+Canvas::get_item_at(double x, double y) const
+{
+	GanvItem* item = ganv_canvas_get_item_at(_gobj, x, y);
+	if (item) {
+		return Glib::wrap(item);
+	}
+	return NULL;
+}
+
 Edge*
 Canvas::get_edge(Node* tail, Node* head) const
 {
 	GanvEdge* e = ganv_canvas_get_edge(_gobj, tail->gobj(), head->gobj());
 	if (e) {
 		return Glib::wrap(e);
-	} else {
-		return NULL;
 	}
+	return NULL;
 }
 
 GQuark
@@ -1766,7 +1775,7 @@ ganv_canvas_init(GanvCanvas* canvas)
 
 	canvas->impl = new GanvCanvasImpl(canvas);
 	
-	g_signal_connect(G_OBJECT(ganv_canvas_root(GANV_CANVAS(canvas))),
+	g_signal_connect(G_OBJECT(ganv_canvas_root(canvas)),
 	                 "event", G_CALLBACK(on_canvas_event), canvas->impl);
 }
 
@@ -1838,6 +1847,8 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	GtkWidgetClass* widget_class  = (GtkWidgetClass*)klass;
 
 	canvas_parent_class = GTK_LAYOUT_CLASS(g_type_class_peek_parent(klass));
+
+	g_type_class_add_private(klass, sizeof(GanvCanvasImpl));
 
 	gobject_class->set_property = ganv_canvas_set_property;
 	gobject_class->get_property = ganv_canvas_get_property;
@@ -1951,8 +1962,7 @@ ganv_canvas_resize(GanvCanvas* canvas, double width, double height)
 	if (width != canvas->impl->width || height != canvas->impl->height) {
 		canvas->impl->width  = width;
 		canvas->impl->height = height;
-		ganv_canvas_set_scroll_region(
-			GANV_CANVAS(canvas), 0.0, 0.0, width, height);
+		ganv_canvas_set_scroll_region(canvas, 0.0, 0.0, width, height);
 	}
 }
 
@@ -2049,7 +2059,7 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 
 	int win_width, win_height;
 	GdkWindow* win = gtk_widget_get_window(
-		GTK_WIDGET(GANV_CANVAS(canvas->impl->_gcanvas)));
+		GTK_WIDGET(canvas->impl->_gcanvas));
 	gdk_window_get_size(win, &win_width, &win_height);
 
 	// Box containing all canvas items
@@ -2060,8 +2070,8 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 
 	FOREACH_ITEM(canvas->impl->_items, i) {
 		GanvItem* const item = GANV_ITEM(*i);
-		const double    x    = item->x;
-		const double    y    = item->y;
+		const double    x    = item->impl->x;
+		const double    y    = item->impl->y;
 		if (GANV_IS_CIRCLE(*i)) {
 			const double r = GANV_CIRCLE(*i)->impl->coords.radius;
 			left   = MIN(left, x - r);
@@ -2085,11 +2095,11 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 	ganv_canvas_set_zoom(canvas, new_zoom);
 
 	int scroll_x, scroll_y;
-	ganv_canvas_w2c(GANV_CANVAS(canvas->impl->_gcanvas),
+	ganv_canvas_w2c(canvas->impl->_gcanvas,
 	                lrintf(left - pad), lrintf(bottom - pad),
 	                &scroll_x, &scroll_y);
 
-	ganv_canvas_scroll_to(GANV_CANVAS(canvas->impl->_gcanvas),
+	ganv_canvas_scroll_to(canvas->impl->_gcanvas,
 	                      scroll_x, scroll_y);
 }
 
@@ -2140,7 +2150,7 @@ ganv_canvas_move_selected_items(GanvCanvas* canvas,
                                 double      dy)
 {
 	FOREACH_ITEM(canvas->impl->_selected_items, i) {
-		if ((*i)->item.parent == canvas->impl->root) {
+		if ((*i)->item.impl->parent == canvas->impl->root) {
 			ganv_node_move(*i, dx, dy);
 		}
 	}
@@ -2150,8 +2160,8 @@ void
 ganv_canvas_selection_move_finished(GanvCanvas* canvas)
 {
 	FOREACH_ITEM(canvas->impl->_selected_items, i) {
-		const double x = GANV_ITEM(*i)->x;
-		const double y = GANV_ITEM(*i)->y;
+		const double x = GANV_ITEM(*i)->impl->x;
+		const double y = GANV_ITEM(*i)->impl->y;
 		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
 	}
 }
@@ -2161,7 +2171,7 @@ select_if_ends_are_selected(GanvEdge* edge, void* data)
 {
 	if (ganv_node_is_selected(ganv_edge_get_tail(edge)) &&
 	    ganv_node_is_selected(ganv_edge_get_head(edge))) {
-		ganv_edge_select(edge);
+		ganv_edge_set_selected(edge, TRUE);
 	}
 }
 	    
@@ -2221,7 +2231,7 @@ ganv_canvas_add_node(GanvCanvas* canvas,
                      GanvNode*   node)
 {
 	GanvItem* item = GANV_ITEM(node);
-	if (item->parent == ganv_canvas_root(canvas)) {
+	if (item->impl->parent == ganv_canvas_root(canvas)) {
 		canvas->impl->_items.insert(node);
 	}
 }
@@ -2468,8 +2478,8 @@ ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y)
 {
 	double min_x=HUGE_VAL, min_y=HUGE_VAL;
 	FOREACH_ITEM(canvas->impl->_items, i) {
-		const double x = GANV_ITEM(*i)->x;
-		const double y = GANV_ITEM(*i)->y;
+		const double x = GANV_ITEM(*i)->impl->x;
+		const double y = GANV_ITEM(*i)->impl->y;
 		min_x = std::min(min_x, x);
 		min_y = std::min(min_y, y);
 	}
@@ -2493,7 +2503,7 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 
 	// Arrange to graphviz coordinates
 	for (GVNodes::iterator i = nodes.begin(); i != nodes.end(); ++i) {
-		if (GANV_ITEM(i->first)->parent != GANV_ITEM(ganv_canvas_root(canvas))) {
+		if (GANV_ITEM(i->first)->impl->parent != GANV_ITEM(ganv_canvas_root(canvas))) {
 			continue;
 		}
 		const std::string pos   = agget(i->second, (char*)"pos");
@@ -2549,11 +2559,11 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 
 	static const double border_width = GANV_CANVAS_PAD;
 	canvas->impl->move_contents_to_internal(border_width, border_width, least_x, least_y);
-	ganv_canvas_scroll_to(GANV_CANVAS(canvas->impl->_gcanvas), 0, 0);
+	ganv_canvas_scroll_to(canvas->impl->_gcanvas, 0, 0);
 
 	FOREACH_ITEM(canvas->impl->_items, i) {
-		const double x = GANV_ITEM(*i)->x;
-		const double y = GANV_ITEM(*i)->y;
+		const double x = GANV_ITEM(*i)->impl->x;
+		const double y = GANV_ITEM(*i)->impl->y;
 		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
 	}
 #endif
@@ -2569,7 +2579,7 @@ ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename)
 }
 
 gboolean
-ganv_canvas_supports_sprung_layout(GanvCanvas* canvas)
+ganv_canvas_supports_sprung_layout(const GanvCanvas* canvas)
 {
 #ifdef GANV_FDGL
 	return TRUE;
@@ -2591,7 +2601,7 @@ ganv_canvas_set_sprung_layout(GanvCanvas* canvas, gboolean sprung_layout)
 }
 
 gboolean
-ganv_canvas_get_locked(GanvCanvas* canvas)
+ganv_canvas_get_locked(const GanvCanvas* canvas)
 {
 	return canvas->impl->locked;
 }
@@ -2672,8 +2682,7 @@ ganv_canvas_new(double width, double height)
 		             "height", height,
 		             NULL));
 
-	ganv_canvas_set_scroll_region(GANV_CANVAS(canvas),
-	                              0.0, 0.0, width, height);
+	ganv_canvas_set_scroll_region(canvas, 0.0, 0.0, width, height);
 
 	return canvas;
 }
@@ -2682,8 +2691,6 @@ ganv_canvas_new(double width, double height)
 static void
 ganv_canvas_map(GtkWidget* widget)
 {
-	GanvCanvas* canvas;
-
 	g_return_if_fail(GANV_IS_CANVAS(widget));
 
 	/* Normal widget mapping stuff */
@@ -2692,7 +2699,7 @@ ganv_canvas_map(GtkWidget* widget)
 		(*GTK_WIDGET_CLASS(canvas_parent_class)->map)(widget);
 	}
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	if (canvas->impl->need_update) {
 		add_idle(canvas);
@@ -2709,11 +2716,9 @@ ganv_canvas_map(GtkWidget* widget)
 static void
 ganv_canvas_unmap(GtkWidget* widget)
 {
-	GanvCanvas* canvas;
-
 	g_return_if_fail(GANV_IS_CANVAS(widget));
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	shutdown_transients(canvas);
 
@@ -2734,8 +2739,6 @@ ganv_canvas_unmap(GtkWidget* widget)
 static void
 ganv_canvas_realize(GtkWidget* widget)
 {
-	GanvCanvas* canvas;
-
 	g_return_if_fail(GANV_IS_CANVAS(widget));
 
 	/* Normal widget realization stuff */
@@ -2744,7 +2747,7 @@ ganv_canvas_realize(GtkWidget* widget)
 		(*GTK_WIDGET_CLASS(canvas_parent_class)->realize)(widget);
 	}
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	gdk_window_set_events(
 		canvas->layout.bin_window,
@@ -2770,11 +2773,9 @@ ganv_canvas_realize(GtkWidget* widget)
 static void
 ganv_canvas_unrealize(GtkWidget* widget)
 {
-	GanvCanvas* canvas;
-
 	g_return_if_fail(GANV_IS_CANVAS(widget));
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	shutdown_transients(canvas);
 
@@ -2889,8 +2890,6 @@ scroll_to(GanvCanvas* canvas, int cx, int cy)
 static void
 ganv_canvas_size_allocate(GtkWidget* widget, GtkAllocation* allocation)
 {
-	GanvCanvas* canvas;
-
 	g_return_if_fail(GANV_IS_CANVAS(widget));
 	g_return_if_fail(allocation != NULL);
 
@@ -2898,7 +2897,7 @@ ganv_canvas_size_allocate(GtkWidget* widget, GtkAllocation* allocation)
 		(*GTK_WIDGET_CLASS(canvas_parent_class)->size_allocate)(widget, allocation);
 	}
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	/* Recenter the view, if appropriate */
 
@@ -2920,7 +2919,7 @@ ganv_canvas_size_allocate(GtkWidget* widget, GtkAllocation* allocation)
 static gboolean
 is_descendant(GanvItem* item, GanvItem* parent)
 {
-	for (; item; item = item->parent) {
+	for (; item; item = item->impl->parent) {
 		if (item == parent) {
 			return TRUE;
 		}
@@ -3050,7 +3049,7 @@ ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 
 		ganv_item_emit_event(item, ev, &finished);
 
-		parent = item->parent;
+		parent = item->impl->parent;
 		g_object_unref(G_OBJECT(item));
 
 		item = parent;
@@ -3143,9 +3142,9 @@ int
 ganv_canvas_grab_item(GanvItem* item, guint event_mask, GdkCursor* cursor, guint32 etime)
 {
 	g_return_val_if_fail(GANV_IS_ITEM(item), GDK_GRAB_NOT_VIEWABLE);
-	g_return_val_if_fail(GTK_WIDGET_MAPPED(item->canvas), GDK_GRAB_NOT_VIEWABLE);
+	g_return_val_if_fail(GTK_WIDGET_MAPPED(item->impl->canvas), GDK_GRAB_NOT_VIEWABLE);
 
-	if (item->canvas->impl->grabbed_item) {
+	if (item->impl->canvas->impl->grabbed_item) {
 		return GDK_GRAB_ALREADY_GRABBED;
 	}
 
@@ -3153,7 +3152,7 @@ ganv_canvas_grab_item(GanvItem* item, guint event_mask, GdkCursor* cursor, guint
 		return GDK_GRAB_NOT_VIEWABLE;
 	}
 
-	int retval = gdk_pointer_grab(item->canvas->layout.bin_window,
+	int retval = gdk_pointer_grab(item->impl->canvas->layout.bin_window,
 	                              FALSE,
 	                              (GdkEventMask)event_mask,
 	                              NULL,
@@ -3164,9 +3163,9 @@ ganv_canvas_grab_item(GanvItem* item, guint event_mask, GdkCursor* cursor, guint
 		return retval;
 	}
 
-	item->canvas->impl->grabbed_item       = item;
-	item->canvas->impl->grabbed_event_mask = event_mask;
-	item->canvas->impl->current_item       = item; /* So that events go to the grabbed item */
+	item->impl->canvas->impl->grabbed_item       = item;
+	item->impl->canvas->impl->grabbed_event_mask = event_mask;
+	item->impl->canvas->impl->current_item       = item; /* So that events go to the grabbed item */
 
 	return retval;
 }
@@ -3184,11 +3183,11 @@ ganv_canvas_ungrab_item(GanvItem* item, guint32 etime)
 {
 	g_return_if_fail(GANV_IS_ITEM(item));
 
-	if (item->canvas->impl->grabbed_item != item) {
+	if (item->impl->canvas->impl->grabbed_item != item) {
 		return;
 	}
 
-	item->canvas->impl->grabbed_item = NULL;
+	item->impl->canvas->impl->grabbed_item = NULL;
 
 	gdk_pointer_ungrab(etime);
 }
@@ -3285,7 +3284,7 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 		if (canvas->impl->root->object.flags & GANV_ITEM_VISIBLE) {
 			GANV_ITEM_GET_CLASS(canvas->impl->root)->point(
 				canvas->impl->root,
-				x - canvas->impl->root->x, y - canvas->impl->root->y,
+				x - canvas->impl->root->impl->x, y - canvas->impl->root->impl->y,
 				&canvas->impl->new_current_item);
 		} else {
 			canvas->impl->new_current_item = NULL;
@@ -3344,16 +3343,15 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 static gint
 ganv_canvas_button(GtkWidget* widget, GdkEventButton* event)
 {
-	GanvCanvas* canvas;
-	int             mask;
-	int             retval;
+	int mask;
+	int retval;
 
 	g_return_val_if_fail(GANV_IS_CANVAS(widget), FALSE);
 	g_return_val_if_fail(event != NULL, FALSE);
 
 	retval = FALSE;
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	/*
 	 * dispatch normally regardless of the event's window if an item has
@@ -3419,12 +3417,10 @@ ganv_canvas_button(GtkWidget* widget, GdkEventButton* event)
 static gint
 ganv_canvas_motion(GtkWidget* widget, GdkEventMotion* event)
 {
-	GanvCanvas* canvas;
-
 	g_return_val_if_fail(GANV_IS_CANVAS(widget), FALSE);
 	g_return_val_if_fail(event != NULL, FALSE);
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	if (event->window != canvas->layout.bin_window) {
 		return FALSE;
@@ -3438,12 +3434,10 @@ ganv_canvas_motion(GtkWidget* widget, GdkEventMotion* event)
 static gboolean
 ganv_canvas_scroll(GtkWidget* widget, GdkEventScroll* event)
 {
-	GanvCanvas* canvas;
-
 	g_return_val_if_fail(GANV_IS_CANVAS(widget), FALSE);
 	g_return_val_if_fail(event != NULL, FALSE);
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	if (event->window != canvas->layout.bin_window) {
 		return FALSE;
@@ -3458,12 +3452,10 @@ ganv_canvas_scroll(GtkWidget* widget, GdkEventScroll* event)
 static gboolean
 ganv_canvas_key(GtkWidget* widget, GdkEventKey* event)
 {
-	GanvCanvas* canvas;
-
 	g_return_val_if_fail(GANV_IS_CANVAS(widget), FALSE);
 	g_return_val_if_fail(event != NULL, FALSE);
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	if (!ganv_canvas_emit_event(canvas, (GdkEvent*)event)) {
 		GtkWidgetClass* widget_class;
@@ -3492,12 +3484,10 @@ ganv_canvas_key(GtkWidget* widget, GdkEventKey* event)
 static gint
 ganv_canvas_crossing(GtkWidget* widget, GdkEventCrossing* event)
 {
-	GanvCanvas* canvas;
-
 	g_return_val_if_fail(GANV_IS_CANVAS(widget), FALSE);
 	g_return_val_if_fail(event != NULL, FALSE);
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	if (event->window != canvas->layout.bin_window) {
 		return FALSE;
@@ -3511,11 +3501,9 @@ ganv_canvas_crossing(GtkWidget* widget, GdkEventCrossing* event)
 static gint
 ganv_canvas_focus_in(GtkWidget* widget, GdkEventFocus* event)
 {
-	GanvCanvas* canvas;
-
 	GTK_WIDGET_SET_FLAGS(widget, GTK_HAS_FOCUS);
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	if (canvas->impl->focused_item) {
 		return ganv_canvas_emit_event(canvas, (GdkEvent*)event);
@@ -3528,11 +3516,9 @@ ganv_canvas_focus_in(GtkWidget* widget, GdkEventFocus* event)
 static gint
 ganv_canvas_focus_out(GtkWidget* widget, GdkEventFocus* event)
 {
-	GanvCanvas* canvas;
-
 	GTK_WIDGET_UNSET_FLAGS(widget, GTK_HAS_FOCUS);
 
-	canvas = GANV_CANVAS(widget);
+	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	if (canvas->impl->focused_item) {
 		return ganv_canvas_emit_event(canvas, (GdkEvent*)event);
@@ -3695,11 +3681,9 @@ update_again:
 static gboolean
 idle_handler(gpointer data)
 {
-	GanvCanvas* canvas;
-
 	GDK_THREADS_ENTER();
 
-	canvas = GANV_CANVAS(data);
+	GanvCanvas* canvas = GANV_CANVAS(data);
 
 	do_update(canvas);
 
@@ -3809,7 +3793,7 @@ ganv_canvas_set_center_scroll_region(GanvCanvas* canvas, gboolean center_scroll_
 }
 
 gboolean
-ganv_canvas_get_center_scroll_region(GanvCanvas* canvas)
+ganv_canvas_get_center_scroll_region(const GanvCanvas* canvas)
 {
 	g_return_val_if_fail(GANV_IS_CANVAS(canvas), FALSE);
 
@@ -3841,14 +3825,13 @@ ganv_canvas_get_scroll_offsets(const GanvCanvas* canvas, int* cx, int* cy)
 GanvItem*
 ganv_canvas_get_item_at(GanvCanvas* canvas, double x, double y)
 {
-
 	g_return_val_if_fail(GANV_IS_CANVAS(canvas), NULL);
 
 	GanvItem* item = NULL;
 	double dist    = GANV_ITEM_GET_CLASS(canvas->impl->root)->point(
 		canvas->impl->root,
-		x - canvas->impl->root->x,
-		y - canvas->impl->root->y,
+		x - canvas->impl->root->impl->x,
+		y - canvas->impl->root->impl->y,
 		&item);
 	if ((int)(dist * canvas->impl->pixels_per_unit + 0.5) <= GANV_CLOSE_ENOUGH) {
 		return item;

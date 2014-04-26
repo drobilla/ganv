@@ -61,14 +61,12 @@ public:
 	{}
 
 	virtual ~Edge() {
-		if (_gobj && _gobj->parent) {
+		if (_gobj && ganv_item_get_parent(_gobj)) {
 			g_object_unref(_gobj);
 		}
 	}
 
-	/** Return true iff the handle is within the given rectangle. */
-	virtual gboolean is_within(double x1, double y1,
-	                           double x2, double y2) const {
+	gboolean is_within(double x1, double y1, double x2, double y2) const {
 		return ganv_edge_is_within(gobj(), x1, y1, x2, y2);
 	}
 
@@ -80,8 +78,6 @@ public:
 
 	METHODRETWRAP0(ganv_edge, Node*, get_tail);
 	METHODRETWRAP0(ganv_edge, Node*, get_head);
-
-	METHOD1(ganv_edge, tick, double, seconds);
 
 	GanvEdge*       gobj()       { return (GanvEdge*)_gobj; }
 	const GanvEdge* gobj() const { return (GanvEdge*)_gobj; }

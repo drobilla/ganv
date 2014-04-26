@@ -45,27 +45,30 @@ enum {
 static void
 ganv_widget_init(GanvWidget* witem)
 {
-	witem->x           = 0.0;
-	witem->y           = 0.0;
-	witem->width       = 0.0;
-	witem->height      = 0.0;
-	witem->anchor      = GTK_ANCHOR_NW;
-	witem->size_pixels = FALSE;
+	GanvWidgetImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		witem, GANV_TYPE_WIDGET, GanvWidgetImpl);
+
+	witem->impl              = impl;
+	witem->impl->x           = 0.0;
+	witem->impl->y           = 0.0;
+	witem->impl->width       = 0.0;
+	witem->impl->height      = 0.0;
+	witem->impl->anchor      = GTK_ANCHOR_NW;
+	witem->impl->size_pixels = FALSE;
 }
 
 static void
 ganv_widget_destroy(GtkObject* object)
 {
-
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_WIDGET(object));
 
 	GanvWidget* witem = GANV_WIDGET(object);
 
-	if (witem->widget && !witem->in_destroy) {
-		g_signal_handler_disconnect(witem->widget, witem->destroy_id);
-		gtk_widget_destroy(witem->widget);
-		witem->widget = NULL;
+	if (witem->impl->widget && !witem->impl->in_destroy) {
+		g_signal_handler_disconnect(witem->impl->widget, witem->impl->destroy_id);
+		gtk_widget_destroy(witem->impl->widget);
+		witem->impl->widget = NULL;
 	}
 
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {
@@ -80,44 +83,44 @@ recalc_bounds(GanvWidget* witem)
 
 	/* Get world coordinates */
 
-	double wx = witem->x;
-	double wy = witem->y;
+	double wx = witem->impl->x;
+	double wy = witem->impl->y;
 	ganv_item_i2w(item, &wx, &wy);
 
 	/* Get canvas pixel coordinates */
 
-	ganv_canvas_w2c(item->canvas, wx, wy, &witem->cx, &witem->cy);
+	ganv_canvas_w2c(item->impl->canvas, wx, wy, &witem->impl->cx, &witem->impl->cy);
 
 	/* Anchor widget item */
 
-	switch (witem->anchor) {
+	switch (witem->impl->anchor) {
 	case GTK_ANCHOR_N:
 	case GTK_ANCHOR_CENTER:
 	case GTK_ANCHOR_S:
-		witem->cx -= witem->cwidth / 2;
+		witem->impl->cx -= witem->impl->cwidth / 2;
 		break;
 
 	case GTK_ANCHOR_NE:
 	case GTK_ANCHOR_E:
 	case GTK_ANCHOR_SE:
-		witem->cx -= witem->cwidth;
+		witem->impl->cx -= witem->impl->cwidth;
 		break;
 
 	default:
 		break;
 	}
 
-	switch (witem->anchor) {
+	switch (witem->impl->anchor) {
 	case GTK_ANCHOR_W:
 	case GTK_ANCHOR_CENTER:
 	case GTK_ANCHOR_E:
-		witem->cy -= witem->cheight / 2;
+		witem->impl->cy -= witem->impl->cheight / 2;
 		break;
 
 	case GTK_ANCHOR_SW:
 	case GTK_ANCHOR_S:
 	case GTK_ANCHOR_SE:
-		witem->cy -= witem->cheight;
+		witem->impl->cy -= witem->impl->cheight;
 		break;
 
 	default:
@@ -126,17 +129,17 @@ recalc_bounds(GanvWidget* witem)
 
 	/* Bounds */
 
-	item->x1 = witem->cx;
-	item->y1 = witem->cy;
-	item->x2 = witem->cx + witem->cwidth;
-	item->y2 = witem->cy + witem->cheight;
+	item->impl->x1 = witem->impl->cx;
+	item->impl->y1 = witem->impl->cy;
+	item->impl->x2 = witem->impl->cx + witem->impl->cwidth;
+	item->impl->y2 = witem->impl->cy + witem->impl->cheight;
 
 	int zoom_xofs, zoom_yofs;
-	ganv_canvas_get_zoom_offsets(item->canvas, &zoom_xofs, &zoom_yofs);
-	if (witem->widget) {
-		gtk_layout_move(GTK_LAYOUT(item->canvas), witem->widget,
-		                witem->cx + zoom_xofs,
-		                witem->cy + zoom_yofs);
+	ganv_canvas_get_zoom_offsets(item->impl->canvas, &zoom_xofs, &zoom_yofs);
+	if (witem->impl->widget) {
+		gtk_layout_move(GTK_LAYOUT(item->impl->canvas), witem->impl->widget,
+		                witem->impl->cx + zoom_xofs,
+		                witem->impl->cy + zoom_yofs);
 	}
 }
 
@@ -145,7 +148,7 @@ do_destroy(GtkObject* object, gpointer data)
 {
 	GanvWidget* witem = GANV_WIDGET(data);
 
-	witem->in_destroy = TRUE;
+	witem->impl->in_destroy = TRUE;
 	gtk_object_destroy(GTK_OBJECT(data));
 }
 
@@ -163,66 +166,66 @@ ganv_widget_set_property(GObject*      object,
 
 	switch (param_id) {
 	case PROP_WIDGET:
-		if (witem->widget) {
-			g_signal_handler_disconnect(witem->widget, witem->destroy_id);
-			gtk_container_remove(GTK_CONTAINER(item->canvas), witem->widget);
+		if (witem->impl->widget) {
+			g_signal_handler_disconnect(witem->impl->widget, witem->impl->destroy_id);
+			gtk_container_remove(GTK_CONTAINER(item->impl->canvas), witem->impl->widget);
 		}
 
 		obj = (GObject*)g_value_get_object(value);
 		if (obj) {
-			witem->widget     = GTK_WIDGET(obj);
-			witem->destroy_id = g_signal_connect(obj, "destroy",
+			witem->impl->widget     = GTK_WIDGET(obj);
+			witem->impl->destroy_id = g_signal_connect(obj, "destroy",
 			                                     G_CALLBACK(do_destroy),
 			                                     witem);
 			int zoom_xofs, zoom_yofs;
-			ganv_canvas_get_zoom_offsets(item->canvas, &zoom_xofs, &zoom_yofs);
+			ganv_canvas_get_zoom_offsets(item->impl->canvas, &zoom_xofs, &zoom_yofs);
 
-			gtk_layout_put(GTK_LAYOUT(item->canvas), witem->widget,
-			               witem->cx + zoom_xofs,
-			               witem->cy + zoom_yofs);
+			gtk_layout_put(GTK_LAYOUT(item->impl->canvas), witem->impl->widget,
+			               witem->impl->cx + zoom_xofs,
+			               witem->impl->cy + zoom_yofs);
 		}
 
 		update = TRUE;
 		break;
 
 	case PROP_X:
-		if (witem->x != g_value_get_double(value)) {
-			witem->x    = g_value_get_double(value);
+		if (witem->impl->x != g_value_get_double(value)) {
+			witem->impl->x    = g_value_get_double(value);
 			calc_bounds = TRUE;
 		}
 		break;
 
 	case PROP_Y:
-		if (witem->y != g_value_get_double(value)) {
-			witem->y    = g_value_get_double(value);
+		if (witem->impl->y != g_value_get_double(value)) {
+			witem->impl->y    = g_value_get_double(value);
 			calc_bounds = TRUE;
 		}
 		break;
 
 	case PROP_WIDTH:
-		if (witem->width != fabs(g_value_get_double(value))) {
-			witem->width = fabs(g_value_get_double(value));
+		if (witem->impl->width != fabs(g_value_get_double(value))) {
+			witem->impl->width = fabs(g_value_get_double(value));
 			update       = TRUE;
 		}
 		break;
 
 	case PROP_HEIGHT:
-		if (witem->height != fabs(g_value_get_double(value))) {
-			witem->height = fabs(g_value_get_double(value));
+		if (witem->impl->height != fabs(g_value_get_double(value))) {
+			witem->impl->height = fabs(g_value_get_double(value));
 			update        = TRUE;
 		}
 		break;
 
 	case PROP_ANCHOR:
-		if (witem->anchor != (GtkAnchorType)g_value_get_enum(value)) {
-			witem->anchor = g_value_get_enum(value);
+		if (witem->impl->anchor != (GtkAnchorType)g_value_get_enum(value)) {
+			witem->impl->anchor = g_value_get_enum(value);
 			update        = TRUE;
 		}
 		break;
 
 	case PROP_SIZE_PIXELS:
-		if (witem->size_pixels != g_value_get_boolean(value)) {
-			witem->size_pixels = g_value_get_boolean(value);
+		if (witem->impl->size_pixels != g_value_get_boolean(value)) {
+			witem->impl->size_pixels = g_value_get_boolean(value);
 			update             = TRUE;
 		}
 		break;
@@ -254,31 +257,31 @@ ganv_widget_get_property(GObject*    object,
 
 	switch (param_id) {
 	case PROP_WIDGET:
-		g_value_set_object(value, (GObject*)witem->widget);
+		g_value_set_object(value, (GObject*)witem->impl->widget);
 		break;
 
 	case PROP_X:
-		g_value_set_double(value, witem->x);
+		g_value_set_double(value, witem->impl->x);
 		break;
 
 	case PROP_Y:
-		g_value_set_double(value, witem->y);
+		g_value_set_double(value, witem->impl->y);
 		break;
 
 	case PROP_WIDTH:
-		g_value_set_double(value, witem->width);
+		g_value_set_double(value, witem->impl->width);
 		break;
 
 	case PROP_HEIGHT:
-		g_value_set_double(value, witem->height);
+		g_value_set_double(value, witem->impl->height);
 		break;
 
 	case PROP_ANCHOR:
-		g_value_set_enum(value, witem->anchor);
+		g_value_set_enum(value, witem->impl->anchor);
 		break;
 
 	case PROP_SIZE_PIXELS:
-		g_value_set_boolean(value, witem->size_pixels);
+		g_value_set_boolean(value, witem->impl->size_pixels);
 		break;
 
 	default:
@@ -296,20 +299,20 @@ ganv_widget_update(GanvItem* item, int flags)
 		(*parent_class->update)(item, flags);
 	}
 
-	if (witem->widget) {
-		const double pixels_per_unit = ganv_canvas_get_zoom(item->canvas);
-		if (witem->size_pixels) {
-			witem->cwidth  = (int)(witem->width + 0.5);
-			witem->cheight = (int)(witem->height + 0.5);
+	if (witem->impl->widget) {
+		const double pixels_per_unit = ganv_canvas_get_zoom(item->impl->canvas);
+		if (witem->impl->size_pixels) {
+			witem->impl->cwidth  = (int)(witem->impl->width + 0.5);
+			witem->impl->cheight = (int)(witem->impl->height + 0.5);
 		} else {
-			witem->cwidth  = (int)(witem->width * pixels_per_unit + 0.5);
-			witem->cheight = (int)(witem->height * pixels_per_unit + 0.5);
+			witem->impl->cwidth  = (int)(witem->impl->width * pixels_per_unit + 0.5);
+			witem->impl->cheight = (int)(witem->impl->height * pixels_per_unit + 0.5);
 		}
 
-		gtk_widget_set_size_request(witem->widget, witem->cwidth, witem->cheight);
+		gtk_widget_set_size_request(witem->impl->widget, witem->impl->cwidth, witem->impl->cheight);
 	} else {
-		witem->cwidth  = 0.0;
-		witem->cheight = 0.0;
+		witem->impl->cwidth  = 0.0;
+		witem->impl->cheight = 0.0;
 	}
 
 	recalc_bounds(witem);
@@ -321,8 +324,8 @@ ganv_widget_draw(GanvItem* item,
 {
 	GanvWidget* witem = GANV_WIDGET(item);
 
-	if (witem->widget) {
-		gtk_widget_queue_draw(witem->widget);
+	if (witem->impl->widget) {
+		gtk_widget_queue_draw(witem->impl->widget);
 	}
 }
 
@@ -334,12 +337,12 @@ ganv_widget_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 	*actual_item = item;
 
 	double x1, y1;
-	ganv_canvas_c2w(item->canvas, witem->cx, witem->cy, &x1, &y1);
+	ganv_canvas_c2w(item->impl->canvas, witem->impl->cx, witem->impl->cy, &x1, &y1);
 
-	const double pixels_per_unit = ganv_canvas_get_zoom(item->canvas);
+	const double pixels_per_unit = ganv_canvas_get_zoom(item->impl->canvas);
 
-	double x2 = x1 + (witem->cwidth - 1) / pixels_per_unit;
-	double y2 = y1 + (witem->cheight - 1) / pixels_per_unit;
+	double x2 = x1 + (witem->impl->cwidth - 1) / pixels_per_unit;
+	double y2 = y1 + (witem->impl->cheight - 1) / pixels_per_unit;
 
 	/* Is point inside widget bounds? */
 
@@ -375,10 +378,10 @@ ganv_widget_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y
 {
 	GanvWidget* witem = GANV_WIDGET(item);
 
-	*x1 = witem->x;
-	*y1 = witem->y;
+	*x1 = witem->impl->x;
+	*y1 = witem->impl->y;
 
-	switch (witem->anchor) {
+	switch (witem->impl->anchor) {
 	case GTK_ANCHOR_NW:
 	case GTK_ANCHOR_W:
 	case GTK_ANCHOR_SW:
@@ -387,20 +390,20 @@ ganv_widget_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y
 	case GTK_ANCHOR_N:
 	case GTK_ANCHOR_CENTER:
 	case GTK_ANCHOR_S:
-		*x1 -= witem->width / 2.0;
+		*x1 -= witem->impl->width / 2.0;
 		break;
 
 	case GTK_ANCHOR_NE:
 	case GTK_ANCHOR_E:
 	case GTK_ANCHOR_SE:
-		*x1 -= witem->width;
+		*x1 -= witem->impl->width;
 		break;
 
 	default:
 		break;
 	}
 
-	switch (witem->anchor) {
+	switch (witem->impl->anchor) {
 	case GTK_ANCHOR_NW:
 	case GTK_ANCHOR_N:
 	case GTK_ANCHOR_NE:
@@ -409,21 +412,21 @@ ganv_widget_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y
 	case GTK_ANCHOR_W:
 	case GTK_ANCHOR_CENTER:
 	case GTK_ANCHOR_E:
-		*y1 -= witem->height / 2.0;
+		*y1 -= witem->impl->height / 2.0;
 		break;
 
 	case GTK_ANCHOR_SW:
 	case GTK_ANCHOR_S:
 	case GTK_ANCHOR_SE:
-		*y1 -= witem->height;
+		*y1 -= witem->impl->height;
 		break;
 
 	default:
 		break;
 	}
 
-	*x2 = *x1 + witem->width;
-	*y2 = *y1 + witem->height;
+	*x2 = *x1 + witem->impl->width;
+	*y2 = *y1 + witem->impl->height;
 }
 
 static void
@@ -434,6 +437,8 @@ ganv_widget_class_init(GanvWidgetClass* klass)
 	GanvItemClass*  item_class    = (GanvItemClass*)klass;
 
 	parent_class = g_type_class_peek_parent(klass);
+
+	g_type_class_add_private(klass, sizeof(GanvWidgetImpl));
 
 	gobject_class->set_property = ganv_widget_set_property;
 	gobject_class->get_property = ganv_widget_get_property;

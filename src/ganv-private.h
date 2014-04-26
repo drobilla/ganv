@@ -130,6 +130,83 @@ struct _GanvNodeImpl {
 #endif
 };
 
+/* Widget */
+
+struct _GanvWidgetImpl {
+	GtkWidget* widget;          /* The child widget */
+
+	double        x, y;			/* Position at anchor */
+	double        width, height; /* Dimensions of widget */
+	GtkAnchorType anchor;		/* Anchor side for widget */
+
+	int cx, cy;                 /* Top-left canvas coordinates for widget */
+	int cwidth, cheight;		/* Size of widget in pixels */
+
+	guint destroy_id;           /* Signal connection id for destruction of child widget */
+
+	guint size_pixels : 1;		/* Is size specified in (unchanging) pixels or units (get scaled)? */
+	guint in_destroy : 1;		/* Is child widget being destroyed? */
+};
+
+/* Group */
+struct _GanvGroupImpl {
+	GList* item_list;
+	GList* item_list_end;
+};
+
+/* Item */
+struct _GanvItemImpl {
+	/* Parent canvas for this item */
+	struct _GanvCanvas* canvas;
+
+	/* Parent for this item */
+	GanvItem* parent;
+
+	/* Layer (z order), higher values are on top */
+	guint layer;
+
+	/* Position in parent-relative coordinates. */
+	double x, y;
+
+	/* Bounding box for this item (in world coordinates) */
+	double x1, y1, x2, y2;
+
+	/* True if parent manages this item (don't call add/remove) */
+	gboolean managed;
+};
+
+void
+ganv_node_tick(GanvNode* self, double seconds);
+
+void
+ganv_node_tail_vector(const GanvNode* self,
+                      const GanvNode* head,
+                      double*         x1,
+                      double*         y1,
+                      double*         x2,
+                      double*         y2);
+
+void
+ganv_node_head_vector(const GanvNode* self,
+                      const GanvNode* tail,
+                      double*         x1,
+                      double*         y1,
+                      double*         x2,
+                      double*         y2);
+
+/**
+ * ganv_node_get_draw_properties:
+ *
+ * Get the colours that should currently be used for drawing this node.  Note
+ * these may not be identical to the property values because of highlighting
+ * and selection.
+ */
+void
+ganv_node_get_draw_properties(const GanvNode* node,
+                              double*         dash_length,
+                              double*         border_color,
+                              double*         fill_color);
+
 /* Port */
 
 typedef struct {
@@ -197,10 +274,6 @@ ganv_canvas_unselect_node(GanvCanvas* canvas,
 void
 ganv_canvas_add_edge(GanvCanvas* canvas,
                      GanvEdge*   edge);
-
-void
-ganv_canvas_remove_edge(GanvCanvas* canvas,
-                        GanvEdge*   edge);
 
 void
 ganv_canvas_select_edge(GanvCanvas* canvas,
@@ -271,11 +344,17 @@ ganv_canvas_request_redraw_w(GanvCanvas* canvas,
 /* Edge */
 
 void
+ganv_edge_update_location(GanvEdge* edge);
+
+void
 ganv_edge_get_coords(const GanvEdge* edge, GanvEdgeCoords* coords);
 
 void
 ganv_edge_request_redraw(GanvItem*             item,
                          const GanvEdgeCoords* coords);
+
+void
+ganv_edge_tick(GanvEdge* edge, double seconds);
 
 /* Box */
 
@@ -289,6 +368,10 @@ ganv_box_request_redraw(GanvItem*            item,
 void
 ganv_port_set_control_value_internal(GanvPort* port,
                                      float     value);
+
+void
+ganv_port_set_direction(GanvPort*     port,
+                        GanvDirection direction);
 
 #ifdef __cplusplus
 }  /* extern "C" */

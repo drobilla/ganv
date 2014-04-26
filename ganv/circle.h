@@ -46,7 +46,7 @@ struct _GanvCircleClass {
 	GanvNodeClass parent_class;
 
 	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
+	gpointer spare_vmethods[4];
 };
 
 GType ganv_circle_get_type(void) G_GNUC_CONST;
@@ -57,6 +57,21 @@ ganv_circle_new(GanvCanvas* canvas,
 
 double
 ganv_circle_get_radius(const GanvCircle* circle);
+
+void
+ganv_circle_set_radius(GanvCircle* circle, double radius);
+
+double
+ganv_circle_get_radius_ems(const GanvCircle* circle);
+
+void
+ganv_circle_set_radius_ems(GanvCircle* circle, double radius);
+
+gboolean
+ganv_circle_get_fit_label(const GanvCircle* circle);
+
+void
+ganv_circle_set_fit_label(GanvCircle* circle, gboolean fit_label);
 
 G_END_DECLS
 

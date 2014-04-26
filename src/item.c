@@ -72,8 +72,12 @@ static GtkObjectClass* item_parent_class;
 static void
 ganv_item_init(GanvItem* item)
 {
+	GanvItemImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		item, GANV_TYPE_ITEM, GanvItemImpl);
+
 	item->object.flags |= GANV_ITEM_VISIBLE;
-	item->managed       = FALSE;
+	item->impl          = impl;
+	item->impl->managed = FALSE;
 }
 
 /**
@@ -98,13 +102,11 @@ ganv_item_init(GanvItem* item)
 GanvItem*
 ganv_item_new(GanvItem* parent, GType type, const gchar* first_arg_name, ...)
 {
-	GanvItem* item;
-	va_list   args;
-
 	g_return_val_if_fail(g_type_is_a(type, ganv_item_get_type()), NULL);
 
-	item = GANV_ITEM(g_object_new(type, NULL));
+	GanvItem* item = GANV_ITEM(g_object_new(type, NULL));
 
+	va_list args;
 	va_start(args, first_arg_name);
 	ganv_item_construct(item, parent, first_arg_name, args);
 	va_end(args);
@@ -118,18 +120,18 @@ ganv_item_new(GanvItem* parent, GType type, const gchar* first_arg_name, ...)
 static void
 item_post_create_setup(GanvItem* item)
 {
-	GanvItemClass* parent_class = GANV_ITEM_GET_CLASS(item->parent);
-	if (!item->managed) {
+	GanvItemClass* parent_class = GANV_ITEM_GET_CLASS(item->impl->parent);
+	if (!item->impl->managed) {
 		if (parent_class->add) {
-			parent_class->add(item->parent, item);
+			parent_class->add(item->impl->parent, item);
 		} else {
 			g_warning("item added to non-parent item\n");
 		}
 	}
-	ganv_canvas_request_redraw_w(item->canvas,
-	                             item->x1, item->y1,
-	                             item->x2 + 1, item->y2 + 1);
-	ganv_canvas_set_need_repick(item->canvas);
+	ganv_canvas_request_redraw_w(item->impl->canvas,
+	                             item->impl->x1, item->impl->y1,
+	                             item->impl->x2 + 1, item->impl->y2 + 1);
+	ganv_canvas_set_need_repick(item->impl->canvas);
 }
 
 static void
@@ -145,25 +147,25 @@ ganv_item_set_property(GObject*      object,
 
 	switch (prop_id) {
 	case ITEM_PROP_PARENT:
-		if (item->parent != NULL) {
+		if (item->impl->parent != NULL) {
 			g_warning("Cannot set `parent' argument after item has "
 			          "already been constructed.");
 		} else if (g_value_get_object(value)) {
-			item->parent = GANV_ITEM(g_value_get_object(value));
-			item->canvas = item->parent->canvas;
+			item->impl->parent = GANV_ITEM(g_value_get_object(value));
+			item->impl->canvas = item->impl->parent->impl->canvas;
 			item_post_create_setup(item);
 		}
 		break;
 	case ITEM_PROP_X:
-		item->x = g_value_get_double(value);
+		item->impl->x = g_value_get_double(value);
 		ganv_item_request_update(item);
 		break;
 	case ITEM_PROP_Y:
-		item->y = g_value_get_double(value);
+		item->impl->y = g_value_get_double(value);
 		ganv_item_request_update(item);
 		break;
 	case ITEM_PROP_MANAGED:
-		item->managed = g_value_get_boolean(value);
+		item->impl->managed = g_value_get_boolean(value);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -184,16 +186,16 @@ ganv_item_get_property(GObject*    object,
 
 	switch (prop_id) {
 	case ITEM_PROP_PARENT:
-		g_value_set_object(value, item->parent);
+		g_value_set_object(value, item->impl->parent);
 		break;
 	case ITEM_PROP_X:
-		g_value_set_double(value, item->x);
+		g_value_set_double(value, item->impl->x);
 		break;
 	case ITEM_PROP_Y:
-		g_value_set_double(value, item->y);
+		g_value_set_double(value, item->impl->y);
 		break;
 	case ITEM_PROP_MANAGED:
-		g_value_set_boolean(value, item->managed);
+		g_value_set_boolean(value, item->impl->managed);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -216,9 +218,9 @@ ganv_item_construct(GanvItem* item, GanvItem* parent,
 {
 	g_return_if_fail(GANV_IS_ITEM(item));
 
-	item->parent = parent;
-	item->canvas = item->parent->canvas;
-	item->layer = 0;
+	item->impl->parent = parent;
+	item->impl->canvas = item->impl->parent->impl->canvas;
+	item->impl->layer = 0;
 
 	g_object_set_valist(G_OBJECT(item), first_arg_name, args);
 
@@ -230,9 +232,9 @@ static void
 redraw_if_visible(GanvItem* item)
 {
 	if (item->object.flags & GANV_ITEM_VISIBLE) {
-		ganv_canvas_request_redraw_w(item->canvas,
-		                             item->x1, item->y1,
-		                             item->x2 + 1, item->y2 + 1);
+		ganv_canvas_request_redraw_w(item->impl->canvas,
+		                             item->impl->x1, item->impl->y1,
+		                             item->impl->x2 + 1, item->impl->y2 + 1);
 	}
 }
 
@@ -246,9 +248,9 @@ ganv_item_dispose(GObject* object)
 
 	item = GANV_ITEM(object);
 
-	if (item->canvas) {
+	if (item->impl->canvas) {
 		redraw_if_visible(item);
-		ganv_canvas_forget_item(item->canvas, item);
+		ganv_canvas_forget_item(item->impl->canvas, item);
 	}
 
 	/* Normal destroy stuff */
@@ -261,18 +263,18 @@ ganv_item_dispose(GObject* object)
 		(*GANV_ITEM_GET_CLASS(item)->unrealize)(item);
 	}
 
-	if (!item->managed && item->parent) {
-		if (GANV_ITEM_GET_CLASS(item->parent)->remove) {
-			GANV_ITEM_GET_CLASS(item->parent)->remove(item->parent, item);
+	if (!item->impl->managed && item->impl->parent) {
+		if (GANV_ITEM_GET_CLASS(item->impl->parent)->remove) {
+			GANV_ITEM_GET_CLASS(item->impl->parent)->remove(item->impl->parent, item);
 		} else {
 			fprintf(stderr, "warning: Item parent has no remove method\n");
 		}
 	}
 
 	G_OBJECT_CLASS(item_parent_class)->dispose(object);
-	/* items should remove any reference to item->canvas after the
+	/* items should remove any reference to item->impl->canvas after the
 	   first ::destroy */
-	item->canvas = NULL;
+	item->impl->canvas = NULL;
 }
 
 /* Realize handler for canvas items */
@@ -380,19 +382,31 @@ ganv_item_set_valist(GanvItem* item, const gchar* first_arg_name, va_list args)
 
 	g_object_set_valist(G_OBJECT(item), first_arg_name, args);
 
-	ganv_canvas_set_need_repick(item->canvas);
+	ganv_canvas_set_need_repick(item->impl->canvas);
+}
+
+GanvCanvas*
+ganv_item_get_canvas(GanvItem* item)
+{
+	return item->impl->canvas;
+}
+
+GanvItem*
+ganv_item_get_parent(GanvItem* item)
+{
+	return item->impl->parent;
 }
 
 void
 ganv_item_raise(GanvItem* item)
 {
-	++item->layer;
+	++item->impl->layer;
 }
 
 void
 ganv_item_lower(GanvItem* item)
 {
-	--item->layer;
+	--item->impl->layer;
 }
 
 /**
@@ -408,11 +422,11 @@ ganv_item_move(GanvItem* item, double dx, double dy)
 		return;
 	}
 
-	item->x += dx;
-	item->y += dy;
+	item->impl->x += dx;
+	item->impl->y += dy;
 
 	ganv_item_request_update(item);
-	ganv_canvas_set_need_repick(item->canvas);
+	ganv_canvas_set_need_repick(item->impl->canvas);
 }
 
 /**
@@ -428,10 +442,10 @@ ganv_item_show(GanvItem* item)
 
 	if (!(item->object.flags & GANV_ITEM_VISIBLE)) {
 		item->object.flags |= GANV_ITEM_VISIBLE;
-		ganv_canvas_request_redraw_w(item->canvas,
-		                             item->x1, item->y1,
-		                             item->x2 + 1, item->y2 + 1);
-		ganv_canvas_set_need_repick(item->canvas);
+		ganv_canvas_request_redraw_w(item->impl->canvas,
+		                             item->impl->x1, item->impl->y1,
+		                             item->impl->x2 + 1, item->impl->y2 + 1);
+		ganv_canvas_set_need_repick(item->impl->canvas);
 	}
 }
 
@@ -449,10 +463,10 @@ ganv_item_hide(GanvItem* item)
 
 	if (item->object.flags & GANV_ITEM_VISIBLE) {
 		item->object.flags &= ~GANV_ITEM_VISIBLE;
-		ganv_canvas_request_redraw_w(item->canvas,
-		                             item->x1, item->y1,
-		                             item->x2 + 1, item->y2 + 1);
-		ganv_canvas_set_need_repick(item->canvas);
+		ganv_canvas_request_redraw_w(item->impl->canvas,
+		                             item->impl->x1, item->impl->y1,
+		                             item->impl->x2 + 1, item->impl->y2 + 1);
+		ganv_canvas_set_need_repick(item->impl->canvas);
 	}
 }
 
@@ -462,9 +476,9 @@ ganv_item_i2w_offset(GanvItem* item, double* px, double* py)
 	double x = 0.0;
 	double y = 0.0;
 	while (item) {
-		x += item->x;
-		y += item->y;
-		item = item->parent;
+		x += item->impl->x;
+		y += item->impl->y;
+		item = item->impl->parent;
 	}
 	*px = x;
 	*py = y;
@@ -538,7 +552,7 @@ ganv_item_w2i(GanvItem* item, double* x, double* y)
 void
 ganv_item_grab_focus(GanvItem* item)
 {
-	ganv_canvas_grab_focus(item->canvas, item);
+	ganv_canvas_grab_focus(item->impl->canvas, item);
 }
 
 void
@@ -587,19 +601,19 @@ ganv_item_request_update(GanvItem* item)
 		return;
 	}
 
-	if (!item->canvas) {
+	if (!item->impl->canvas) {
 		/* Item is being / has been destroyed, ignore */
 		return;
 	}
 
 	item->object.flags |= GANV_ITEM_NEED_UPDATE;
 
-	if (item->parent != NULL) {
+	if (item->impl->parent != NULL) {
 		/* Recurse up the tree */
-		ganv_item_request_update(item->parent);
+		ganv_item_request_update(item->impl->parent);
 	} else {
 		/* Have reached the top of the tree, make sure the update call gets scheduled. */
-		ganv_canvas_request_update(item->canvas);
+		ganv_canvas_request_update(item->impl->canvas);
 	}
 }
 
@@ -628,6 +642,8 @@ ganv_item_class_init(GanvItemClass* klass)
 	gobject_class = (GObjectClass*)klass;
 
 	item_parent_class = (GtkObjectClass*)g_type_class_peek_parent(klass);
+
+	g_type_class_add_private(klass, sizeof(GanvItemImpl));
 
 	gobject_class->set_property = ganv_item_set_property;
 	gobject_class->get_property = ganv_item_get_property;

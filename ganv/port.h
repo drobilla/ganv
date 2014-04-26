@@ -41,7 +41,7 @@ struct _GanvPortClass {
 	GanvBoxClass parent_class;
 
 	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
+	gpointer spare_vmethods[4];
 };
 
 GType ganv_port_get_type(void) G_GNUC_CONST;
@@ -50,10 +50,6 @@ GanvPort*
 ganv_port_new(GanvModule* module,
               gboolean    is_input,
               const char* first_prop_name, ...);
-
-void
-ganv_port_set_direction(GanvPort*     port,
-                        GanvDirection direction);
 
 void
 ganv_port_set_value_label(GanvPort*   port,

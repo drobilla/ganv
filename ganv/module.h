@@ -44,7 +44,7 @@ struct _GanvModuleClass {
 	GanvBoxClass parent_class;
 
 	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
+	gpointer spare_vmethods[4];
 };
 
 GType ganv_module_get_type(void) G_GNUC_CONST;
@@ -73,16 +73,10 @@ double
 ganv_module_get_empty_port_depth(const GanvModule* module);
 
 void
-ganv_module_set_icon(GanvModule* module,
-                     GdkPixbuf*  icon);
+ganv_module_embed(GanvModule* module, GtkWidget* widget);
 
 void
-ganv_module_embed(GanvModule* module,
-                  GtkWidget*  widget);
-
-void
-ganv_module_set_direction(GanvModule*   module,
-                          GanvDirection direction);
+ganv_module_set_direction(GanvModule* module, GanvDirection direction);
 
 /**
  * ganv_module_for_each_port:

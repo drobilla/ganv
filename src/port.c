@@ -69,7 +69,7 @@ ganv_port_destroy(GtkObject* object)
 
 	GanvItem*   item   = GANV_ITEM(object);
 	GanvPort*   port   = GANV_PORT(object);
-	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(item);
 	if (canvas) {
 		if (port->impl->is_input) {
 			ganv_canvas_for_each_edge_to(
@@ -130,7 +130,7 @@ ganv_port_draw(GanvItem* item,
                cairo_t* cr, double cx, double cy, double cw, double ch)
 {
 	GanvPort*   port   = GANV_PORT(item);
-	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(item);
 
 	// Draw Box
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
@@ -168,10 +168,10 @@ ganv_port_tail_vector(const GanvNode* self,
 {
 	GanvPort*   port   = GANV_PORT(self);
 	GanvItem*   item   = &port->box.node.item;
-	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(item);
 
-	const double px = item->x;
-	const double py = item->y;
+	const double px = item->impl->x;
+	const double py = item->impl->y;
 
 	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
@@ -188,7 +188,7 @@ ganv_port_tail_vector(const GanvNode* self,
 		break;
 	}
 
-	ganv_item_i2w(item->parent, x, y);
+	ganv_item_i2w(item->impl->parent, x, y);
 }
 
 static void
@@ -201,10 +201,10 @@ ganv_port_head_vector(const GanvNode* self,
 {
 	GanvPort*   port   = GANV_PORT(self);
 	GanvItem*   item   = &port->box.node.item;
-	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(item);
 
-	const double px = item->x;
-	const double py = item->y;
+	const double px = item->impl->x;
+	const double py = item->impl->y;
 
 	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
@@ -221,7 +221,7 @@ ganv_port_head_vector(const GanvNode* self,
 		break;
 	}
 
-	ganv_item_i2w(item->parent, x, y);
+	ganv_item_i2w(item->impl->parent, x, y);
 }
 
 static void
@@ -229,7 +229,7 @@ ganv_port_place_value_label(GanvPort* port)
 {
 	GanvPortControl* control = port->impl->control;
 	if (control && control->label) {
-		GanvCanvas*  canvas  = GANV_CANVAS(GANV_ITEM(port)->canvas);
+		GanvCanvas*  canvas  = ganv_item_get_canvas(GANV_ITEM(port));
 		const double port_w  = ganv_box_get_width(&port->box);
 		const double label_w = control->label->impl->coords.width;
 		if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_RIGHT) {
@@ -327,7 +327,7 @@ ganv_port_set_height(GanvBox* box,
 static gboolean
 ganv_port_event(GanvItem* item, GdkEvent* event)
 {
-	GanvCanvas* canvas = GANV_CANVAS(item->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(item);
 
 	return ganv_canvas_port_event(canvas, GANV_PORT(item), event);
 }
@@ -414,7 +414,7 @@ ganv_port_new(GanvModule* module,
 	node->impl->draggable    = FALSE;
 	node->impl->border_width = 1.0;
 
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(port)->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(port));
 	ganv_port_set_direction(port, ganv_canvas_get_direction(canvas));
 
 	return port;
@@ -633,7 +633,7 @@ ganv_port_set_control_max(GanvPort* port,
 double
 ganv_port_get_natural_width(const GanvPort* port)
 {
-	GanvCanvas* const canvas = GANV_CANVAS(GANV_ITEM(port)->canvas);
+	GanvCanvas* const canvas = ganv_item_get_canvas(GANV_ITEM(port));
 	GanvText* const   label  = port->box.node.impl->label;
 	double            w      = 0.0;
 	if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_DOWN) {
@@ -658,7 +658,7 @@ ganv_port_get_natural_width(const GanvPort* port)
 GanvModule*
 ganv_port_get_module(const GanvPort* port)
 {
-	return GANV_MODULE(GANV_ITEM(port)->parent);
+	return GANV_MODULE(GANV_ITEM(port)->impl->parent);
 }
 
 float

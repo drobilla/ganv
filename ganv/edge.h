@@ -41,7 +41,7 @@ struct _GanvEdgeClass {
 	GanvItemClass parent_class;
 
 	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
+	gpointer spare_vmethods[4];
 };
 
 GType ganv_edge_get_type(void) G_GNUC_CONST;
@@ -59,20 +59,23 @@ ganv_edge_is_within(const GanvEdge* edge,
                     double          x2,
                     double          y2);
 
+gboolean
+ganv_edge_get_curved(const GanvEdge* edge);
+
 void
-ganv_edge_update_location(GanvEdge* edge);
+ganv_edge_set_curved(GanvEdge* edge, gboolean curved);
+
+void
+ganv_edge_set_selected(GanvEdge* edge, gboolean selected);
+
+void
+ganv_edge_set_highlighted(GanvEdge* edge, gboolean highlighted);
 
 void
 ganv_edge_select(GanvEdge* edge);
 
 void
 ganv_edge_unselect(GanvEdge* edge);
-
-void
-ganv_edge_highlight(GanvEdge* edge);
-
-void
-ganv_edge_unhighlight(GanvEdge* edge);
 
 /**
  * ganv_edge_disconnect:
@@ -90,10 +93,6 @@ ganv_edge_disconnect(GanvEdge* edge);
  */
 void
 ganv_edge_remove(GanvEdge* edge);
-
-void
-ganv_edge_tick(GanvEdge* edge,
-               double    seconds);
 
 /**
  * ganv_edge_get_tail:

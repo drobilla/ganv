@@ -60,7 +60,7 @@ struct _GanvCanvasClass {
 	GtkLayoutClass parent_class;
 
 	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
+	gpointer spare_vmethods[4];
 };
 
 GType ganv_canvas_get_type(void) G_GNUC_CONST;
@@ -92,6 +92,28 @@ typedef void (*GanvNodeFunc)(GanvNode* node, void* data);
  */
 GanvCanvas*
 ganv_canvas_new(double width, double height);
+
+/**
+ * ganv_canvas_clear:
+ * Remove all items from the canvas.
+ */
+void
+ganv_canvas_clear(GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_empty:
+ *
+ * Return value: True if there are no items on the canvas.
+ */
+gboolean
+ganv_canvas_empty(const GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_resize:
+ * Resize the canvas to the given dimensions.
+ */
+void
+ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
 
 /**
  * ganv_canvas_root:
@@ -158,7 +180,7 @@ ganv_canvas_set_center_scroll_region(GanvCanvas* canvas,
  * Returns: Whether the scroll region is being centered in the canvas window.
  */
 gboolean
-ganv_canvas_get_center_scroll_region(GanvCanvas* canvas);
+ganv_canvas_get_center_scroll_region(const GanvCanvas* canvas);
 
 /**
  * ganv_canvas_scroll_to:
@@ -185,21 +207,6 @@ ganv_canvas_scroll_to(GanvCanvas* canvas, int cx, int cy);
  */
 void
 ganv_canvas_get_scroll_offsets(const GanvCanvas* canvas, int* cx, int* cy);
-
-/**
- * ganv_canvas_get_item_at:
- * @canvas: A canvas.
- * @x: X position in world coordinates.
- * @y: Y position in world coordinates.
- *
- * Looks for the item that is under the specified position, which must be
- * specified in world coordinates.
- *
- * Returns: (transfer none): The sought item, or NULL if no item is at the
- * specified coordinates.
- */
-GanvItem*
-ganv_canvas_get_item_at(GanvCanvas* canvas, double x, double y);
 
 /**
  * ganv_canvas_w2c_affine:
@@ -293,11 +300,19 @@ ganv_canvas_world_to_window(GanvCanvas* canvas,
                             double*     winy);
 
 /**
- * ganv_canvas_resize:
- * Resize the canvas to the given dimensions.
+ * ganv_canvas_get_item_at:
+ * @canvas: A canvas.
+ * @x: X position in world coordinates.
+ * @y: Y position in world coordinates.
+ *
+ * Looks for the item that is under the specified position, which must be
+ * specified in world coordinates.
+ *
+ * Returns: (transfer none): The sought item, or NULL if no item is at the
+ * specified coordinates.
  */
-void
-ganv_canvas_resize(GanvCanvas* canvas, double width, double height);
+GanvItem*
+ganv_canvas_get_item_at(GanvCanvas* canvas, double x, double y);
 
 /**
  * ganv_canvas_get_edge:
@@ -311,6 +326,15 @@ ganv_canvas_get_edge(GanvCanvas* canvas,
                      GanvNode*   head);
 
 /**
+ * ganv_canvas_remove_edge:
+ *
+ * Remove @edge from the canvas.
+ */
+void
+ganv_canvas_remove_edge(GanvCanvas* canvas,
+                        GanvEdge*   edge);
+
+/**
  * ganv_canvas_remove_edge_between:
  *
  * Remove the edge from @tail to @head if one exists.
@@ -319,14 +343,6 @@ void
 ganv_canvas_remove_edge_between(GanvCanvas* canvas,
                                 GanvNode*   tail,
                                 GanvNode*   head);
-
-/**
- * ganv_canvas_get_default_font_size:
- *
- * Get the default font size in points.
- */
-double
-ganv_canvas_get_default_font_size(const GanvCanvas* canvas);
 
 /**
  * ganv_canvas_get_direction:
@@ -343,14 +359,6 @@ ganv_canvas_get_direction(GanvCanvas* canvas);
  */
 void
 ganv_canvas_set_direction(GanvCanvas* canvas, GanvDirection dir);
-
-/**
- * ganv_canvas_clear_selection:
- *
- * Deselect any selected items on the canvas.
- */
-void
-ganv_canvas_clear_selection(GanvCanvas* canvas);
 
 /**
  * ganv_canvas_arrange:
@@ -374,7 +382,7 @@ ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename);
  * Returns: true iff ganv is compiled with sprung layout support.
  */
 gboolean
-ganv_canvas_supports_sprung_layout(GanvCanvas* canvas);
+ganv_canvas_supports_sprung_layout(const GanvCanvas* canvas);
 
 /**
  * ganv_canvas_set_sprung_layout:
@@ -392,7 +400,7 @@ ganv_canvas_set_sprung_layout(GanvCanvas* canvas, gboolean sprung_layout);
  * Return true iff the canvas is locked and nodes may not move.
  */
 gboolean
-ganv_canvas_get_locked(GanvCanvas* canvas);
+ganv_canvas_get_locked(const GanvCanvas* canvas);
 
 /**
  * ganv_canvas_for_each_node:
@@ -415,14 +423,6 @@ void
 ganv_canvas_for_each_selected_node(GanvCanvas*  canvas,
                                    GanvNodeFunc f,
                                    void*        data);
-
-/**
- * ganv_canvas_empty:
- *
- * Return value: True if there are no items on the canvas.
- */
-gboolean
-ganv_canvas_empty(const GanvCanvas* canvas);
 
 /**
  * ganv_canvas_for_each_edge:
@@ -483,18 +483,19 @@ ganv_canvas_for_each_selected_edge(GanvCanvas*  canvas,
                                    void*        data);
 
 /**
- * ganv_canvas_clear:
- * Remove all items from the canvas.
- */
-void
-ganv_canvas_clear(GanvCanvas* canvas);
-
-/**
  * ganv_canvas_select_all:
  * Select all items on the canvas.
  */
 void
 ganv_canvas_select_all(GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_clear_selection:
+ *
+ * Deselect any selected items on the canvas.
+ */
+void
+ganv_canvas_clear_selection(GanvCanvas* canvas);
 
 /**
  * ganv_canvas_get_zoom:
@@ -520,6 +521,21 @@ void
 ganv_canvas_set_zoom(GanvCanvas* canvas, double zoom);
 
 /**
+ * ganv_canvas_zoom_full:
+ * Zoom so all canvas contents are visible.
+ */
+void
+ganv_canvas_zoom_full(GanvCanvas* canvas);
+
+/**
+ * ganv_canvas_get_default_font_size:
+ *
+ * Get the default font size in points.
+ */
+double
+ganv_canvas_get_default_font_size(const GanvCanvas* canvas);
+
+/**
  * ganv_canvas_get_font_size:
  * Get the current font size in points.
  */
@@ -532,13 +548,6 @@ ganv_canvas_get_font_size(const GanvCanvas* canvas);
  */
 void
 ganv_canvas_set_font_size(GanvCanvas* canvas, double points);
-
-/**
- * ganv_canvas_zoom_full:
- * Zoom so all canvas contents are visible.
- */
-void
-ganv_canvas_zoom_full(GanvCanvas* canvas);
 
 /**
  * ganv_canvas_get_move_cursor:

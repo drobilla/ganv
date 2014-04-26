@@ -78,7 +78,7 @@ struct _GanvNodeClass {
 	                    double*         dy);
 
 	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
+	gpointer spare_vmethods[4];
 };
 
 GType ganv_node_get_type(void) G_GNUC_CONST;
@@ -119,44 +119,27 @@ ganv_node_is_within(const GanvNode* node,
                     double          x2,
                     double          y2);
 
-void
-ganv_node_tick(GanvNode* self,
-               double    seconds);
-
-void
-ganv_node_tail_vector(const GanvNode* self,
-                      const GanvNode* head,
-                      double*         x1,
-                      double*         y1,
-                      double*         x2,
-                      double*         y2);
-
-void
-ganv_node_head_vector(const GanvNode* self,
-                      const GanvNode* tail,
-                      double*         x1,
-                      double*         y1,
-                      double*         x2,
-                      double*         y2);
-
-/**
- * ganv_node_get_draw_properties:
- *
- * Get the colours that should currently be used for drawing this node.  Note
- * these may not be identical to the property values because of highlighting
- * and selection.
- */
-void
-ganv_node_get_draw_properties(const GanvNode* node,
-                              double*         dash_length,
-                              double*         border_color,
-                              double*         fill_color);
-
 const char* ganv_node_get_label(const GanvNode* node);
 
 double ganv_node_get_border_width(const GanvNode* node);
 
+void ganv_node_set_border_width(const GanvNode* node, double border_width);
+
 double ganv_node_get_dash_length(const GanvNode* node);
+
+void ganv_node_set_dash_length(const GanvNode* node, double dash_length);
+
+double ganv_node_get_dash_offset(const GanvNode* node);
+
+void ganv_node_set_dash_offset(const GanvNode* node, double dash_offset);
+
+guint ganv_node_get_fill_color(const GanvNode* node);
+
+void ganv_node_set_fill_color(const GanvNode* node, guint fill_color);
+
+guint ganv_node_get_border_color(const GanvNode* node);
+
+void ganv_node_set_border_color(const GanvNode* node, guint border_color);
 
 /**
  * ganv_node_get_partner:

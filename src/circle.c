@@ -61,15 +61,6 @@ ganv_circle_destroy(GtkObject* object)
 }
 
 static void
-set_radius_ems(GanvCircle* circle,
-               double      ems)
-{
-	GanvCanvas*  canvas = GANV_CANVAS(GANV_ITEM(circle)->canvas);
-	const double points = ganv_canvas_get_font_size(canvas);
-	circle->impl->coords.radius = points * ems;
-}
-
-static void
 ganv_circle_set_property(GObject*      object,
                          guint         prop_id,
                          const GValue* value,
@@ -90,7 +81,7 @@ ganv_circle_set_property(GObject*      object,
 	}
 
 	if (prop_id == PROP_RADIUS_EMS) {
-		set_radius_ems(circle, circle->impl->coords.radius_ems);
+		ganv_circle_set_radius_ems(circle, circle->impl->coords.radius_ems);
 	}
 }
 
@@ -120,7 +111,7 @@ ganv_circle_resize(GanvNode* self)
 {
 	GanvNode*   node   = GANV_NODE(self);
 	GanvCircle* circle = GANV_CIRCLE(self);
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
+	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->impl->canvas);
 
 	if (node->impl->label) {
 		if (node->impl->label->impl->needs_layout) {
@@ -159,7 +150,7 @@ ganv_circle_redraw_text(GanvNode* self)
 {
 	GanvCircle* circle = GANV_CIRCLE(self);
 	if (circle->impl->coords.radius_ems) {
-		set_radius_ems(circle, circle->impl->coords.radius_ems);
+		ganv_circle_set_radius_ems(circle, circle->impl->coords.radius_ems);
 	}
 
 	if (parent_class->redraw_text) {
@@ -174,8 +165,8 @@ ganv_circle_is_within(const GanvNode* self,
                       double          x2,
                       double          y2)
 {
-	const double x = GANV_ITEM(self)->x;
-	const double y = GANV_ITEM(self)->y;
+	const double x = GANV_ITEM(self)->impl->x;
+	const double y = GANV_ITEM(self)->impl->y;
 
 	return x >= x1
 		&& x <= x2
@@ -193,10 +184,10 @@ ganv_circle_vector(const GanvNode* self,
 {
 	GanvCircle* circle = GANV_CIRCLE(self);
 
-	const double cx      = GANV_ITEM(self)->x;
-	const double cy      = GANV_ITEM(self)->y;
-	const double other_x = GANV_ITEM(other)->x;
-	const double other_y = GANV_ITEM(other)->y;
+	const double cx      = GANV_ITEM(self)->impl->x;
+	const double cy      = GANV_ITEM(self)->impl->y;
+	const double other_x = GANV_ITEM(other)->impl->x;
+	const double other_y = GANV_ITEM(other)->impl->y;
 
 	const double xdist = other_x - cx;
 	const double ydist = other_y - cy;
@@ -212,7 +203,7 @@ ganv_circle_vector(const GanvNode* self,
 	*dx = 0.0;
 	*dy = 0.0;
 
-	ganv_item_i2w(GANV_ITEM(circle)->parent, x, y);
+	ganv_item_i2w(GANV_ITEM(circle)->impl->parent, x, y);
 }
 
 static void
@@ -232,7 +223,7 @@ request_redraw(GanvItem*               item,
 		ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 	}
 
-	ganv_canvas_request_redraw_w(item->canvas, x1, y1, x2, y2);
+	ganv_canvas_request_redraw_w(item->impl->canvas, x1, y1, x2, y2);
 }
 
 static void
@@ -283,8 +274,8 @@ ganv_circle_update(GanvItem* item, int flags)
 	coords_i2w(item, &impl->old_coords);
 
 	// Update world-relative bounding box
-	ganv_circle_bounds(item, &item->x1, &item->y1, &item->x2, &item->y2);
-	ganv_item_i2w_pair(item, &item->x1, &item->y1, &item->x2, &item->y2);
+	ganv_circle_bounds(item, &item->impl->x1, &item->impl->y1, &item->impl->x2, &item->impl->y2);
+	ganv_item_i2w_pair(item, &item->impl->x1, &item->impl->y1, &item->impl->x2, &item->impl->y2);
 
 	// Request redraw of new location
 	request_redraw(item, &impl->coords, FALSE);
@@ -436,4 +427,40 @@ double
 ganv_circle_get_radius(const GanvCircle* circle)
 {
 	return circle->impl->coords.radius;
+}
+
+void
+ganv_circle_set_radius(GanvCircle* circle, double radius)
+{
+	circle->impl->coords.radius = radius;
+	ganv_item_request_update(GANV_ITEM(circle));
+}
+
+double
+ganv_circle_get_radius_ems(const GanvCircle* circle)
+{
+	return circle->impl->coords.radius_ems;
+}
+
+void
+ganv_circle_set_radius_ems(GanvCircle* circle, double ems)
+{
+	GanvCanvas*  canvas = GANV_CANVAS(GANV_ITEM(circle)->impl->canvas);
+	const double points = ganv_canvas_get_font_size(canvas);
+	circle->impl->coords.radius_ems = ems;
+	circle->impl->coords.radius     = points * ems;
+	ganv_item_request_update(GANV_ITEM(circle));
+}
+
+gboolean
+ganv_circle_get_fit_label(const GanvCircle* circle)
+{
+	return circle->impl->fit_label;
+}
+
+void
+ganv_circle_set_fit_label(GanvCircle* circle, gboolean fit_label)
+{
+	circle->impl->fit_label = fit_label;
+	ganv_item_request_update(GANV_ITEM(circle));
 }

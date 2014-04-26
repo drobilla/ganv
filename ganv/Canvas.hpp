@@ -34,6 +34,7 @@ GANV_GLIB_WRAP(Canvas)
 namespace Ganv {
 
 class Edge;
+class Item;
 class Node;
 class Port;
 
@@ -55,42 +56,64 @@ public:
 	Canvas(double width, double height);
 	virtual	~Canvas();
 
+	GanvItem* root() { return ganv_canvas_root(gobj()); }
+
 	METHOD0(ganv_canvas, clear);
-	METHOD0(ganv_canvas, clear_selection);
-	METHOD0(ganv_canvas, select_all);
-	METHODRET0(ganv_canvas, double, get_zoom);
-	METHOD1(ganv_canvas, set_zoom, double, pix_per_unit);
-	METHOD1(ganv_canvas, set_font_size, double, points);
-	METHOD0(ganv_canvas, zoom_full);
-	METHODRET0(ganv_canvas, double, get_font_size)
-	METHODRET0(ganv_canvas, double, get_default_font_size)
-	METHOD1(ganv_canvas, export_dot, const char*, filename);
-	METHOD0(ganv_canvas, arrange);
-	METHOD2(ganv_canvas, move_contents_to, double, x, double, y);
+	METHODRET0(ganv_canvas, gboolean, empty)
 	METHOD2(ganv_canvas, resize, double, width, double, height);
+	METHOD4(ganv_canvas, set_scroll_region, double, x1, double, y1, double, x2, double, y2);
+	METHOD4(ganv_canvas, get_scroll_region, double*, x1, double*, y1, double*, x2, double*, y2);
+	METHOD1(ganv_canvas, set_center_scroll_region, gboolean, c);
+	METHODRET0(ganv_canvas, gboolean, get_center_scroll_region);
+	METHOD2(ganv_canvas, scroll_to, int, x, int, y);
+
+	void get_scroll_offsets(int& cx, int& cy) const {
+		ganv_canvas_get_scroll_offsets(gobj(), &cx, &cy);
+	}
+
+	METHOD1(ganv_canvas, w2c_affine, cairo_matrix_t*, matrix);
+	METHOD4(ganv_canvas, w2c, double, wx, double, wy, int*, cx, int*, cy);
+	METHOD4(ganv_canvas, w2c_d, double, wx, double, wy, double*, cx, double*, cy);
+	METHOD4(ganv_canvas, c2w, int, cx, int, cy, double*, wx, double*, wy);
+	METHOD4(ganv_canvas, window_to_world, double, winx, double, winy, double*, worldx, double*, worldy);
+	METHOD4(ganv_canvas, world_to_window, double, worldx, double, worldy, double*, winx, double*, winy);
+
+	Item* get_item_at(double x, double y) const;
+	Edge* get_edge(Node* tail, Node* head) const;
+	void  remove_edge_between(Node* tail, Node* head);
+	void  remove_edge(Edge* edge);
+	
+	METHOD0(ganv_canvas, arrange);
+	METHOD1(ganv_canvas, export_dot, const char*, filename);
+	METHODRET0(ganv_canvas, gboolean, supports_sprung_layout);
+	METHODRET1(ganv_canvas, gboolean, set_sprung_layout, gboolean, sprung_layout);
 	METHOD2(ganv_canvas, for_each_node, GanvNodeFunc, f, void*, data)
 	METHOD2(ganv_canvas, for_each_selected_node, GanvNodeFunc, f, void*, data)
 	METHOD2(ganv_canvas, for_each_edge, GanvEdgeFunc, f, void*, data)
-	METHOD2(ganv_canvas, for_each_selected_edge, GanvEdgeFunc, f, void*, data)
-	METHODRET0(ganv_canvas, gboolean, empty)
-	METHOD2(ganv_canvas, scroll_to, int, x, int, y);
-
 	METHOD3(ganv_canvas, for_each_edge_from,
 	        const GanvNode*, tail,
 	        GanvEdgeFunc, f,
 	        void*, data);
-
 	METHOD3(ganv_canvas, for_each_edge_to,
 	        const GanvNode*, head,
 	        GanvEdgeFunc, f,
 	        void*, data);
-
 	METHOD3(ganv_canvas, for_each_edge_on,
 	        const GanvNode*, node,
 	        GanvEdgeFunc, f,
 	        void*, data);
+	METHOD2(ganv_canvas, for_each_selected_edge, GanvEdgeFunc, f, void*, data)
 
+	METHOD0(ganv_canvas, select_all);
+	METHOD0(ganv_canvas, clear_selection);
+	METHODRET0(ganv_canvas, double, get_zoom);
+	METHOD1(ganv_canvas, set_zoom, double, pix_per_unit);
+	METHOD0(ganv_canvas, zoom_full);
+	METHODRET0(ganv_canvas, double, get_default_font_size)
+	METHODRET0(ganv_canvas, double, get_font_size)
+	METHOD1(ganv_canvas, set_font_size, double, points);
 	METHOD0(ganv_canvas, get_move_cursor);
+	METHOD2(ganv_canvas, move_contents_to, double, x, double, y);
 
 	RW_PROPERTY(gboolean, locked);
 	RW_PROPERTY(double, width)
@@ -101,23 +124,7 @@ public:
 		return *Glib::wrap(&_gobj->layout);
 	}
 
-	/** Get the edge from @c tail to @c head if one exists. */
-	Edge* get_edge(Node* tail, Node* head) const;
-
-	/** Delete the edge from @c tail to @c head. */
-	void remove_edge(Node* tail, Node* head);
-
-	void remove_edge(Edge* edge);
-
-	void get_scroll_offsets(int& cx, int& cy) const {
-		ganv_canvas_get_scroll_offsets(gobj(), &cx, &cy);
-	}
-
 	GQuark wrapper_key();
-
-	GanvItem* root() {
-		return ganv_canvas_root(gobj());
-	}
 
 	GanvCanvas*       gobj()       { return GANV_CANVAS(_gobj); }
 	const GanvCanvas* gobj() const { return GANV_CANVAS(_gobj); }

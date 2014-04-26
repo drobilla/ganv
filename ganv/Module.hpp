@@ -105,11 +105,7 @@ public:
 	const_iterator back()  const { return iterator(const_cast<GanvModule*>(gobj()), num_ports() - 1); }
 
 	void embed(Gtk::Widget* widget) {
-		if (widget) {
-			ganv_module_embed(gobj(), widget->gobj());
-		} else {
-			ganv_module_embed(gobj(), NULL);
-		}
+		ganv_module_embed(gobj(), widget ? widget->gobj() : NULL);
 	}
 
 	Port* get_port(guint index) {

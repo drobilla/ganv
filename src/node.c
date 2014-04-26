@@ -84,8 +84,7 @@ static void
 ganv_node_realize(GanvItem* item)
 {
 	GANV_ITEM_CLASS(parent_class)->realize(item);
-	ganv_canvas_add_node(GANV_CANVAS(item->canvas),
-	                     GANV_NODE(item));
+	ganv_canvas_add_node(ganv_item_get_canvas(item), GANV_NODE(item));
 }
 
 static void
@@ -103,16 +102,16 @@ ganv_node_destroy(GtkObject* object)
 
 	GanvItem* item = GANV_ITEM(object);
 	ganv_node_disconnect(node);
-	if (item->canvas) {
-		ganv_canvas_remove_node(GANV_CANVAS(item->canvas), node);
+	if (item->impl->canvas) {
+		ganv_canvas_remove_node(item->impl->canvas, node);
 	}
 
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {
 		(*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
 	}
 
-	impl->partner = NULL;
-	item->canvas  = NULL;
+	impl->partner      = NULL;
+	item->impl->canvas = NULL;
 }
 
 static void
@@ -154,21 +153,21 @@ ganv_node_set_property(GObject*      object,
 		if (impl->selected != g_value_get_boolean(value)) {
 			GanvItem* item = GANV_ITEM(object);
 			impl->selected = g_value_get_boolean(value);
-			if (item->canvas) {
+			if (item->impl->canvas) {
 				if (impl->selected) {
-					ganv_canvas_select_node(GANV_CANVAS(item->canvas), node);
+					ganv_canvas_select_node(ganv_item_get_canvas(item), node);
 				} else {
-					ganv_canvas_unselect_node(GANV_CANVAS(item->canvas), node);
+					ganv_canvas_unselect_node(ganv_item_get_canvas(item), node);
 				}
 				ganv_item_request_update(item);
 			}
 		}
 		break;
 	case PROP_CANVAS:
-		if (!GANV_ITEM(object)->parent) {
+		if (!GANV_ITEM(object)->impl->parent) {
 			GanvCanvas* canvas = GANV_CANVAS(g_value_get_object(value));
 			g_object_set(object, "parent", ganv_canvas_root(canvas), NULL);
-			ganv_canvas_add_node(GANV_CANVAS(canvas), node);
+			ganv_canvas_add_node(canvas, node);
 		} else {
 			g_warning("Cannot change `canvas' property after construction");
 		}
@@ -213,7 +212,7 @@ ganv_node_get_property(GObject*    object,
 		GET_CASE(DRAGGABLE, boolean, impl->draggable);
 		GET_CASE(GRABBED, boolean, impl->grabbed);
 	case PROP_CANVAS:
-		g_value_set_object(value, GANV_ITEM(object)->canvas);
+		g_value_set_object(value, ganv_item_get_canvas(GANV_ITEM(object)));
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -229,10 +228,10 @@ ganv_node_default_tail_vector(const GanvNode* self,
                               double*         dx,
                               double*         dy)
 {
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(self));
 
-	*x = GANV_ITEM(self)->x;
-	*y = GANV_ITEM(self)->y;
+	*x = GANV_ITEM(self)->impl->x;
+	*y = GANV_ITEM(self)->impl->y;
 
 	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
@@ -245,7 +244,7 @@ ganv_node_default_tail_vector(const GanvNode* self,
 		break;
 	}
 
-	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
+	ganv_item_i2w(GANV_ITEM(self)->impl->parent, x, y);
 }
 
 static void
@@ -256,10 +255,10 @@ ganv_node_default_head_vector(const GanvNode* self,
                               double*         dx,
                               double*         dy)
 {
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(self)->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(self));
 
-	*x = GANV_ITEM(self)->x;
-	*y = GANV_ITEM(self)->y;
+	*x = GANV_ITEM(self)->impl->x;
+	*y = GANV_ITEM(self)->impl->y;
 
 	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
@@ -272,7 +271,7 @@ ganv_node_default_head_vector(const GanvNode* self,
 		break;
 	}
 
-	ganv_item_i2w(GANV_ITEM(self)->parent, x, y);
+	ganv_item_i2w(GANV_ITEM(self)->impl->parent, x, y);
 }
 
 void
@@ -355,7 +354,7 @@ ganv_node_default_tick(GanvNode* self,
 static void
 ganv_node_default_disconnect(GanvNode* node)
 {
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(node));
 	if (canvas) {
 		ganv_canvas_for_each_edge_on(
 			canvas, node, (GanvEdgeFunc)ganv_edge_disconnect, NULL);
@@ -367,7 +366,7 @@ ganv_node_default_move(GanvNode* node,
                        double    dx,
                        double    dy)
 {
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(node));
 	ganv_item_move(GANV_ITEM(node), dx, dy);
 	ganv_canvas_for_each_edge_on(
 		canvas, node, (GanvEdgeFunc)ganv_edge_update_location, NULL);
@@ -378,7 +377,7 @@ ganv_node_default_move_to(GanvNode* node,
                           double    x,
                           double    y)
 {
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(node));
 	ganv_item_set(GANV_ITEM(node),
 	              "x", x,
 	              "y", y,
@@ -396,8 +395,8 @@ static void
 ganv_node_default_resize(GanvNode* node)
 {
 	GanvItem* item = GANV_ITEM(node);
-	if (GANV_IS_NODE(item->parent)) {
-		ganv_node_resize(GANV_NODE(item->parent));
+	if (GANV_IS_NODE(item->impl->parent)) {
+		ganv_node_resize(GANV_NODE(item->impl->parent));
 	}
 }
 
@@ -415,7 +414,7 @@ ganv_node_default_event(GanvItem* item,
                         GdkEvent* event)
 {
 	GanvNode*   node   = GANV_NODE(item);
-	GanvCanvas* canvas = GANV_CANVAS(GANV_ITEM(node)->canvas);
+	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(node));
 
 	// FIXME: put these somewhere better
 	static double last_x, last_y;
@@ -462,8 +461,8 @@ ganv_node_default_event(GanvItem* item,
 				if (selected) {
 					ganv_canvas_selection_move_finished(canvas);
 				} else {
-					const double x = GANV_ITEM(node)->x;
-					const double y = GANV_ITEM(node)->y;
+					const double x = GANV_ITEM(node)->impl->x;
+					const double y = GANV_ITEM(node)->impl->y;
 					g_signal_emit(node, signal_moved, 0, x, y, NULL);
 				}
 			} else {
@@ -771,10 +770,63 @@ ganv_node_get_border_width(const GanvNode* node)
 	return node->impl->border_width;
 }
 
+void
+ganv_node_set_border_width(const GanvNode* node, double border_width)
+{
+	node->impl->border_width = border_width;
+	ganv_item_request_update(GANV_ITEM(node));
+}
+
 double
 ganv_node_get_dash_length(const GanvNode* node)
 {
 	return node->impl->dash_length;
+}
+
+void
+ganv_node_set_dash_length(const GanvNode* node, double dash_length)
+{
+	node->impl->dash_length = dash_length;
+	ganv_item_request_update(GANV_ITEM(node));
+}
+
+double
+ganv_node_get_dash_offset(const GanvNode* node)
+{
+	return node->impl->dash_offset;
+}
+
+void
+ganv_node_set_dash_offset(const GanvNode* node, double dash_offset)
+{
+	node->impl->dash_offset = dash_offset;
+	ganv_item_request_update(GANV_ITEM(node));
+}
+
+guint
+ganv_node_get_fill_color(const GanvNode* node)
+{
+	return node->impl->fill_color;
+}
+
+void
+ganv_node_set_fill_color(const GanvNode* node, guint fill_color)
+{
+	node->impl->fill_color = fill_color;
+	ganv_item_request_update(GANV_ITEM(node));
+}
+
+guint
+ganv_node_get_border_color(const GanvNode* node)
+{
+	return node->impl->border_color;
+}
+
+void
+ganv_node_set_border_color(const GanvNode* node, guint border_color)
+{
+	node->impl->border_color = border_color;
+	ganv_item_request_update(GANV_ITEM(node));
 }
 
 GanvNode*

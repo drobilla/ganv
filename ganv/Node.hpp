@@ -44,28 +44,26 @@ public:
 		g_object_unref(_gobj);
 	}
 
-	RW_PROPERTY(const char*, label)
-	RW_PROPERTY(double, dash_length)
-	RW_PROPERTY(double, dash_offset)
-	RW_PROPERTY(double, border_width)
-	RW_PROPERTY(guint, fill_color)
-	RW_PROPERTY(guint, border_color)
 	RW_PROPERTY(gboolean, can_tail)
 	RW_PROPERTY(gboolean, can_head)
 	RW_PROPERTY(gboolean, is_source)
+
+	gboolean is_within(double x1, double y1, double x2, double y2) const {
+		return ganv_node_is_within(gobj(), x1, y1, x2, y2);
+	}
+	
+	RW_PROPERTY(const char*, label)
+	RW_PROPERTY(double, border_width)
+	RW_PROPERTY(double, dash_length)
+	RW_PROPERTY(double, dash_offset)
+	RW_PROPERTY(guint, fill_color)
+	RW_PROPERTY(guint, border_color)
 	RW_PROPERTY(gboolean, selected)
 	RW_PROPERTY(gboolean, highlighted)
 	RW_PROPERTY(gboolean, draggable)
 	RW_PROPERTY(gboolean, grabbed)
 
 	RW_OBJECT_PROPERTY(Node*, partner);
-
-	METHOD1(ganv_node, tick, double, seconds);
-
-	virtual gboolean is_within(double x1, double y1,
-	                           double x2, double y2) const {
-		return ganv_node_is_within(gobj(), x1, y1, x2, y2);
-	}
 
 	GanvNode*       gobj()       { return GANV_NODE(_gobj); }
 	const GanvNode* gobj() const { return GANV_NODE(_gobj); }

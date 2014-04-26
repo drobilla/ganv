@@ -30,10 +30,15 @@ public:
 
 	RW_PROPERTY(const char*, label);
 
+	METHODRET0(ganv_box, double, get_x1)
+	METHODRET0(ganv_box, double, get_y1)
+	METHODRET0(ganv_box, double, get_x2)
+	METHODRET0(ganv_box, double, get_y2)
 	METHODRET0(ganv_box, double, get_width)
 	METHOD1(ganv_box, set_width, double, width)
 	METHODRET0(ganv_box, double, get_height)
 	METHOD1(ganv_box, set_height, double, height)
+	METHODRET0(ganv_box, double, get_border_width)
 
 	GanvBox*       gobj()       { return GANV_BOX(_gobj); }
 	const GanvBox* gobj() const { return GANV_BOX(_gobj); }

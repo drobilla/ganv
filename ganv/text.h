@@ -40,7 +40,7 @@ struct _GanvTextClass {
 	GanvItemClass parent_class;
 
 	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
+	gpointer spare_vmethodsx[4];
 };
 
 GType ganv_text_get_type(void) G_GNUC_CONST;

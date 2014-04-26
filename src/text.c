@@ -90,7 +90,7 @@ ganv_text_layout(GanvText* text)
 {
 	GanvTextImpl* impl      = text->impl;
 	GanvItem*     item      = GANV_ITEM(text);
-	GanvCanvas*   canvas    = GANV_CANVAS(item->canvas);
+	GanvCanvas*   canvas    = ganv_item_get_canvas(item);
 	GtkWidget*    widget    = GTK_WIDGET(canvas);
 	double        font_size = ganv_canvas_get_font_size(canvas);
 	guint         color     = 0xFFFFFFFF;
@@ -164,8 +164,8 @@ ganv_text_set_property(GObject*      object,
 		free(impl->text);
 		impl->text = g_value_dup_string(value);
 		impl->needs_layout = TRUE;
-		if (GANV_IS_NODE(GANV_ITEM(text)->parent)) {
-			ganv_node_resize(GANV_NODE(GANV_ITEM(text)->parent));
+		if (GANV_IS_NODE(GANV_ITEM(text)->impl->parent)) {
+			ganv_node_resize(GANV_NODE(GANV_ITEM(text)->impl->parent));
 		}
 		break;
 	default:
@@ -236,11 +236,11 @@ ganv_text_update(GanvItem* item, int flags)
 	parent_class->update(item, flags);
 
 	// Update world-relative bounding box
-	ganv_text_bounds(item, &item->x1, &item->y1, &item->x2, &item->y2);
-	ganv_item_i2w_pair(item, &item->x1, &item->y1, &item->x2, &item->y2);
+	ganv_text_bounds(item, &item->impl->x1, &item->impl->y1, &item->impl->x2, &item->impl->y2);
+	ganv_item_i2w_pair(item, &item->impl->x1, &item->impl->y1, &item->impl->x2, &item->impl->y2);
 
 	ganv_canvas_request_redraw_w(
-		item->canvas, item->x1, item->y1, item->x2, item->y2);
+		item->impl->canvas, item->impl->x1, item->impl->y1, item->impl->x2, item->impl->y2);
 }
 
 static double

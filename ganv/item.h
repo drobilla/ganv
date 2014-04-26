@@ -28,7 +28,10 @@
 
 G_BEGIN_DECLS
 
+struct _GanvCanvas;
+
 typedef struct _GanvItem      GanvItem;
+typedef struct _GanvItemImpl  GanvItemImpl;
 typedef struct _GanvItemClass GanvItemClass;
 
 /* Object flags for items */
@@ -49,25 +52,8 @@ enum {
 #define GANV_ITEM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GANV_TYPE_ITEM, GanvItemClass))
 
 struct _GanvItem {
-	GtkObject object;
-
-	/* Parent canvas for this item */
-	struct _GanvCanvas* canvas;
-
-	/* Parent for this item */
-	GanvItem* parent;
-
-	/* Layer (z order), higher values are on top */
-	guint layer;
-
-	/* Position in parent-relative coordinates. */
-	double x, y;
-
-	/* Bounding box for this item (in world coordinates) */
-	double x1, y1, x2, y2;
-
-	/* True if parent manages this item (don't call add/remove) */
-	gboolean managed;
+	GtkObject     object;
+	GanvItemImpl* impl;
 };
 
 struct _GanvItemClass {
@@ -136,7 +122,7 @@ struct _GanvItemClass {
 	gboolean (*event)(GanvItem* item, GdkEvent* event);
 
 	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
+	gpointer spare_vmethods[4];
 };
 
 GType ganv_item_get_type(void) G_GNUC_CONST;
@@ -151,6 +137,10 @@ void ganv_item_set(GanvItem* item, const gchar* first_arg_name, ...);
 
 void ganv_item_set_valist(GanvItem* item,
                           const gchar* first_arg_name, va_list args);
+
+struct _GanvCanvas* ganv_item_get_canvas(GanvItem* item);
+
+GanvItem* ganv_item_get_parent(GanvItem* item);
 
 void ganv_item_raise(GanvItem* item);
 

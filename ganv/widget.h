@@ -32,24 +32,12 @@ G_BEGIN_DECLS
 #define GANV_WIDGET_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GANV_TYPE_WIDGET, GanvWidgetClass))
 
 typedef struct _GanvWidget      GanvWidget;
+typedef struct _GanvWidgetImpl  GanvWidgetImpl;
 typedef struct _GanvWidgetClass GanvWidgetClass;
 
 struct _GanvWidget {
-	GanvItem item;
-
-	GtkWidget* widget;          /* The child widget */
-
-	double        x, y;			/* Position at anchor */
-	double        width, height; /* Dimensions of widget */
-	GtkAnchorType anchor;		/* Anchor side for widget */
-
-	int cx, cy;                 /* Top-left canvas coordinates for widget */
-	int cwidth, cheight;		/* Size of widget in pixels */
-
-	guint destroy_id;           /* Signal connection id for destruction of child widget */
-
-	guint size_pixels : 1;		/* Is size specified in (unchanging) pixels or units (get scaled)? */
-	guint in_destroy : 1;		/* Is child widget being destroyed? */
+	GanvItem        item;
+	GanvWidgetImpl* impl;
 };
 
 struct _GanvWidgetClass {

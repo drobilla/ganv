@@ -71,6 +71,11 @@ private: \
 		return prefix##_##name(gobj()); \
 	}
 
+#define METHODRET1(prefix, ret, name, t1, a1) \
+	virtual ret name(t1 a1) { \
+		return prefix##_##name(gobj(), a1); \
+	}
+
 #define METHODRETWRAP0(prefix, ret, name) \
 	virtual ret name() const { \
 		if (gobj()) { \
@@ -88,6 +93,11 @@ private: \
 #define METHOD3(prefix, name, t1, a1, t2, a2, t3, a3) \
 	virtual void name(t1 a1, t2 a2, t3 a3) { \
 		prefix##_##name(gobj(), a1, a2, a3); \
+	}
+
+#define METHOD4(prefix, name, t1, a1, t2, a2, t3, a3, t4, a4) \
+	virtual void name(t1 a1, t2 a2, t3 a3, t4 a4) { \
+		prefix##_##name(gobj(), a1, a2, a3, a4); \
 	}
 
 #define GANV_GLIB_WRAP(Name) \

@@ -50,7 +50,7 @@ struct _GanvBoxClass {
 	                   double   height);
 
 	/* Reserved for future expansion */
-	gpointer spare_vmethods [4];
+	gpointer spare_vmethods[4];
 };
 
 GType  ganv_box_get_type(void) G_GNUC_CONST;

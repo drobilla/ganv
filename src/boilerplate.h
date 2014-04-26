@@ -27,7 +27,7 @@ typedef gpointer gobject;
 		if (field != tmp) { \
 			field = tmp; \
 			GanvItem* item = GANV_ITEM(object); \
-			if (item->canvas) { \
+			if (item->impl->canvas) { \
 				ganv_item_request_update(item); \
 			} \
 		} \
