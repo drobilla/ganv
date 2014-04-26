@@ -108,7 +108,7 @@ def build(bld):
 
     # Pkgconfig file
     autowaf.build_pc(bld, 'GANV', GANV_VERSION, GANV_MAJOR_VERSION,
-                     'AGRAPH_2_20 AGRAPH_2_30 GLIBMM ART',
+                     'GTKMM AGRAPH_2_20 AGRAPH_2_30',
                      {'GANV_MAJOR_VERSION' : GANV_MAJOR_VERSION})
 
     bld(rule = 'glib-genmarshal --prefix=ganv_marshal --header ${SRC} > ${TGT}',
@@ -126,7 +126,7 @@ def build(bld):
         includes        = ['.', './src'],
         name            = 'libganv',
         target          = 'ganv-%s' % GANV_MAJOR_VERSION,
-        uselib          = 'GTKMM AGRAPH_2_20 AGRAPH_2_30 ART',
+        uselib          = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
         vnum            = GANV_VERSION,
         install_path    = '${LIBDIR}')
 
@@ -135,7 +135,7 @@ def build(bld):
         source       = 'src/ganv_bench.cpp',
         includes     = ['.', './src'],
         use          = 'libganv',
-        use_lib      = 'GTKMM',
+        uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
         target       = 'src/ganv_bench')
 
     if bld.env.BUILD_TESTS:
@@ -145,7 +145,7 @@ def build(bld):
             includes     = ['.', './src'],
             name         = 'libganv_profiled',
             target       = 'ganv_profiled',
-            uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30 ART',
+            uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
             install_path = '',
             cflags       = [ '-fprofile-arcs', '-ftest-coverage' ])
 
@@ -155,7 +155,7 @@ def build(bld):
             includes     = ['.', './src'],
             use          = 'libganv_profiled',
             lib          = ['gcov'],
-            use_lib      = 'GTK',
+            uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
             target       = 'src/ganv_test')
 
     # Documentation
