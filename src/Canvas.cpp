@@ -883,6 +883,11 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			node->impl->force,
 			tide_force(mouth, reg.pos, 4000000000000.0));
 
+		// Add slight noise to force to limit oscillation
+		const Vector noise = { rand() / (float)RAND_MAX * 128.0,
+		                       rand() / (float)RAND_MAX * 128.0 };
+		node->impl->force = vec_add(noise, node->impl->force);
+
 		FOREACH_ITEM(_items, j) {
 			if (i == j || (!GANV_IS_MODULE(*i) && !GANV_IS_CIRCLE(*i))) {
 				continue;
@@ -902,7 +907,8 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 
 		static const float damp = 0.3;  // Velocity damping
 
-		if (node->impl->grabbed || !node->impl->connected) {
+		if (node->impl->grabbed ||
+		    (!node->impl->connected && !ganv_node_get_partner(node))) {
 			node->impl->vel.x = 0.0;
 			node->impl->vel.y = 0.0;
 		} else {

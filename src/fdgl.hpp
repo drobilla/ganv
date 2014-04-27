@@ -16,7 +16,7 @@
 #include <float.h>
 #include <math.h>
 
-static const double CHARGE_KE = 1000000.0;
+static const double CHARGE_KE = 4000000.0;
 static const double EDGE_K    = 16.0;
 static const double EDGE_LEN  = 0.1;
 
