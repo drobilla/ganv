@@ -1881,8 +1881,8 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	g_object_class_install_property(
 		gobject_class, PROP_FOCUSED_ITEM, g_param_spec_object(
 			"focused-item",
-			NULL,
-			NULL,
+			_("Focused item"),
+			_("The item that currently has keyboard focus."),
 			GANV_TYPE_ITEM,
 			(GParamFlags)(G_PARAM_READABLE | G_PARAM_WRITABLE)));
 

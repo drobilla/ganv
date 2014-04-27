@@ -37,6 +37,7 @@ struct _GanvBox {
 
 /**
  * GanvBoxClass:
+ * @parent_class: Node superclass.
  * @set_width: Set the width of the box.
  * @set_height: Set the height of the box.
  */

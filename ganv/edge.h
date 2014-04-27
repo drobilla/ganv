@@ -79,6 +79,7 @@ ganv_edge_unselect(GanvEdge* edge);
 
 /**
  * ganv_edge_disconnect:
+ *
  * Disconnect the edge.  This will disconnect the edge just as if it had been
  * disconnected by the user via the canvas.  The canvas disconnect signal will
  * be emitted, allowing the application to control disconnect logic.
@@ -88,6 +89,7 @@ ganv_edge_disconnect(GanvEdge* edge);
 
 /**
  * ganv_edge_remove:
+ *
  * Remove the edge from the canvas.  This will only remove the edge visually,
  * it will not emit the canvas disconnect signal to notify the application.
  */

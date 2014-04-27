@@ -58,6 +58,7 @@ ganv_module_num_ports(const GanvModule* module);
 
 /**
  * ganv_module_get_port:
+ *
  * Get a port by index.
  *
  * Return value: (transfer none): The port on @module at @index.

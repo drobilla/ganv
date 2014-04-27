@@ -67,6 +67,9 @@ GType ganv_canvas_get_type(void) G_GNUC_CONST;
 
 /**
  * GanvEdgeFunc:
+ * @edge: Canvas edge.
+ * @data: User callback data.
+ *
  * A node function that takes a user data argument (for callbacks).
  *
  * Note that in the Gtk world it is considered safe to cast a function to a
@@ -77,6 +80,9 @@ typedef void (*GanvEdgeFunc)(GanvEdge* edge, void* data);
 
 /**
  * GanvNodeFunc:
+ * @node: Canvas node.
+ * @data: User callback data.
+ *
  * A node function that takes a user data argument (for callbacks).
  *
  * Note that in the Gtk world it is considered safe to cast a function to a
@@ -95,6 +101,7 @@ ganv_canvas_new(double width, double height);
 
 /**
  * ganv_canvas_clear:
+ *
  * Remove all items from the canvas.
  */
 void
@@ -110,6 +117,7 @@ ganv_canvas_empty(const GanvCanvas* canvas);
 
 /**
  * ganv_canvas_resize:
+ *
  * Resize the canvas to the given dimensions.
  */
 void
@@ -241,7 +249,7 @@ ganv_canvas_w2c(GanvCanvas* canvas, double wx, double wy, int* cx, int* cy);
  * @cy: Y pixel coordinate (return value).
  *
  * Converts world coordinates into canvas pixel coordinates.  This version
- * returns floating point coordinates, for greater precision.
+ * uses floating point coordinates for greater precision.
  */
 void
 ganv_canvas_w2c_d(GanvCanvas* canvas,
@@ -316,6 +324,7 @@ ganv_canvas_get_item_at(GanvCanvas* canvas, double x, double y);
 
 /**
  * ganv_canvas_get_edge:
+ *
  * Get the edge between two nodes, or NULL if none exists.
  *
  * Return value: (transfer none): The root group of @canvas.
@@ -484,6 +493,7 @@ ganv_canvas_for_each_selected_edge(GanvCanvas*  canvas,
 
 /**
  * ganv_canvas_select_all:
+ *
  * Select all items on the canvas.
  */
 void
@@ -499,6 +509,7 @@ ganv_canvas_clear_selection(GanvCanvas* canvas);
 
 /**
  * ganv_canvas_get_zoom:
+ *
  * Return the current zoom factor (pixels per unit).
  */
 double
@@ -522,6 +533,7 @@ ganv_canvas_set_zoom(GanvCanvas* canvas, double zoom);
 
 /**
  * ganv_canvas_zoom_full:
+ *
  * Zoom so all canvas contents are visible.
  */
 void
@@ -537,6 +549,7 @@ ganv_canvas_get_default_font_size(const GanvCanvas* canvas);
 
 /**
  * ganv_canvas_get_font_size:
+ *
  * Get the current font size in points.
  */
 double
@@ -544,6 +557,7 @@ ganv_canvas_get_font_size(const GanvCanvas* canvas);
 
 /**
  * ganv_canvas_set_font_size:
+ *
  * Set the current font size in points.
  */
 void
@@ -551,6 +565,7 @@ ganv_canvas_set_font_size(GanvCanvas* canvas, double points);
 
 /**
  * ganv_canvas_get_move_cursor:
+ *
  * Return the cursor to use while dragging canvas objects.
  */
 GdkCursor*
@@ -558,6 +573,7 @@ ganv_canvas_get_move_cursor(const GanvCanvas* canvas);
 
 /**
  * ganv_canvas_move_contents_to:
+ *
  * Shift all canvas contents so the top-left object is at (x, y).
  */
 void
