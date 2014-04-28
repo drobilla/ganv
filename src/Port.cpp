@@ -31,8 +31,7 @@ on_value_changed(GanvPort* port, double value, void* portmm)
 	((Port*)portmm)->signal_value_changed.emit(value);
 }
 
-/** Contruct a Port on an existing module.
- */
+/* Construct a Port on an existing module. */
 Port::Port(Module&            module,
            const std::string& name,
            bool               is_input,

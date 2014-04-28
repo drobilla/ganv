@@ -87,7 +87,7 @@ ganv_item_init(GanvItem* item)
  * @first_arg_name: A list of object argument name/value pairs, NULL-terminated,
  * used to configure the item.  For example, "fill_color", "black",
  * "width_units", 5.0, NULL.
- * @Varargs:
+ * @...: first argument value, second argument name, second argument value, ...
  *
  * Creates a new canvas item with @parent as its parent group.  The item is
  * created at the top of its parent's stack, and starts up as visible.  The item
@@ -351,7 +351,7 @@ ganv_item_invoke_update(GanvItem* item, int flags)
  * ganv_item_set:
  * @item: A canvas item.
  * @first_arg_name: The list of object argument name/value pairs used to configure the item.
- * @Varargs:
+ * @...: first argument value, second argument name, second argument value, ...
  *
  * Configures a canvas item.  The arguments in the item are set to the specified
  * values, and the item is repainted as appropriate.

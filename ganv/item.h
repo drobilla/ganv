@@ -138,8 +138,20 @@ void ganv_item_set(GanvItem* item, const gchar* first_arg_name, ...);
 void ganv_item_set_valist(GanvItem* item,
                           const gchar* first_arg_name, va_list args);
 
+/**
+ * ganv_item_get_canvas:
+ * @item: The item.
+ *
+ * Return value: (transfer none): The canvas @item is on.
+ */
 struct _GanvCanvas* ganv_item_get_canvas(GanvItem* item);
 
+/**
+ * ganv_item_get_parent:
+ * @item: The item.
+ *
+ * Return value: (transfer none): The parent of @item.
+ */
 GanvItem* ganv_item_get_parent(GanvItem* item);
 
 void ganv_item_raise(GanvItem* item);

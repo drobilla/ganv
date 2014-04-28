@@ -156,7 +156,7 @@ public:
 static const uint32_t SELECT_RECT_FILL_COLOUR   = 0x2E444577;
 static const uint32_t SELECT_RECT_BORDER_COLOUR = 0x2E4445FF;
 
-/** Order edges by (tail, head) */
+/* Order edges by (tail, head) */
 struct TailHeadOrder {
 	inline bool operator()(const GanvEdge* a, const GanvEdge* b) const {
 		return ((a->impl->tail < b->impl->tail)
@@ -165,7 +165,7 @@ struct TailHeadOrder {
 	}
 };
 
-/** Order edges by (head, tail) */
+/* Order edges by (head, tail) */
 struct HeadTailOrder {
 	inline bool operator()(const GanvEdge* a, const GanvEdge* b) const {
 		return ((a->impl->head < b->impl->head)
@@ -1562,7 +1562,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 	return false;
 }
 
-/** Called when two ports are 'joined' (connected or disconnected) */
+/* Called when two ports are 'joined' (connected or disconnected) */
 void
 GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 {
@@ -1608,7 +1608,7 @@ GanvCanvasImpl::port_clicked(GdkEvent* event, GanvPort* port)
 	}
 }
 
-/** Update animated "rubber band" selection effect. */
+/* Update animated "rubber band" selection effect. */
 gboolean
 GanvCanvasImpl::on_animate_timeout(gpointer data)
 {

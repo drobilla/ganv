@@ -275,7 +275,7 @@ ganv_group_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 	}
 }
 
-/** Get bounds of child item in group-relative coordinates. */
+/* Get bounds of child item in group-relative coordinates. */
 static void
 get_child_bounds(GanvItem* child, double* x1, double* y1, double* x2, double* y2)
 {
