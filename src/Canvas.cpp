@@ -788,6 +788,18 @@ apply_force(GanvNode* a, GanvNode* b, const Vector& f)
 	b->impl->force = vec_sub(b->impl->force, f);
 }
 
+inline uint64_t
+get_monotonic_time()
+{
+#if GLIB_CHECK_VERSION(2, 28, 0)
+	return g_get_monotonic_time();
+#else
+	GTimeVal time;
+	g_get_current_time(&time);
+	return time.tv_sec + time.tv_usec;
+#endif
+}
+
 gboolean
 GanvCanvasImpl::layout_iteration()
 {
@@ -802,7 +814,7 @@ GanvCanvasImpl::layout_iteration()
 
 	static uint64_t prev = 0;  // Previous iteration time
 
-	const uint64_t now         = g_get_monotonic_time();
+	const uint64_t now         = get_monotonic_time();
 	const double   time_to_run = std::min((now - prev) * T_PER_US, 10.0);
 
 	prev = now;
@@ -1614,14 +1626,7 @@ GanvCanvasImpl::on_animate_timeout(gpointer data)
 {
 	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
 
-#ifdef g_get_monotonic_time
-	// Only available in glib 2.28
-	const double seconds = g_get_monotonic_time() / 1000000.0;
-#else
-	GTimeVal time;
-	g_get_current_time(&time);
-	const double seconds = time.tv_sec + time.tv_usec / (double)G_USEC_PER_SEC;
-#endif
+	const double seconds = get_monotonic_time() / 1000000.0;
 
 	FOREACH_ITEM(impl->_selected_items, s) {
 		ganv_node_tick(*s, seconds);
