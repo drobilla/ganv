@@ -1,3 +1,10 @@
+ganv (1.4.1) unstable;
+
+  * Fix bug where edges would not update when nodes are moved after the canvas
+    is cleared (fix stuck connections in Patchage after refresh).
+
+ -- David Robillard <d@drobilla.net>  Sun, 13 Jul 2014 15:47:32 -0400
+
 ganv (1.4.0) stable;
 
   * Begin using library and pkg-config names suitable for parallel

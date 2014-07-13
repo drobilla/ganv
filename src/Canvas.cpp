@@ -2464,6 +2464,7 @@ ganv_canvas_clear(GanvCanvas* canvas)
 		gtk_object_destroy(GTK_OBJECT(*i));
 	}
 	canvas->impl->_edges.clear();
+	canvas->impl->_dst_edges.clear();
 
 	canvas->impl->_selected_ports.clear();
 	canvas->impl->_connect_port = NULL;
