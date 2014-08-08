@@ -1,9 +1,10 @@
-ganv (1.4.1) unstable;
+ganv (1.4.2) stable;
 
   * Fix bug where edges would not update when nodes are moved after the canvas
     is cleared (fix stuck connections in Patchage after refresh).
+  * Upgrade to waf 1.7.16
 
- -- David Robillard <d@drobilla.net>  Sun, 13 Jul 2014 15:47:32 -0400
+ -- David Robillard <d@drobilla.net>  Fri, 08 Aug 2014 18:24:33 -0400
 
 ganv (1.4.0) stable;
 
