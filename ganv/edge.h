@@ -99,7 +99,7 @@ ganv_edge_remove(GanvEdge* edge);
 /**
  * ganv_edge_get_tail:
  *
- * Return value: (transfer none): The tail of @a edge.
+ * Return value: (transfer none): The tail of `edge`.
  */
 GanvNode*
 ganv_edge_get_tail(const GanvEdge* edge);
@@ -107,7 +107,7 @@ ganv_edge_get_tail(const GanvEdge* edge);
 /**
  * ganv_edge_get_head:
  *
- * Return value: (transfer none): The head of @a edge.
+ * Return value: (transfer none): The head of `edge`.
  */
 GanvNode*
 ganv_edge_get_head(const GanvEdge* edge);
