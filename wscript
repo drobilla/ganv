@@ -117,6 +117,10 @@ def build(bld):
 
     bld(rule = 'glib-genmarshal --prefix=ganv_marshal --body ${SRC} > ${TGT}',
         source = 'src/ganv-marshal.list',
+        target = 'src/ganv-marshal.c.in')
+
+    bld(rule = 'cat ${SRC} > ${TGT}',
+        source = ['src/ganv-marshal.h', 'src/ganv-marshal.c.in'],
         target = 'src/ganv-marshal.c')
 
     # Library
