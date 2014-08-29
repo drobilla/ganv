@@ -268,6 +268,7 @@ resize_right(GanvModule* module)
 	if (impl->embed_item) {
 		ganv_item_set(impl->embed_item,
 		              "x", (double)m.embed_x,
+		              "y", header_height,
 		              NULL);
 	}
 
