@@ -1,3 +1,9 @@
+ganv (1.4.3) unstable;
+
+  * Fix positioning of embedded widgets during sprung layout.
+
+ -- David Robillard <d@drobilla.net>  Fri, 29 Aug 2014 12:23:44 -0400
+
 ganv (1.4.2) stable;
 
   * Fix bug where edges would not update when nodes are moved after the canvas

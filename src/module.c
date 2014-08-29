@@ -550,6 +550,11 @@ ganv_module_update(GanvItem* item, int flags)
 		layout(node);
 	}
 
+	if (module->impl->embed_item) {
+		// Kick the embedded item to update position if we have moved
+		ganv_item_move(GANV_ITEM(module->impl->embed_item), 0.0, 0.0);
+	}
+
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	item_class->update(item, flags);
 
