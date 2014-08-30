@@ -288,11 +288,12 @@ ganv_node_get_draw_properties(const GanvNode* node,
 
 	if (impl->selected) {
 		*dash_length  = 4.0;
-		*border_color = highlight_color(impl->border_color, 0x20);
+		*border_color = highlight_color(impl->border_color, 0x40);
 	}
 
 	if (impl->highlighted) {
-		*border_color = highlight_color(impl->border_color, 0x20);
+		*border_color = highlight_color(impl->border_color, 0x40);
+		*fill_color   = highlight_color(impl->fill_color, 0x10);
 	}
 }
 
