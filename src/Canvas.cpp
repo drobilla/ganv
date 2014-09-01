@@ -1513,6 +1513,8 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			}
 			ganv_port_set_control_value_internal(port, value);
 			return true;
+		} else if (port_dragging) {
+			return true;
 		}
 		break;
 
