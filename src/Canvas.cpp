@@ -760,6 +760,18 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 }
 #endif
 
+inline uint64_t
+get_monotonic_time()
+{
+#if GLIB_CHECK_VERSION(2, 28, 0)
+	return g_get_monotonic_time();
+#else
+	GTimeVal time;
+	g_get_current_time(&time);
+	return time.tv_sec + time.tv_usec;
+#endif
+}
+
 #ifdef GANV_FDGL
 
 inline Region
@@ -786,18 +798,6 @@ apply_force(GanvNode* a, GanvNode* b, const Vector& f)
 {
 	a->impl->force = vec_add(a->impl->force, f);
 	b->impl->force = vec_sub(b->impl->force, f);
-}
-
-inline uint64_t
-get_monotonic_time()
-{
-#if GLIB_CHECK_VERSION(2, 28, 0)
-	return g_get_monotonic_time();
-#else
-	GTimeVal time;
-	g_get_current_time(&time);
-	return time.tv_sec + time.tv_usec;
-#endif
 }
 
 gboolean
