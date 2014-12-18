@@ -55,7 +55,7 @@ def configure(conf):
     if not Options.options.no_graphviz:
         autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH_2_30',
                           atleast_version='2.30', mandatory=False)
-        if not conf.is_defined('HAVE_AGRAPH_2_30'):
+        if not conf.env.HAVE_AGRAPH_2_30:
             autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH_2_20',
                               atleast_version='2.20', mandatory=False)
 
@@ -70,13 +70,13 @@ def configure(conf):
     conf.write_config_header('ganv_config.h', remove=False)
 
     autowaf.display_msg(conf, "Static (Graphviz) arrange",
-                        conf.is_defined('HAVE_AGRAPH_2_20') or
-                        conf.is_defined('HAVE_AGRAPH_2_30'))
+                        bool(conf.env.HAVE_AGRAPH_2_20 or
+                             conf.env.HAVE_AGRAPH_2_30))
     autowaf.display_msg(conf, "Interactive force-directed arrange",
-                        conf.is_defined('GANV_FDGL'))
-    autowaf.display_msg(conf, "Native language support", conf.is_defined('ENABLE_NLS'))
-    autowaf.display_msg(conf, "GObject introspection", conf.is_defined('HAVE_GIR'))
-    autowaf.display_msg(conf, "Unit tests", str(conf.env.BUILD_TESTS))
+                        bool(conf.env.GANV_FDGL))
+    autowaf.display_msg(conf, "Native language support", bool(conf.env.ENABLE_NLS))
+    autowaf.display_msg(conf, "GObject introspection", bool(conf.env.HAVE_GIR))
+    autowaf.display_msg(conf, "Unit tests", bool(conf.env.BUILD_TESTS))
     print('')
 
 ganv_source = [
@@ -165,7 +165,7 @@ def build(bld):
     # Documentation
     #autowaf.build_dox(bld, 'GANV', GANV_VERSION, top, out)
 
-    if bld.is_defined('HAVE_GIR'):
+    if bld.env.HAVE_GIR:
         bld.add_group()
 
         bld_dir = os.path.join(out, APPNAME)
