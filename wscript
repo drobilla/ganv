@@ -63,7 +63,11 @@ def configure(conf):
         autowaf.define(conf, 'GANV_FDGL', 1)
 
     if not Options.options.no_nls:
-        autowaf.check_header(conf, 'c', 'libintl.h', 'ENABLE_NLS', mandatory=False)
+        conf.check(function_name = 'dgettext',
+                   header_name   = 'libintl.h',
+                   lib           = 'intl',
+                   define_name   = 'ENABLE_NLS',
+                   mandatory     = False)
 
     conf.env.LIB_GANV = ['ganv-%s' % GANV_MAJOR_VERSION]
 
@@ -124,15 +128,17 @@ def build(bld):
         target = 'src/ganv-marshal.c')
 
     # Library
-    bld(features        = 'c cshlib cxx cxxshlib',
-        export_includes = ['.'],
-        source          = ganv_source,
-        includes        = ['.', './src'],
-        name            = 'libganv',
-        target          = 'ganv-%s' % GANV_MAJOR_VERSION,
-        uselib          = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
-        vnum            = GANV_VERSION,
-        install_path    = '${LIBDIR}')
+    lib = bld(features        = 'c cshlib cxx cxxshlib',
+              export_includes = ['.'],
+              source          = ganv_source,
+              includes        = ['.', './src'],
+              name            = 'libganv',
+              target          = 'ganv-%s' % GANV_MAJOR_VERSION,
+              uselib          = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
+              vnum            = GANV_VERSION,
+              install_path    = '${LIBDIR}')
+    if bld.is_defined('ENABLE_NLS'):
+        lib.lib = ['intl']
 
     # Benchmark program (C++)
     bld(features     = 'cxx cxxprogram',
