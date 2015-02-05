@@ -252,7 +252,7 @@ struct GanvCanvasImpl {
 		this->sprung_layout  = FALSE;
 #endif
 
-		_animate_idle_id = g_timeout_add(120, on_animate_timeout, this);
+		_animate_idle_id = 0;
 
 		gtk_layout_set_hadjustment(GTK_LAYOUT(canvas), NULL);
 		gtk_layout_set_vadjustment(GTK_LAYOUT(canvas), NULL);
@@ -1627,6 +1627,9 @@ gboolean
 GanvCanvasImpl::on_animate_timeout(gpointer data)
 {
 	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
+	if (!impl->pixmap_gc) {
+		return FALSE;  // Unrealized
+	}
 
 	const double seconds = get_monotonic_time() / 1000000.0;
 
@@ -2781,6 +2784,9 @@ ganv_canvas_realize(GtkWidget* widget)
 	canvas->impl->pixmap_gc = gdk_gc_new(canvas->layout.bin_window);
 
 	(*GANV_ITEM_GET_CLASS(canvas->impl->root)->realize)(canvas->impl->root);
+
+	canvas->impl->_animate_idle_id = g_timeout_add(
+		120, GanvCanvasImpl::on_animate_timeout, canvas->impl);
 }
 
 /* Unrealize handler for the canvas */
@@ -2790,6 +2796,8 @@ ganv_canvas_unrealize(GtkWidget* widget)
 	g_return_if_fail(GANV_IS_CANVAS(widget));
 
 	GanvCanvas* canvas = GANV_CANVAS(widget);
+
+	while (g_idle_remove_by_data(canvas->impl)) {}
 
 	shutdown_transients(canvas);
 
