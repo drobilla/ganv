@@ -164,7 +164,19 @@ measure(GanvModule* module, Metrics* m)
 		m->input_width  = ganv_module_get_empty_port_breadth(module);
 		m->output_width = ganv_module_get_empty_port_breadth(module);
 
-		const double ports_width = PAD + ((m->input_width + PAD) * impl->ports->len);
+		// TODO: cache this or merge with resize_right
+		unsigned n_inputs  = 0;
+		unsigned n_outputs = 0;
+		FOREACH_PORT(impl->ports, pi) {
+			if ((*pi)->impl->is_input) {
+				++n_inputs;
+			} else {
+				++n_outputs;
+			}
+		}
+		
+		const double ports_width = PAD + ((m->input_width + PAD) *
+		                                  MAX(n_inputs, n_outputs));
 
 		m->width = MAX(contents_width, ports_width);
 		m->width = MAX(m->width, impl->embed_width);

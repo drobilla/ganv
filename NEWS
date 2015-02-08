@@ -4,10 +4,11 @@ ganv (1.5.0) unstable;
   * Fix unexpected node jumping when dragging new connections.
   * Add support for PDF and PS export.
   * Improve text rendering at high zoom.
+  * Fix size of vertical flow modules.
   * Fix compilation with --no-fdgl (patch from Vlad Glagolev).
   * Fix crash when destroying canvas.
 
- -- David Robillard <d@drobilla.net>  Sun, 08 Feb 2015 08:32:08 -0500
+ -- David Robillard <d@drobilla.net>  Sun, 08 Feb 2015 16:20:38 -0500
 
 ganv (1.4.2) stable;
 
