@@ -237,7 +237,7 @@ typedef struct
 
 struct _GanvTextImpl
 {
-	cairo_surface_t* surface;
+	PangoLayout*     layout;
 	char*            text;
 	GanvTextCoords   coords;
 	GanvTextCoords   old_coords;

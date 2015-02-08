@@ -55,7 +55,7 @@ ganv_text_init(GanvText* text)
 	impl->coords.height = 1.0;
 	impl->old_coords = impl->coords;
 
-	impl->surface      = NULL;
+	impl->layout       = NULL;
 	impl->text         = NULL;
 	impl->color        = 0xFFFFFFFF;
 	impl->needs_layout = FALSE;
@@ -75,9 +75,9 @@ ganv_text_destroy(GtkObject* object)
 		impl->text = NULL;
 	}
 
-	if (impl->surface) {
-		cairo_surface_destroy(impl->surface);
-		impl->surface = NULL;
+	if (impl->layout) {
+		g_object_unref(impl->layout);
+		impl->layout = NULL;
 	}
 
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {
@@ -88,57 +88,36 @@ ganv_text_destroy(GtkObject* object)
 void
 ganv_text_layout(GanvText* text)
 {
-	GanvTextImpl* impl      = text->impl;
-	GanvItem*     item      = GANV_ITEM(text);
-	GanvCanvas*   canvas    = ganv_item_get_canvas(item);
-	GtkWidget*    widget    = GTK_WIDGET(canvas);
-	double        font_size = ganv_canvas_get_font_size(canvas);
-	guint         color     = 0xFFFFFFFF;
+	GanvTextImpl* impl   = text->impl;
+	GanvItem*     item   = GANV_ITEM(text);
+	GanvCanvas*   canvas = ganv_item_get_canvas(item);
+	GtkWidget*    widget = GTK_WIDGET(canvas);
+	double        points = ganv_canvas_get_font_size(canvas);
+	GtkStyle*     style  = gtk_rc_get_style(widget);
 
-	GtkStyle*             style   = gtk_rc_get_style(widget);
-	PangoFontDescription* font    = pango_font_description_copy(style->font_desc);
-	PangoLayout*          layout  = gtk_widget_create_pango_layout(widget, impl->text);
-	PangoContext*         context = pango_layout_get_context(layout);
-	cairo_font_options_t* options = cairo_font_options_copy(
-		pango_cairo_context_get_font_options(context));
-
-	pango_font_description_set_size(font, font_size * (double)PANGO_SCALE);
-	pango_layout_set_font_description(layout, font);
-
-	if (cairo_font_options_get_antialias(options) == CAIRO_ANTIALIAS_SUBPIXEL) {
-		cairo_font_options_set_antialias(options, CAIRO_ANTIALIAS_GRAY);
+	if (impl->layout) {
+		g_object_unref(impl->layout);
 	}
+	impl->layout = gtk_widget_create_pango_layout(widget, impl->text);
 
-	pango_cairo_context_set_font_options(context, options);
-	cairo_font_options_destroy(options);
+	PangoFontDescription* font = pango_font_description_copy(style->font_desc);
+	PangoContext*         ctx  = pango_layout_get_context(impl->layout);
+	cairo_font_options_t* opt  = cairo_font_options_copy(
+		pango_cairo_context_get_font_options(ctx));
 
-	int width, height;
-	pango_layout_get_pixel_size(layout, &width, &height);
-
-	impl->coords.width = width;
-	impl->coords.height = height;
-
-	if (impl->surface) {
-		cairo_surface_destroy(impl->surface);
-	}
-
-	impl->surface = cairo_image_surface_create(
-		CAIRO_FORMAT_ARGB32, width, height);
-
-	cairo_t* cr = cairo_create(impl->surface);
-
-	double r, g, b, a;
-	color_to_rgba(color, &r, &g, &b, &a);
-
-	cairo_set_source_rgba(cr, r, g, b, a);
-	cairo_move_to(cr, 0, 0);
-	pango_cairo_show_layout(cr, layout);
-
-	cairo_destroy(cr);
-	g_object_unref(layout);
+	pango_font_description_set_size(font, points * (double)PANGO_SCALE);
+	pango_layout_set_font_description(impl->layout, font);
+	pango_cairo_context_set_font_options(ctx, opt);
+	cairo_font_options_destroy(opt);
 	pango_font_description_free(font);
 
-	impl->needs_layout = FALSE;
+	int width, height;
+	pango_layout_get_pixel_size(impl->layout, &width, &height);
+
+	impl->coords.width  = width;
+	impl->coords.height = height;
+	impl->needs_layout  = FALSE;
+
 	ganv_item_request_update(GANV_ITEM(text));
 }
 
@@ -293,12 +272,14 @@ ganv_text_draw(GanvItem* item,
 		ganv_text_layout(text);
 	}
 
-	// Round to the nearest pixel so text isn't blurry
-	wx = lrint(wx);
-	wy = lrint(wy);
+	guint color = 0xFFFFFFFF;
 
-	cairo_set_source_surface(cr, impl->surface, wx, wy);
-	cairo_paint(cr);
+	double r, g, b, a;
+	color_to_rgba(color, &r, &g, &b, &a);
+
+	cairo_set_source_rgba(cr, r, g, b, a);
+	cairo_move_to(cr, wx, wy);
+	pango_cairo_show_layout(cr, impl->layout);
 }
 
 static void

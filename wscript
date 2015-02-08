@@ -8,7 +8,7 @@ import waflib.extras.autowaf as autowaf
 # major increment <=> incompatible changes
 # minor increment <=> compatible changes (additions)
 # micro increment <=> no interface changes
-GANV_VERSION       = '1.4.3'
+GANV_VERSION       = '1.5.0'
 GANV_MAJOR_VERSION = '1'
 
 # Mandatory waf variables

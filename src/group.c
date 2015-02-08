@@ -203,11 +203,6 @@ ganv_group_draw(GanvItem* item,
 {
 	GanvGroup* group = GANV_GROUP(item);
 
-	// Draw background
-	cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
-	cairo_rectangle(cr, cx, cy, cw, ch);
-	cairo_fill(cr);
-
 	// TODO: Layered drawing
 
 	for (GList* list = group->impl->item_list; list; list = list->next) {

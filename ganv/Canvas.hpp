@@ -84,6 +84,7 @@ public:
 	void  remove_edge(Edge* edge);
 	
 	METHOD0(ganv_canvas, arrange);
+	METHODRET2(ganv_canvas, int, export_image, const char*, filename, bool, draw_background);
 	METHOD1(ganv_canvas, export_dot, const char*, filename);
 	METHODRET0(ganv_canvas, gboolean, supports_sprung_layout);
 	METHODRET1(ganv_canvas, gboolean, set_sprung_layout, gboolean, sprung_layout);

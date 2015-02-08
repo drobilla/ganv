@@ -378,6 +378,19 @@ void
 ganv_canvas_arrange(GanvCanvas* canvas);
 
 /**
+ * ganv_canvas_export_image:
+ *
+ * Draw the canvas to an image file.  The file type is determined by extension,
+ * currently supported: pdf, ps, svg, dot.
+ *
+ * Returns: 0 on success.
+ */
+int
+ganv_canvas_export_image(GanvCanvas* canvas,
+                         const char* filename,
+                         gboolean    draw_background);
+
+/**
  * ganv_canvas_export_dot:
  *
  * Write a Graphviz DOT description of the canvas to a file.

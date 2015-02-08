@@ -2586,6 +2586,64 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 #endif
 }
 
+int
+ganv_canvas_export_image(GanvCanvas* canvas,
+                         const char* filename,
+                         gboolean    draw_background)
+{
+	const char* ext = strrchr(filename, '.');
+	if (!ext) {
+		return 1;
+	} else if (!strcmp(ext, ".dot")) {
+		ganv_canvas_export_dot(canvas, filename);
+		return 0;
+	}
+
+	cairo_surface_t* rec_surface = cairo_recording_surface_create(
+		CAIRO_CONTENT_COLOR_ALPHA, NULL);
+
+	// Draw to recording surface
+	cairo_t* cr = cairo_create(rec_surface);
+	(*GANV_ITEM_GET_CLASS(canvas->impl->root)->draw)(
+		canvas->impl->root, cr,
+		0, 0, canvas->impl->width, canvas->impl->height);
+	cairo_destroy(cr);	
+
+	// Get draw extent
+	double x, y, w, h;
+	cairo_recording_surface_ink_extents(rec_surface, &x, &y, &w, &h);
+
+	// Create image surface with the appropriate size
+	const double     pad   = GANV_CANVAS_PAD;
+	const double     img_w = w + pad * 2;
+	const double     img_h = h + pad * 2;
+	cairo_surface_t* img   = NULL;
+	if (!strcmp(ext, ".svg")) {
+		img = cairo_svg_surface_create(filename, img_w, img_h);
+	} else if (!strcmp(ext, ".pdf")) {
+		img = cairo_pdf_surface_create(filename, img_w, img_h);
+	} else if (!strcmp(ext, ".ps")) {
+		img = cairo_ps_surface_create(filename, img_w, img_h);
+	} else {
+		cairo_surface_destroy(rec_surface);
+		return 1;
+	}	
+
+	// Draw recording to image surface
+	cr = cairo_create(img);
+	if (draw_background) {
+		cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+		cairo_rectangle(cr, 0, 0, w + 2 * pad, h + 2 * pad);
+		cairo_fill(cr);
+	}
+	cairo_set_source_surface(cr, rec_surface, -x + pad, -y + pad);
+	cairo_paint(cr);
+	cairo_destroy(cr);	
+	cairo_surface_destroy(rec_surface);
+	cairo_surface_destroy(img);
+	return 0;
+}
+
 void
 ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename)
 {
@@ -3590,6 +3648,13 @@ ganv_canvas_paint_rect(GanvCanvas* canvas, gint x0, gint y0, gint x1, gint y1)
 		double wx1, wy1, ww, wh;
 		ganv_canvas_c2w(canvas, draw_x1, draw_y1, &wx1, &wy1);
 		ganv_canvas_c2w(canvas, draw_width, draw_height, &ww, &wh);
+
+		// Draw background
+		cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+		cairo_rectangle(cr, wx1, wy1, ww, wh);
+		cairo_fill(cr);
+
+		// Draw root group
 		(*GANV_ITEM_GET_CLASS(canvas->impl->root)->draw)(
 			canvas->impl->root, cr,
 			wx1, wy1, ww, wh);

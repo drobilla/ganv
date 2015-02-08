@@ -76,6 +76,11 @@ private: \
 		return prefix##_##name(gobj(), a1); \
 	}
 
+#define METHODRET2(prefix, ret, name, t1, a1, t2, a2) \
+	virtual ret name(t1 a1, t2 a2) { \
+		return prefix##_##name(gobj(), a1, a2); \
+	}
+
 #define METHODRETWRAP0(prefix, ret, name) \
 	virtual ret name() const { \
 		if (gobj()) { \
