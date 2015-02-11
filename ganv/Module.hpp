@@ -56,6 +56,7 @@ public:
 				      "radius-tr", 4.0,
 				      "radius-br", 4.0,
 				      "radius-bl", 4.0,
+				      "border-width", 2.0,
 				      "label", name.c_str(),
 				      "draggable", TRUE,
 				      NULL)))

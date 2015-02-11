@@ -34,6 +34,8 @@
 	for (const GanvPort** i = (const GanvPort**)ports->pdata; \
 	     i != (const GanvPort**)ports->pdata + ports->len; ++i)
 
+static const double PAD              = 2.0;
+static const double EDGE_PAD         = 4.0;
 static const double MODULE_LABEL_PAD = 2.0;
 
 G_DEFINE_TYPE(GanvModule, ganv_module, GANV_TYPE_BOX)
@@ -153,11 +155,9 @@ measure(GanvModule* module, Metrics* m)
 	GanvModuleImpl* impl         = module->impl;
 
 	if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_DOWN) {
-		static const double PAD = 2.0;
-
-		double contents_width = PAD;
+		double contents_width = 0.0;
 		if (canvas_title) {
-			contents_width += title_w;
+			contents_width += title_w + (2.0 * PAD);
 		}
 
 		m->embed_x      = 0;
@@ -174,9 +174,11 @@ measure(GanvModule* module, Metrics* m)
 				++n_outputs;
 			}
 		}
-		
-		const double ports_width = PAD + ((m->input_width + PAD) *
-		                                  MAX(n_inputs, n_outputs));
+
+		const unsigned hor_ports = MAX(1, MAX(n_inputs, n_outputs));
+		const double ports_width = (2 * EDGE_PAD) +
+			((m->input_width) * hor_ports) +
+			(PAD * (hor_ports - 1));
 
 		m->width = MAX(contents_width, ports_width);
 		m->width = MAX(m->width, impl->embed_width);
@@ -303,10 +305,14 @@ resize_right(GanvModule* module)
 		GanvNode* const pnode = GANV_NODE(p);
 		h = ganv_box_get_height(pbox);
 
+		// Offset to shift ports to make borders line up
+		const double border_off = (GANV_NODE(module)->impl->border_width -
+		                           pnode->impl->border_width) / 2.0;
+
 		if (p->impl->is_input) {
 			y = header_height + 2.0 + (i * (h + 2.0));
 			++i;
-			ganv_node_move_to(pnode, 0.0, y);
+			ganv_node_move_to(pnode, -border_off, y);
 			ganv_box_set_width(pbox, m.input_width);
 			last_was_input = TRUE;
 
@@ -318,7 +324,7 @@ resize_right(GanvModule* module)
 				y = header_height + 2.0 + (i * (h + 2.0));
 				++i;
 			}
-			ganv_node_move_to(pnode, m.width - m.output_width, y);
+			ganv_node_move_to(pnode, m.width - m.output_width + border_off, y);
 			ganv_box_set_width(pbox, m.output_width);
 			last_was_input = FALSE;
 
@@ -353,8 +359,6 @@ resize_down(GanvModule* module)
 	double title_w, title_h;
 	title_size(module, &title_w, &title_h);
 
-	static const double PAD = 2.0;
-
 	const double port_depth   = ganv_module_get_empty_port_depth(module);
 	const double port_breadth = ganv_module_get_empty_port_breadth(module);
 
@@ -379,15 +383,20 @@ resize_down(GanvModule* module)
 		GanvNode* const pnode = GANV_NODE(p);
 		ganv_box_set_width(pbox, port_breadth);
 		ganv_box_set_height(pbox, port_depth);
+
+		// Offset to shift ports to make borders line up
+		const double border_off = (GANV_NODE(module)->impl->border_width -
+		                           pnode->impl->border_width) / 2.0;
+		
 		if (p->impl->is_input) {
-			in_x = PAD + (in_count++ * (port_breadth + PAD));
-			ganv_node_move_to(pnode, in_x, 0);
+			in_x = EDGE_PAD + (in_count++ * (port_breadth + PAD));
+			ganv_node_move_to(pnode, in_x, -border_off);
 			ganv_canvas_for_each_edge_to(
 				canvas, pnode,
 				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		} else {
-			out_x = PAD + (out_count++ * (port_breadth + PAD));
-			ganv_node_move_to(pnode, out_x, height - ganv_box_get_height(pbox));
+			out_x = EDGE_PAD + (out_count++ * (port_breadth + PAD));
+			ganv_node_move_to(pnode, out_x, height - port_depth + border_off);
 			ganv_canvas_for_each_edge_from(
 				canvas, pnode,
 				(GanvEdgeFunc)ganv_edge_update_location, NULL);
