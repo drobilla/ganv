@@ -126,6 +126,21 @@ ganv_port_get_property(GObject*    object,
 }
 
 static void
+ganv_port_update(GanvItem* item, int flags)
+{
+	GanvPort*     port = GANV_PORT(item);
+	GanvPortImpl* impl = port->impl;
+
+	if (impl->control) {
+		const double border_width = GANV_NODE(item)->impl->border_width;
+		impl->control->rect->impl->coords.border_width = border_width;
+	}
+
+	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
+	item_class->update(item, flags);
+}
+
+static void
 ganv_port_draw(GanvItem* item,
                cairo_t* cr, double cx, double cy, double cw, double ch)
 {
@@ -137,8 +152,21 @@ ganv_port_draw(GanvItem* item,
 	item_class->draw(item, cr, cx, cy, cw, ch);
 
 	if (port->impl->control) {
+		// Clip to port boundaries (to stay within radiused borders)
+		cairo_save(cr);
+		const double  pad    = GANV_NODE(port)->impl->border_width / 2.0;
+		GanvBoxCoords coords = GANV_BOX(port)->impl->coords;
+		ganv_item_i2w_pair(GANV_ITEM(port),
+		                   &coords.x1, &coords.y1, &coords.x2, &coords.y2);
+		ganv_box_path(GANV_BOX(port), cr,
+		              coords.x1 - pad, coords.y1 - pad,
+		              coords.x2 + pad, coords.y2 + pad);
+		cairo_clip(cr);
+
 		GanvItem* const rect = GANV_ITEM(port->impl->control->rect);
 		GANV_ITEM_GET_CLASS(rect)->draw(rect, cr, cx, cy, cw, ch);
+
+		cairo_restore(cr);
 	}
 
 	if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_DOWN ||
@@ -378,8 +406,9 @@ ganv_port_class_init(GanvPortClass* klass)
 
 	object_class->destroy = ganv_port_destroy;
 
-	item_class->event = ganv_port_event;
-	item_class->draw  = ganv_port_draw;
+	item_class->update = ganv_port_update;
+	item_class->event  = ganv_port_event;
+	item_class->draw   = ganv_port_draw;
 
 	node_class->tail_vector = ganv_port_tail_vector;
 	node_class->head_vector = ganv_port_head_vector;
@@ -449,10 +478,12 @@ ganv_port_set_direction(GanvPort*     port,
 void
 ganv_port_show_control(GanvPort* port)
 {
+	GanvNode* node = GANV_NODE(port);
+
+	guint color = highlight_color(node->impl->fill_color, 0x40);
+
 	GanvPortControl* control = (GanvPortControl*)malloc(sizeof(GanvPortControl));
 	port->impl->control = control;
-
-	guint control_col = highlight_color(GANV_NODE(port)->impl->fill_color, 0x40);
 
 	control->value      = 0.0f;
 	control->min        = 0.0f;
@@ -467,9 +498,9 @@ ganv_port_show_control(GanvPort* port)
 		              "y1", 0.0,
 		              "x2", 0.0,
 		              "y2", ganv_box_get_height(&port->box),
-		              "fill-color", control_col,
-		              "border-color", control_col,
-		              "border-width", 0.0,
+		              "fill-color", color,
+		              "border-color", color,
+		              "border-width", 0.0,//node->impl->border_width,
 		              "managed", TRUE,
 		              NULL));
 	ganv_item_show(GANV_ITEM(control->rect));
@@ -553,7 +584,7 @@ ganv_port_update_control_slider(GanvPort* port, float value, gboolean force)
 
 	// Redraw port
 	impl->control->value = value;
-	ganv_box_set_width(impl->control->rect, MAX(0.0, w - 1.0));
+	ganv_box_set_width(impl->control->rect, MAX(0.0, w));
 	ganv_box_request_redraw(
 		GANV_ITEM(port), &GANV_BOX(port)->impl->coords, FALSE);
 }

@@ -359,6 +359,10 @@ ganv_edge_tick(GanvEdge* edge, double seconds);
 /* Box */
 
 void
+ganv_box_path(GanvBox* box,
+              cairo_t* cr, double x1, double y1, double x2, double  y2);
+
+void
 ganv_box_request_redraw(GanvItem*            item,
                         const GanvBoxCoords* coords,
                         gboolean             world);

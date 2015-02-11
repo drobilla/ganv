@@ -52,11 +52,12 @@ ganv_box_init(GanvBox* box)
 
 	memset(&box->impl->coords, '\0', sizeof(GanvBoxCoords));
 
-	box->impl->old_coords = box->impl->coords;
-	box->impl->radius_tl  = 0.0;
-	box->impl->radius_tr  = 0.0;
-	box->impl->radius_br  = 0.0;
-	box->impl->radius_bl  = 0.0;
+	box->impl->coords.border_width = GANV_NODE(box)->impl->border_width;
+	box->impl->old_coords          = box->impl->coords;
+	box->impl->radius_tl           = 0.0;
+	box->impl->radius_tr           = 0.0;
+	box->impl->radius_br           = 0.0;
+	box->impl->radius_bl           = 0.0;
 }
 
 static void
@@ -199,6 +200,38 @@ ganv_box_update(GanvItem* item, int flags)
 	ganv_box_request_redraw(item, &impl->coords, FALSE);
 }
 
+void
+ganv_box_path(GanvBox* box,
+              cairo_t* cr, double x1, double y1, double x2, double  y2)
+{
+	static const double degrees = G_PI / 180.0;
+
+	GanvBoxImpl* impl = box->impl;
+
+	if (impl->radius_tl == 0.0 && impl->radius_tr == 0.0
+	    && impl->radius_br == 0.0 && impl->radius_bl == 0.0) {
+		// Simple rectangle
+		cairo_rectangle(cr, x1, y1, x2 - x1, y2 - y1);
+	} else {
+		// Rounded rectangle
+		cairo_new_sub_path(cr);
+		cairo_arc(cr,
+		          x2 - impl->radius_tr,
+		          y1 + impl->radius_tr,
+		          impl->radius_tr, -90 * degrees, 0 * degrees);
+		cairo_arc(cr,
+		          x2 - impl->radius_br, y2 - impl->radius_br,
+		          impl->radius_br, 0 * degrees, 90 * degrees);
+		cairo_arc(cr,
+		          x1 + impl->radius_bl, y2 - impl->radius_bl,
+		          impl->radius_bl, 90 * degrees, 180 * degrees);
+		cairo_arc(cr,
+		          x1 + impl->radius_tl, y1 + impl->radius_tl,
+		          impl->radius_tl, 180 * degrees, 270 * degrees);
+		cairo_close_path(cr);
+	}
+}
+
 static void
 ganv_box_draw(GanvItem* item,
               cairo_t* cr, double cx, double cy, double cw, double ch)
@@ -218,34 +251,12 @@ ganv_box_draw(GanvItem* item,
 
 	double r, g, b, a;
 
-	static const double degrees = G_PI / 180.0;
-
 	for (int i = (impl->coords.stacked ? 1 : 0); i >= 0; --i) {
 		const double x = 0.0 - (STACKED_OFFSET * i);
 		const double y = 0.0 - (STACKED_OFFSET * i);
 
-		if (impl->radius_tl == 0.0 && impl->radius_tr == 0.0
-		    && impl->radius_br == 0.0 && impl->radius_bl == 0.0) {
-			// Simple rectangle
-			cairo_rectangle(cr, x1 - x, y1 - y, x2 - x1, y2 - y1);
-		} else {
-			// Rounded rectangle
-			cairo_new_sub_path(cr);
-			cairo_arc(cr,
-			          x2 - x - impl->radius_tr,
-			          y1 - y + impl->radius_tr,
-			          impl->radius_tr, -90 * degrees, 0 * degrees);
-			cairo_arc(cr,
-			          x2 - x - impl->radius_br, y2 - y - impl->radius_br,
-			          impl->radius_br, 0 * degrees, 90 * degrees);
-			cairo_arc(cr,
-			          x1 - x + impl->radius_bl, y2 - y - impl->radius_bl,
-			          impl->radius_bl, 90 * degrees, 180 * degrees);
-			cairo_arc(cr,
-			          x1 - x + impl->radius_tl, y1 - y + impl->radius_tl,
-			          impl->radius_tl, 180 * degrees, 270 * degrees);
-			cairo_close_path(cr);
-		}
+		// Trace basic box path
+		ganv_box_path(box, cr, x1 - x, y1 - y, x2 - x, y2 - y);
 
 		// Fill
 		color_to_rgba(fill_color, &r, &g, &b, &a);
