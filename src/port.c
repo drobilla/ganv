@@ -170,19 +170,20 @@ ganv_port_tail_vector(const GanvNode* self,
 	GanvItem*   item   = &port->box.node.item;
 	GanvCanvas* canvas = ganv_item_get_canvas(item);
 
-	const double px = item->impl->x;
-	const double py = item->impl->y;
+	const double px           = item->impl->x;
+	const double py           = item->impl->y;
+	const double border_width = GANV_NODE(port)->impl->border_width;
 
 	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
-		*x  = px + ganv_box_get_width(&port->box);
+		*x  = px + ganv_box_get_width(&port->box) + (border_width / 2.0);
 		*y  = py + ganv_box_get_height(&port->box) / 2.0;
 		*dx = 1.0;
 		*dy = 0.0;
 		break;
 	case GANV_DIRECTION_DOWN:
 		*x  = px + ganv_box_get_width(&port->box) / 2.0;
-		*y  = py + ganv_box_get_height(&port->box);
+		*y  = py + ganv_box_get_height(&port->box) + (border_width / 2.0);
 		*dx = 0.0;
 		*dy = 1.0;
 		break;
@@ -203,19 +204,20 @@ ganv_port_head_vector(const GanvNode* self,
 	GanvItem*   item   = &port->box.node.item;
 	GanvCanvas* canvas = ganv_item_get_canvas(item);
 
-	const double px = item->impl->x;
-	const double py = item->impl->y;
+	const double px           = item->impl->x;
+	const double py           = item->impl->y;
+	const double border_width = GANV_NODE(port)->impl->border_width;
 
 	switch (ganv_canvas_get_direction(canvas)) {
 	case GANV_DIRECTION_RIGHT:
-		*x  = px;
+		*x  = px - (border_width / 2.0);
 		*y  = py + ganv_box_get_height(&port->box) / 2.0;
 		*dx = -1.0;
 		*dy = 0.0;
 		break;
 	case GANV_DIRECTION_DOWN:
 		*x  = px + ganv_box_get_width(&port->box) / 2.0;
-		*y  = 0.0;
+		*y  = py - (border_width / 2.0);
 		*dx = 0.0;
 		*dy = -1.0;
 		break;
