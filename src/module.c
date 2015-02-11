@@ -35,7 +35,7 @@
 	     i != (const GanvPort**)ports->pdata + ports->len; ++i)
 
 static const double PAD              = 2.0;
-static const double EDGE_PAD         = 4.0;
+static const double EDGE_PAD         = 5.0;
 static const double MODULE_LABEL_PAD = 2.0;
 
 G_DEFINE_TYPE(GanvModule, ganv_module, GANV_TYPE_BOX)
@@ -254,7 +254,7 @@ place_title(GanvModule* module, GanvDirection dir)
 	} else if (dir == GANV_DIRECTION_RIGHT) {
 		ganv_item_set(GANV_ITEM(canvas_title),
 		              "x", (ganv_box_get_width(box) - title_w) / 2.0,
-		              "y", 2.0,
+		              "y", 1.0,
 		              NULL);
 	} else {
 		ganv_item_set(GANV_ITEM(canvas_title),
@@ -277,7 +277,7 @@ resize_right(GanvModule* module)
 	title_size(module, &title_w, &title_h);
 
 	// Basic height contains title
-	double header_height = 2.0 + title_h;
+	double header_height = title_h ? (3.0 + title_h) : EDGE_PAD;
 
 	if (impl->embed_item) {
 		ganv_item_set(impl->embed_item,
@@ -310,7 +310,7 @@ resize_right(GanvModule* module)
 		                           pnode->impl->border_width) / 2.0;
 
 		if (p->impl->is_input) {
-			y = header_height + 2.0 + (i * (h + 2.0));
+			y = header_height + (i * (h + 2.0));
 			++i;
 			ganv_node_move_to(pnode, -border_off, y);
 			ganv_box_set_width(pbox, m.input_width);
@@ -321,7 +321,7 @@ resize_right(GanvModule* module)
 				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		} else {
 			if (!m.horiz || !last_was_input) {
-				y = header_height + 2.0 + (i * (h + 2.0));
+				y = header_height + (i * (h + 2.0));
 				++i;
 			}
 			ganv_node_move_to(pnode, m.width - m.output_width + border_off, y);
@@ -338,7 +338,7 @@ resize_right(GanvModule* module)
 		h += header_height;
 	}
 
-	double height = y + h + 4.0;
+	double height = y + h + EDGE_PAD;
 	if (impl->embed_item && m.embed_between)
 		height = MAX(height, impl->embed_height + header_height + 2.0);
 
