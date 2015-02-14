@@ -211,7 +211,6 @@ ganv_node_get_draw_properties(const GanvNode* node,
 
 typedef struct {
 	GanvBox*  rect;
-	GanvText* label;
 	float     value;
 	float     min;
 	float     max;
@@ -221,6 +220,7 @@ typedef struct {
 
 struct _GanvPortImpl {
 	GanvPortControl* control;
+	GanvText*        value_label;
 	gboolean         is_input;
 	gboolean         is_controllable;
 };
@@ -241,6 +241,7 @@ struct _GanvTextImpl
 	char*            text;
 	GanvTextCoords   coords;
 	GanvTextCoords   old_coords;
+	double           font_size;
 	guint            color;
 	gboolean         needs_layout;
 };

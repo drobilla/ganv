@@ -25,7 +25,7 @@
 #include "./ganv-private.h"
 #include "./gettext.h"
 
-static const double PORT_LABEL_HPAD = 4.0;
+static const double PORT_LABEL_HPAD = 2.0;
 static const double PORT_LABEL_VPAD = 1.0;
 
 static const guchar check_off[] = { 0xE2, 0x98, 0x90, 0 };
@@ -57,6 +57,8 @@ ganv_port_init(GanvPort* port)
 	port->impl = G_TYPE_INSTANCE_GET_PRIVATE(
 		port, GANV_TYPE_PORT, GanvPortImpl);
 
+	port->impl->control         = NULL;
+	port->impl->value_label     = NULL;
 	port->impl->is_input        = TRUE;
 	port->impl->is_controllable = FALSE;
 }
@@ -176,7 +178,7 @@ ganv_port_draw(GanvItem* item,
 
 	GanvItem* labels[2] = {
 		GANV_ITEM(GANV_NODE(item)->impl->label),
-		port->impl->control ? GANV_ITEM(port->impl->control->label) : NULL
+		port->impl->value_label ? GANV_ITEM(port->impl->value_label) : NULL
 	};
 	for (int i = 0; i < 2; ++i) {
 		if (labels[i] && (labels[i]->object.flags & GANV_ITEM_VISIBLE)) {
@@ -255,23 +257,34 @@ ganv_port_head_vector(const GanvNode* self,
 }
 
 static void
-ganv_port_place_value_label(GanvPort* port)
+ganv_port_place_labels(GanvPort* port)
 {
-	GanvPortControl* control = port->impl->control;
-	if (control && control->label) {
-		GanvCanvas*  canvas  = ganv_item_get_canvas(GANV_ITEM(port));
-		const double port_w  = ganv_box_get_width(&port->box);
-		const double label_w = control->label->impl->coords.width;
+	GanvCanvas*   canvas   = ganv_item_get_canvas(GANV_ITEM(port));
+	GanvPortImpl* impl     = port->impl;
+	GanvText*     label    = GANV_NODE(port)->impl->label;
+	const double  port_w   = ganv_box_get_width(&port->box);
+	const double  port_h   = ganv_box_get_height(&port->box);
+	double        vlabel_w = 0.0;
+	if (impl->value_label) {
+		const double vlabel_h = impl->value_label->impl->coords.height;
+		vlabel_w = impl->value_label->impl->coords.width;
 		if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_RIGHT) {
-			ganv_item_set(GANV_ITEM(control->label),
-			              "x", port_w - label_w - PORT_LABEL_HPAD,
-			              "y", PORT_LABEL_VPAD,
+			ganv_item_set(GANV_ITEM(impl->value_label),
+			              "x", PORT_LABEL_HPAD,
+			              "y", (port_h - vlabel_h) / 2.0,
 			              NULL);
 		} else {
-			const double port_h  = ganv_box_get_height(&port->box);
-			const double label_h = control->label->impl->coords.height;
-			ganv_item_set(GANV_ITEM(control->label),
-			              "x", (port_w - label_w) / 2.0,
+			ganv_item_set(GANV_ITEM(impl->value_label),
+			              "x", (port_w - vlabel_w) / 2.0,
+			              "y", (port_h - vlabel_h) / 2.0,
+			              NULL);
+		}
+	}
+	if (label) {
+		const double label_h = label->impl->coords.height;
+		if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_RIGHT) {
+			ganv_item_set(GANV_ITEM(label),
+			              "x", vlabel_w + 2 * PORT_LABEL_HPAD,
 			              "y", (port_h - label_h) / 2.0,
 			              NULL);
 		}
@@ -284,7 +297,7 @@ ganv_port_resize(GanvNode* self)
 	GanvPort* port   = GANV_PORT(self);
 	GanvNode* node   = GANV_NODE(self);
 	GanvText* label  = node->impl->label;
-	GanvText* vlabel = port->impl->control ? port->impl->control->label : NULL;
+	GanvText* vlabel = port->impl->value_label;
 
 	double label_w  = 0.0;
 	double label_h  = 0.0;
@@ -298,8 +311,11 @@ ganv_port_resize(GanvNode* self)
 	}
 
 	if (label || vlabel) {
-		ganv_box_set_width(&port->box,
-		                   label_w + vlabel_w + (PORT_LABEL_HPAD * 2.0));
+		double labels_w = label_w + PORT_LABEL_HPAD * 2.0;
+		if (vlabel_w != 0.0) {
+			labels_w += vlabel_w + PORT_LABEL_HPAD;
+		}
+		ganv_box_set_width(&port->box, labels_w);
 		ganv_box_set_height(&port->box,
 		                    MAX(label_h, vlabel_h) + (PORT_LABEL_VPAD * 2.0));
 		ganv_item_set(GANV_ITEM(node->impl->label),
@@ -317,13 +333,13 @@ static void
 ganv_port_redraw_text(GanvNode* node)
 {
 	GanvPort* port = GANV_PORT(node);
-	if (port->impl->control && port->impl->control->label) {
-		ganv_text_layout(port->impl->control->label);
-		ganv_port_place_value_label(port);
+	if (port->impl->value_label) {
+		ganv_text_layout(port->impl->value_label);
 	}
 	if (GANV_NODE_CLASS(parent_class)->redraw_text) {
 		(*GANV_NODE_CLASS(parent_class)->redraw_text)(node);
 	}
+	ganv_port_place_labels(port);
 }
 
 static void
@@ -334,8 +350,8 @@ ganv_port_set_width(GanvBox* box,
 	parent_class->set_width(box, width);
 	if (port->impl->control) {
 		ganv_port_update_control_slider(port, port->impl->control->value, TRUE);
-		ganv_port_place_value_label(port);
 	}
+	ganv_port_place_labels(port);
 }
 
 static void
@@ -350,8 +366,8 @@ ganv_port_set_height(GanvBox* box,
 		ganv_item_set(GANV_ITEM(port->impl->control->rect),
 		              "y2", control_y1 + height,
 		              NULL);
-		ganv_port_place_value_label(port);
 	}
+	ganv_port_place_labels(port);
 }
 
 static gboolean
@@ -490,7 +506,6 @@ ganv_port_show_control(GanvPort* port)
 	control->max        = 0.0f;
 	control->is_toggle  = FALSE;
 	control->is_integer = FALSE;
-	control->label      = NULL;
 	control->rect       = GANV_BOX(
 		ganv_item_new(GANV_ITEM(port),
 		              ganv_box_get_type(),
@@ -519,26 +534,26 @@ ganv_port_set_value_label(GanvPort*   port,
                           const char* str)
 {
 	GanvPortImpl* impl = port->impl;
-	if (!impl->control) {
-		return;
-	}
 
 	if (!str || str[0] == '\0') {
-		if (impl->control->label) {
-			gtk_object_destroy(GTK_OBJECT(impl->control->label));
-			impl->control->label = NULL;
+		if (impl->value_label) {
+			gtk_object_destroy(GTK_OBJECT(impl->value_label));
+			impl->value_label = NULL;
 		}
-	} else if (impl->control->label) {
-		ganv_item_set(GANV_ITEM(impl->control->label),
+	} else if (impl->value_label) {
+		ganv_item_set(GANV_ITEM(impl->value_label),
 		              "text", str,
 		              NULL);
 	} else {
-		impl->control->label = GANV_TEXT(ganv_item_new(GANV_ITEM(port),
-		                                               ganv_text_get_type(),
-		                                               "text", str,
-		                                               "color", 0xFFFFFFFF,
-		                                               "managed", TRUE,
-		                                               NULL));
+		GanvCanvas*  canvas = GANV_ITEM(port)->impl->canvas;
+		const double points = lrint(ganv_canvas_get_font_size(canvas) * 0.8);
+		impl->value_label = GANV_TEXT(ganv_item_new(GANV_ITEM(port),
+		                                            ganv_text_get_type(),
+		                                            "text", str,
+		                                            "font-size", points,
+		                                            "color", 0xFFFFFFAA,
+		                                            "managed", TRUE,
+		                                            NULL));
 		ganv_port_resize(GANV_NODE(port));
 	}
 }
@@ -678,12 +693,12 @@ ganv_port_get_natural_width(const GanvPort* port)
 	} else {
 		w = ganv_module_get_empty_port_depth(ganv_port_get_module(port));
 	}
-	if (port->impl->control && port->impl->control->label &&
-	    (GANV_ITEM(port->impl->control->label)->object.flags
+	if (port->impl->value_label &&
+	    (GANV_ITEM(port->impl->value_label)->object.flags
 	     & GANV_ITEM_VISIBLE)) {
 		double label_w;
-		g_object_get(port->impl->control->label, "width", &label_w, NULL);
-		w += (PORT_LABEL_HPAD * 4.0);
+		g_object_get(port->impl->value_label, "width", &label_w, NULL);
+		w += label_w + PORT_LABEL_HPAD;
 	}
 	return w;
 }

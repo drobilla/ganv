@@ -39,7 +39,8 @@ enum {
 	PROP_Y,
 	PROP_WIDTH,
 	PROP_HEIGHT,
-	PROP_COLOR
+	PROP_COLOR,
+	PROP_FONT_SIZE
 };
 
 static void
@@ -53,10 +54,11 @@ ganv_text_init(GanvText* text)
 	memset(&impl->coords, '\0', sizeof(GanvTextCoords));
 	impl->coords.width  = 1.0;
 	impl->coords.height = 1.0;
-	impl->old_coords = impl->coords;
+	impl->old_coords    = impl->coords;
 
 	impl->layout       = NULL;
 	impl->text         = NULL;
+	impl->font_size    = 0.0;
 	impl->color        = 0xFFFFFFFF;
 	impl->needs_layout = FALSE;
 }
@@ -92,8 +94,12 @@ ganv_text_layout(GanvText* text)
 	GanvItem*     item   = GANV_ITEM(text);
 	GanvCanvas*   canvas = ganv_item_get_canvas(item);
 	GtkWidget*    widget = GTK_WIDGET(canvas);
-	double        points = ganv_canvas_get_font_size(canvas);
+	double        points = impl->font_size;
 	GtkStyle*     style  = gtk_rc_get_style(widget);
+
+	if (impl->font_size == 0.0) {
+		points = ganv_canvas_get_font_size(canvas);
+	}
 
 	if (impl->layout) {
 		g_object_unref(impl->layout);
@@ -139,6 +145,7 @@ ganv_text_set_property(GObject*      object,
 		SET_CASE(WIDTH, double, impl->coords.width);
 		SET_CASE(HEIGHT, double, impl->coords.height);
 		SET_CASE(COLOR, uint, impl->color)
+		SET_CASE(FONT_SIZE, double, impl->font_size)
 	case PROP_TEXT:
 		free(impl->text);
 		impl->text = g_value_dup_string(value);
@@ -272,10 +279,8 @@ ganv_text_draw(GanvItem* item,
 		ganv_text_layout(text);
 	}
 
-	guint color = 0xFFFFFFFF;
-
 	double r, g, b, a;
-	color_to_rgba(color, &r, &g, &b, &a);
+	color_to_rgba(impl->color, &r, &g, &b, &a);
 
 	cairo_set_source_rgba(cr, r, g, b, a);
 	cairo_move_to(cr, wx, wy);
@@ -348,6 +353,16 @@ ganv_text_class_init(GanvTextClass* klass)
 			0, G_MAXUINT,
 			DEFAULT_TEXT_COLOR,
 			G_PARAM_READWRITE));
+
+	g_object_class_install_property(
+		gobject_class, PROP_FONT_SIZE, g_param_spec_double(
+			"font-size",
+			_("Font size"),
+			_("The font size in points."),
+			-G_MAXDOUBLE, G_MAXDOUBLE,
+			0.0,
+			G_PARAM_READWRITE));
+
 
 	object_class->destroy = ganv_text_destroy;
 
