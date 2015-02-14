@@ -443,7 +443,7 @@ ganv_port_new(GanvModule* module,
 	node->impl->can_tail     = !is_input;
 	node->impl->can_head     = is_input;
 	node->impl->draggable    = FALSE;
-	node->impl->border_width = 1.0;
+	node->impl->border_width = 2.0;
 
 	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(port));
 	ganv_port_set_direction(port, ganv_canvas_get_direction(canvas));
@@ -500,7 +500,7 @@ ganv_port_show_control(GanvPort* port)
 		              "y2", ganv_box_get_height(&port->box),
 		              "fill-color", color,
 		              "border-color", color,
-		              "border-width", 0.0,//node->impl->border_width,
+		              "border-width", 0.0,
 		              "managed", TRUE,
 		              NULL));
 	ganv_item_show(GANV_ITEM(control->rect));

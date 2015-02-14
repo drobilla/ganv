@@ -44,22 +44,21 @@ public:
 	       double             x                = 0,
 	       double             y                = 0,
 	       bool               show_title       = true)
-		: Box(&canvas, GANV_BOX(
-			      ganv_item_new(
-				      GANV_ITEM(canvas.root()),
-				      ganv_module_get_type(),
-				      "x", x,
-				      "y", y,
-				      "can-tail", FALSE,
-				      "can-head", FALSE,
-				      "radius-tl", 4.0,
-				      "radius-tr", 4.0,
-				      "radius-br", 4.0,
-				      "radius-bl", 4.0,
-				      "border-width", 2.0,
-				      "label", name.c_str(),
-				      "draggable", TRUE,
-				      NULL)))
+		: Box(&canvas,
+		      GANV_BOX(ganv_item_new(GANV_ITEM(canvas.root()),
+		                             ganv_module_get_type(),
+		                             "x", x,
+		                             "y", y,
+		                             "can-tail", FALSE,
+		                             "can-head", FALSE,
+		                             "radius-tl", 4.0,
+		                             "radius-tr", 4.0,
+		                             "radius-br", 4.0,
+		                             "radius-bl", 4.0,
+		                             "border-width", 2.0,
+		                             "label", name.c_str(),
+		                             "draggable", TRUE,
+		                             NULL)))
 	{}
 
 	template<typename P, typename C>

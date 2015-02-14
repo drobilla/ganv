@@ -178,7 +178,7 @@ measure(GanvModule* module, Metrics* m)
 		const unsigned hor_ports = MAX(1, MAX(n_inputs, n_outputs));
 		const double ports_width = (2 * EDGE_PAD) +
 			((m->input_width) * hor_ports) +
-			(PAD * (hor_ports - 1));
+			((PAD + 1.0) * (hor_ports - 1));
 
 		m->width = MAX(contents_width, ports_width);
 		m->width = MAX(m->width, impl->embed_width);
@@ -310,7 +310,7 @@ resize_right(GanvModule* module)
 		                           pnode->impl->border_width) / 2.0;
 
 		if (p->impl->is_input) {
-			y = header_height + (i * (h + 2.0));
+			y = header_height + (i * (h + pnode->impl->border_width + 1.0));
 			++i;
 			ganv_node_move_to(pnode, -border_off, y);
 			ganv_box_set_width(pbox, m.input_width);
@@ -321,7 +321,7 @@ resize_right(GanvModule* module)
 				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		} else {
 			if (!m.horiz || !last_was_input) {
-				y = header_height + (i * (h + 2.0));
+				y = header_height + (i * (h + pnode->impl->border_width + 1.0));
 				++i;
 			}
 			ganv_node_move_to(pnode, m.width - m.output_width + border_off, y);
@@ -389,13 +389,13 @@ resize_down(GanvModule* module)
 		                           pnode->impl->border_width) / 2.0;
 		
 		if (p->impl->is_input) {
-			in_x = EDGE_PAD + (in_count++ * (port_breadth + PAD));
+			in_x = EDGE_PAD + (in_count++ * (port_breadth + PAD + 1.0));
 			ganv_node_move_to(pnode, in_x, -border_off);
 			ganv_canvas_for_each_edge_to(
 				canvas, pnode,
 				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		} else {
-			out_x = EDGE_PAD + (out_count++ * (port_breadth + PAD));
+			out_x = EDGE_PAD + (out_count++ * (port_breadth + PAD + 1.0));
 			ganv_node_move_to(pnode, out_x, height - port_depth + border_off);
 			ganv_canvas_for_each_edge_from(
 				canvas, pnode,

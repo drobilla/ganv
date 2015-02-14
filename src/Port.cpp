@@ -37,12 +37,12 @@ Port::Port(Module&            module,
            bool               is_input,
            uint32_t           color)
 	: Box(module.canvas(),
-	      GANV_BOX(
-		      ganv_port_new(module.gobj(), is_input,
-		                           "fill-color", color,
-		                           "border-color", highlight_color(color, 0x20),
-		                           "label", name.c_str(),
-		                           NULL)))
+	      GANV_BOX(ganv_port_new(module.gobj(), is_input,
+	                             "fill-color", color,
+	                             "border-color", highlight_color(color, 0x20),
+	                             "border-width", 2.0,
+	                             "label", name.c_str(),
+	                             NULL)))
 {
 	g_signal_connect(gobj(), "value-changed",
 	                 G_CALLBACK(on_value_changed), this);
