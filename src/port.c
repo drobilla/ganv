@@ -28,9 +28,6 @@
 static const double PORT_LABEL_HPAD = 2.0;
 static const double PORT_LABEL_VPAD = 1.0;
 
-static const guchar check_off[] = { 0xE2, 0x98, 0x90, 0 };
-static const guchar check_on[]  = { 0xE2, 0x98, 0x91, 0 };
-
 static void
 ganv_port_update_control_slider(GanvPort* port, float value, gboolean force);
 
@@ -629,12 +626,6 @@ void
 ganv_port_set_control_value(GanvPort* port,
                             float     value)
 {
-	GanvPortImpl* impl = port->impl;
-
-	if (impl->control && impl->control->is_toggle) {
-		ganv_port_set_value_label(
-			port, (const char*)((value == 0.0f) ? check_off : check_on));
-	}
 	ganv_port_update_control_slider(port, value, FALSE);
 }
 
