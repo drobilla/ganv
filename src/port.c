@@ -276,12 +276,13 @@ ganv_port_place_labels(GanvPort* port)
 			              "y", (port_h - vlabel_h) / 2.0,
 			              NULL);
 		}
+		vlabel_w += PORT_LABEL_HPAD;
 	}
 	if (label) {
 		const double label_h = label->impl->coords.height;
 		if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_RIGHT) {
 			ganv_item_set(GANV_ITEM(label),
-			              "x", vlabel_w + 2 * PORT_LABEL_HPAD,
+			              "x", vlabel_w + PORT_LABEL_HPAD,
 			              "y", (port_h - label_h) / 2.0,
 			              NULL);
 		}
