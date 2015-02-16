@@ -83,6 +83,11 @@ ganv_module_destroy(GtkObject* object)
 		impl->ports = NULL;
 	}
 
+	if (impl->embed_item) {
+		g_object_unref(GTK_OBJECT(impl->embed_item));
+		impl->embed_item = NULL;
+	}
+
 	if (GTK_OBJECT_CLASS(parent_class)->destroy) {
 		(*GTK_OBJECT_CLASS(parent_class)->destroy)(object);
 	}
@@ -547,8 +552,6 @@ ganv_module_add(GanvItem* item, GanvItem* child)
 {
 	if (GANV_IS_PORT(child)) {
 		ganv_module_add_port(GANV_MODULE(item), GANV_PORT(child));
-	} else {
-		fprintf(stderr, "warning: Non-port item added to module.\n");
 	}
 }
 
@@ -557,8 +560,6 @@ ganv_module_remove(GanvItem* item, GanvItem* child)
 {
 	if (GANV_IS_PORT(child)) {
 		ganv_module_remove_port(GANV_MODULE(item), GANV_PORT(child));
-	} else {
-		fprintf(stderr, "warning: Non-port item removed from module.\n");
 	}
 }
 
