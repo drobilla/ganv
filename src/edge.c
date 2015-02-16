@@ -78,7 +78,7 @@ ganv_edge_init(GanvEdge* edge)
 	impl->old_coords  = impl->coords;
 	impl->dash_length = 0.0;
 	impl->dash_offset = 0.0;
-	impl->color       = 0xA0A0A0FF;
+	impl->color       = 0;
 }
 
 static void
@@ -334,7 +334,7 @@ ganv_edge_draw(GanvItem* item,
 
 	double r, g, b, a;
 	if (impl->highlighted) {
-		color_to_rgba(highlight_color(impl->color, 0x20), &r, &g, &b, &a);
+		color_to_rgba(highlight_color(impl->color, 0x40), &r, &g, &b, &a);
 	} else {
 		color_to_rgba(impl->color, &r, &g, &b, &a);
 	}
@@ -553,7 +553,7 @@ ganv_edge_class_init(GanvEdgeClass* klass)
 			_("Color"),
 			_("Line color as an RGBA integer."),
 			0, G_MAXUINT,
-			0xA0A0A0FF,
+			0,
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
@@ -625,6 +625,13 @@ ganv_edge_new(GanvCanvas* canvas,
 
 	edge->impl->tail = tail;
 	edge->impl->head = head;
+
+	if (!edge->impl->color) {
+		const guint tail_color = GANV_NODE(tail)->impl->fill_color;
+		g_object_set(G_OBJECT(edge),
+		             "color", highlight_color(tail_color, 48),
+		             NULL);
+	}
 
 	if (!edge->impl->ghost) {
 		ganv_canvas_add_edge(canvas, edge);

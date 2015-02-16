@@ -41,20 +41,17 @@ public:
 	Edge(Canvas&  canvas,
 	     Node*    tail,
 	     Node*    head,
-	     uint32_t color,
+	     uint32_t color = 0,
 	     bool     show_arrowhead = false,
 	     bool     curved = true)
-		: Item(GANV_ITEM(
-				       ganv_edge_new(
-					       canvas.gobj(),
-					       tail->gobj(),
-					       head->gobj(),
-					       "color", color,
-					       "curved", (gboolean)curved,
-					       "arrowhead", (gboolean)show_arrowhead,
-					       NULL)))
-	{
-	}
+		: Item(GANV_ITEM(ganv_edge_new(canvas.gobj(),
+		                               tail->gobj(),
+		                               head->gobj(),
+		                               "color", color,
+		                               "curved", (gboolean)curved,
+		                               "arrowhead", (gboolean)show_arrowhead,
+		                               NULL)))
+	{}
 
 	Edge(GanvEdge* gobj)
 		: Item(GANV_ITEM(gobj))
