@@ -2,6 +2,7 @@ ganv (1.5.0) unstable;
 
   * Fix positioning of embedded widgets when changing layout.
   * Fix unexpected node jumping when dragging new connections.
+  * Preserve selection for quickly making several connections.
   * Add support for PDF and PS export.
   * Improve text rendering at high zoom.
   * Fix various minor visual alignment/sizing issues.
@@ -9,7 +10,7 @@ ganv (1.5.0) unstable;
   * Fix compilation with --no-fdgl (patch from Vlad Glagolev).
   * Fix crash when destroying canvas.
 
- -- David Robillard <d@drobilla.net>  Tue, 10 Feb 2015 23:58:57 -0500
+ -- David Robillard <d@drobilla.net>  Sun, 15 Feb 2015 21:59:18 -0500
 
 ganv (1.4.2) stable;
 

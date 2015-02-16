@@ -1385,17 +1385,14 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 				} else {
 					// Connect to selected ports
 					selection_joined_with(_connect_port);
-					unselect_ports();
 					_connect_port = NULL;
 				}
 			} else {  // drag ended on different port
 				ports_joined(_connect_port, GANV_PORT(joinee));
-				unselect_ports();
 				_connect_port = NULL;
 			}
 		}
 
-		unselect_ports();
 		end_connect_drag();
 		return true;
 	}
@@ -1526,7 +1523,6 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 		if (port_dragging) {
 			if (_connect_port) { // dragging
 				ports_joined(port, _connect_port);
-				unselect_ports();
 			} else {
 				port_clicked(event, port);
 			}
@@ -1616,7 +1612,6 @@ GanvCanvasImpl::port_clicked(GdkEvent* event, GanvPort* port)
 	if (!modded && _last_selected_port &&
 	    _last_selected_port->impl->is_input != port->impl->is_input) {
 		selection_joined_with(port);
-		unselect_ports();
 	} else {
 		select_port_toggle(port, event->button.state);
 	}
