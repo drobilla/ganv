@@ -198,7 +198,7 @@ ganv_node_get_property(GObject*    object,
 
 	switch (prop_id) {
 		GET_CASE(PARTNER, object, impl->partner);
-		GET_CASE(LABEL, string, impl->label->impl->text);
+		GET_CASE(LABEL, string, impl->label ? impl->label->impl->text : NULL);
 		GET_CASE(DASH_LENGTH, double, impl->dash_length);
 		GET_CASE(DASH_OFFSET, double, impl->dash_offset);
 		GET_CASE(BORDER_WIDTH, double, impl->border_width);
