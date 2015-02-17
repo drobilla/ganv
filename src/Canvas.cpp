@@ -350,7 +350,7 @@ struct GanvCanvasImpl {
 	GQuark     _wrapper_key;
 	GdkCursor* _move_cursor;
 	guint      _animate_idle_id;
-	
+
 	/* Root canvas item */
 	GanvItem* root;
 
@@ -587,7 +587,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 		ss.str("");
 		ss << "n" << id++;
 		const std::string node_id = ss.str();
-		
+
 		Agnode_t* node = agnode(G, strdup(node_id.c_str()), true);
 		nodes.insert(std::make_pair(*i, node));
 
@@ -624,7 +624,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 				ss.str("");
 				ss << ganv_box_get_height(GANV_BOX(port));// / dpp * 1.333333;
 				cell += " HEIGHT=\"" + ss.str() + "\"";
-			
+
 				cell += ">";
 				const char* label = ganv_node_get_label(GANV_NODE(port));
 				if (label && flow_right) {
@@ -639,12 +639,12 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 				} else {
 					outputs += cell;
 				}
-				
+
 				nodes.insert(std::make_pair(GANV_NODE(port), node));
 			}
 
 			const unsigned n_cols = std::max(n_inputs, n_outputs);
-			
+
 			std::string html = "<TABLE CELLPADDING=\"0\" CELLSPACING=\"0\">";
 
 			// Input row (down flow only)
@@ -680,7 +680,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 				html += std::string("<TR>") + outputs + "</TR>";
 			}
 			html += "</TABLE>";
-			
+
 			char* html_label_str = agstrdup_html(G, (char*)html.c_str());
 
 			agsafeset(node, (char*)"label", (char*)html_label_str, (char*)"");
@@ -699,7 +699,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 			if (ganv_node_get_dash_length(GANV_NODE(*i)) > 0.0) {
 				agsafeset(node, (char*)"style", (char*)"dashed", (char*)"");
 			}
-				
+
 			const char* label = ganv_node_get_label(GANV_NODE(*i));
 			if (label) {
 				agsafeset(node, (char*)"label", (char*)label, (char*)"");
@@ -938,7 +938,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 					vec_mult(node->impl->vel, 1.0 / vel_mag),
 					MAX_VEL);
 			}
-				                           
+
 			// Update position
 			GanvItem*    item = &node->item;
 			const double x0   = item->impl->x;
@@ -1785,7 +1785,7 @@ ganv_canvas_init(GanvCanvas* canvas)
 	GTK_WIDGET_SET_FLAGS(canvas, GTK_CAN_FOCUS);
 
 	canvas->impl = new GanvCanvasImpl(canvas);
-	
+
 	g_signal_connect(G_OBJECT(ganv_canvas_root(canvas)),
 	                 "event", G_CALLBACK(on_canvas_event), canvas->impl);
 }
@@ -2185,7 +2185,7 @@ select_if_ends_are_selected(GanvEdge* edge, void* data)
 		ganv_edge_set_selected(edge, TRUE);
 	}
 }
-	    
+
 static void
 unselect_edges(GanvPort* port, void* data)
 {
@@ -2500,7 +2500,7 @@ ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y)
 
 void
 ganv_canvas_arrange(GanvCanvas* canvas)
-{	
+{
 #if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
 	GVNodes nodes = canvas->impl->layout_dot((char*)"");
 
@@ -2602,7 +2602,7 @@ ganv_canvas_export_image(GanvCanvas* canvas,
 	(*GANV_ITEM_GET_CLASS(canvas->impl->root)->draw)(
 		canvas->impl->root, cr,
 		0, 0, canvas->impl->width, canvas->impl->height);
-	cairo_destroy(cr);	
+	cairo_destroy(cr);
 
 	// Get draw extent
 	double x, y, w, h;
@@ -2622,7 +2622,7 @@ ganv_canvas_export_image(GanvCanvas* canvas,
 	} else {
 		cairo_surface_destroy(rec_surface);
 		return 1;
-	}	
+	}
 
 	// Draw recording to image surface
 	cr = cairo_create(img);
@@ -2633,7 +2633,7 @@ ganv_canvas_export_image(GanvCanvas* canvas,
 	}
 	cairo_set_source_surface(cr, rec_surface, -x + pad, -y + pad);
 	cairo_paint(cr);
-	cairo_destroy(cr);	
+	cairo_destroy(cr);
 	cairo_surface_destroy(rec_surface);
 	cairo_surface_destroy(img);
 	return 0;
@@ -3678,7 +3678,7 @@ ganv_canvas_expose(GtkWidget* widget, GdkEventExpose* event)
 
 	const int x2 = clip.x + clip.width;
 	const int y2 = clip.y + clip.height;
-	
+
 	if (canvas->impl->need_update || canvas->impl->need_redraw) {
 		/* Update or drawing is scheduled, so just mark exposed area as dirty */
 		ganv_canvas_request_redraw_c(canvas, clip.x, clip.y, x2, y2);

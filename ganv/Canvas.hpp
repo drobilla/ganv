@@ -82,7 +82,7 @@ public:
 	Edge* get_edge(Node* tail, Node* head) const;
 	void  remove_edge_between(Node* tail, Node* head);
 	void  remove_edge(Edge* edge);
-	
+
 	METHOD0(ganv_canvas, arrange);
 	METHODRET2(ganv_canvas, int, export_image, const char*, filename, bool, draw_background);
 	METHOD1(ganv_canvas, export_dot, const char*, filename);

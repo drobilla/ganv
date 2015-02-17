@@ -104,8 +104,8 @@ rect_distance(Vector* vec,
 	vec->y = 0.0;
 
 	if (ax2 <= bx1) {  // A is completely to the left of B
-		vec->x = ax2 - bx1; 
-		if (ay2 <= by1) {  // Top Left		
+		vec->x = ax2 - bx1;
+		if (ay2 <= by1) {  // Top Left
 			const double dx = bx1 - ax2;
 			const double dy = by1 - ay2;
 			vec->y = ay2 - by1;

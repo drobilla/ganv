@@ -51,7 +51,7 @@ public:
 	gboolean is_within(double x1, double y1, double x2, double y2) const {
 		return ganv_node_is_within(gobj(), x1, y1, x2, y2);
 	}
-	
+
 	RW_PROPERTY(const char*, label)
 	RW_PROPERTY(double, border_width)
 	RW_PROPERTY(double, dash_length)

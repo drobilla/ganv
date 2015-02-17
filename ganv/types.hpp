@@ -28,4 +28,3 @@ class Port;
 }; // namespace Ganv
 
 #endif // GANV_TYPES_HPP
-

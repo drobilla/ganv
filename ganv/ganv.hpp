@@ -24,4 +24,3 @@
 #include "ganv/Port.hpp"
 
 #endif // GANV_GANV_HPP
-
