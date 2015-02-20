@@ -1432,7 +1432,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 			double port_y = event->button.y;
 			ganv_item_w2i(GANV_ITEM(port), &port_x, &port_y);
 
-			if (module && port->impl->control &&
+			if (_selected_ports.empty() && module && port->impl->control &&
 			    (port->impl->is_input ||
 			     (port->impl->is_controllable &&
 			      port_x < ganv_box_get_width(GANV_BOX(port)) / 2.0))) {
