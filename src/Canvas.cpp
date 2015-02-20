@@ -249,6 +249,7 @@ struct GanvCanvasImpl {
 
 #ifdef GANV_FDGL
 		this->layout_idle_id = 0;
+		this->layout_energy  = 0.4;
 		this->sprung_layout  = FALSE;
 #endif
 
@@ -449,6 +450,7 @@ struct GanvCanvasImpl {
 
 #ifdef GANV_FDGL
 	guint    layout_idle_id;
+	gdouble  layout_energy;
 	gboolean sprung_layout;
 #endif
 };
@@ -805,8 +807,7 @@ GanvCanvasImpl::layout_iteration()
 {
 	if (_drag_state == EDGE) {
 		return FALSE;  // Canvas is locked, halt layout process
-	}
-	if (!sprung_layout) {
+	} else if (!sprung_layout) {
 		return FALSE;  // We shouldn't be running at all
 	}
 
@@ -917,8 +918,6 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 
 		GanvNode* const node = *i;
 
-		static const float damp = 0.3;  // Velocity damping
-
 		if (node->impl->grabbed ||
 		    (!node->impl->connected && !ganv_node_get_partner(node))) {
 			node->impl->vel.x = 0.0;
@@ -926,7 +925,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 		} else {
 			node->impl->vel = vec_add(node->impl->vel,
 			                          vec_mult(node->impl->force, dur));
-			node->impl->vel = vec_mult(node->impl->vel, damp);
+			node->impl->vel = vec_mult(node->impl->vel, layout_energy);
 
 			static const double MAX_VEL   = 1000.0;
 			static const double MIN_COORD = 4.0;
@@ -972,6 +971,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 		}
 	}
 
+	layout_energy *= 0.999;
 	return n_moved > 0;
 }
 
@@ -1982,6 +1982,7 @@ ganv_canvas_contents_changed(GanvCanvas* canvas)
 {
 #ifdef GANV_FDGL
 	if (!canvas->impl->layout_idle_id && canvas->impl->sprung_layout) {
+		canvas->impl->layout_energy = 0.4;
 		canvas->impl->layout_idle_id = g_timeout_add_full(
 			G_PRIORITY_DEFAULT_IDLE,
 			33,
