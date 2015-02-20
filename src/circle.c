@@ -299,6 +299,7 @@ ganv_circle_draw(GanvItem* item,
 	ganv_node_get_draw_properties(
 		&circle->node, &dash_length, &border_color, &fill_color);
 
+	cairo_new_path(cr);
 	cairo_arc(cr,
 	          x,
 	          y,
