@@ -71,6 +71,7 @@ ganv_node_init(GanvNode* node)
 	impl->draggable    = FALSE;
 	impl->show_label   = TRUE;
 	impl->grabbed      = FALSE;
+	impl->must_resize  = FALSE;
 #ifdef GANV_FDGL
 	impl->force.x       = 0.0;
 	impl->force.y       = 0.0;
@@ -112,6 +113,22 @@ ganv_node_destroy(GtkObject* object)
 
 	impl->partner      = NULL;
 	item->impl->canvas = NULL;
+}
+
+static void
+ganv_node_update(GanvItem* item, int flags)
+{
+	GanvNode* node = GANV_NODE(item);
+	if (node->impl->must_resize) {
+		ganv_node_resize(node);
+		node->impl->must_resize = FALSE;
+	}
+
+	if (node->impl->label) {
+		ganv_item_invoke_update(GANV_ITEM(node->impl->label), flags);
+	}
+
+	GANV_ITEM_CLASS(parent_class)->update(item, flags);
 }
 
 static void
@@ -319,14 +336,8 @@ ganv_node_set_label(GanvNode* node, const char* str)
 		                                      NULL));
 	}
 
-	if (impl->show_label) {
-		GanvNodeClass* klass = GANV_NODE_GET_CLASS(node);
-		if (klass->resize) {
-			klass->resize(node);
-		}
-
-		ganv_item_request_update(GANV_ITEM(node));
-	}
+	impl->must_resize = TRUE;
+	ganv_item_request_update(GANV_ITEM(node));
 }
 
 void
@@ -371,6 +382,7 @@ ganv_node_default_move(GanvNode* node,
 	ganv_item_move(GANV_ITEM(node), dx, dy);
 	ganv_canvas_for_each_edge_on(
 		canvas, node, (GanvEdgeFunc)ganv_edge_update_location, NULL);
+	ganv_item_request_update(GANV_ITEM(node));
 }
 
 static void
@@ -378,11 +390,10 @@ ganv_node_default_move_to(GanvNode* node,
                           double    x,
                           double    y)
 {
-	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(node));
-	ganv_item_set(GANV_ITEM(node),
-	              "x", x,
-	              "y", y,
-	              NULL);
+	GanvItem*   item   = GANV_ITEM(node);
+	GanvCanvas* canvas = ganv_item_get_canvas(item);
+	item->impl->x = x;
+	item->impl->y = y;
 	if (node->impl->can_tail) {
 		ganv_canvas_for_each_edge_from(
 			canvas, node, (GanvEdgeFunc)ganv_edge_update_location, NULL);
@@ -390,6 +401,7 @@ ganv_node_default_move_to(GanvNode* node,
 		ganv_canvas_for_each_edge_to(
 			canvas, node, (GanvEdgeFunc)ganv_edge_update_location, NULL);
 	}
+	ganv_item_request_update(GANV_ITEM(node));
 }
 
 static void
@@ -399,6 +411,7 @@ ganv_node_default_resize(GanvNode* node)
 	if (GANV_IS_NODE(item->impl->parent)) {
 		ganv_node_resize(GANV_NODE(item->impl->parent));
 	}
+	node->impl->must_resize = FALSE;
 }
 
 static void
@@ -406,7 +419,8 @@ ganv_node_default_redraw_text(GanvNode* node)
 {
 	if (node->impl->label) {
 		ganv_text_layout(node->impl->label);
-		ganv_node_resize(node);
+		node->impl->must_resize = TRUE;
+		ganv_item_request_update(GANV_ITEM(node));
 	}
 }
 
@@ -425,12 +439,14 @@ ganv_node_default_event(GanvItem* item,
 	switch (event->type) {
 	case GDK_ENTER_NOTIFY:
 		ganv_item_raise(GANV_ITEM(node));
-		ganv_item_set(GANV_ITEM(node), "highlighted", TRUE, NULL);
+		node->impl->highlighted = TRUE;
+		ganv_item_request_update(item);
 		return TRUE;
 
 	case GDK_LEAVE_NOTIFY:
 		ganv_item_lower(GANV_ITEM(node));
-		ganv_item_set(GANV_ITEM(node), "highlighted", FALSE, NULL);
+		node->impl->highlighted = FALSE;
+		ganv_item_request_update(item);
 		return TRUE;
 
 	case GDK_BUTTON_PRESS:
@@ -685,6 +701,7 @@ ganv_node_class_init(GanvNodeClass* klass)
 
 	item_class->realize = ganv_node_realize;
 	item_class->event   = ganv_node_default_event;
+	item_class->update  = ganv_node_update;
 	item_class->draw    = ganv_node_draw;
 
 	klass->disconnect  = ganv_node_default_disconnect;
@@ -856,6 +873,7 @@ void
 ganv_node_resize(GanvNode* node)
 {
 	GANV_NODE_GET_CLASS(node)->resize(node);
+	node->impl->must_resize = FALSE;
 }
 
 void

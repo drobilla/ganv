@@ -182,9 +182,6 @@ ganv_box_update(GanvItem* item, int flags)
 	// Request redraw of old location
 	ganv_box_request_redraw(item, &impl->old_coords, TRUE);
 
-	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-	item_class->update(item, flags);
-
 	// Store old coordinates in world relative coordinates in case the
 	// group we are in moves between now and the next update
 	impl->old_coords = impl->coords;
@@ -198,6 +195,8 @@ ganv_box_update(GanvItem* item, int flags)
 
 	// Request redraw of new location
 	ganv_box_request_redraw(item, &impl->coords, FALSE);
+
+	GANV_ITEM_CLASS(parent_class)->update(item, flags);
 }
 
 void
@@ -343,21 +342,17 @@ ganv_box_is_within(const GanvNode* self,
 }
 
 static void
-ganv_box_default_set_width(GanvBox* box,
-                           double   width)
+ganv_box_default_set_width(GanvBox* box, double width)
 {
-	ganv_item_set(GANV_ITEM(box),
-	              "x2", ganv_box_get_x1(box) + width,
-	              NULL);
+	box->impl->coords.x2 = ganv_box_get_x1(box) + width;
+	ganv_item_request_update(GANV_ITEM(box));
 }
 
 static void
-ganv_box_default_set_height(GanvBox* box,
-                            double   height)
+ganv_box_default_set_height(GanvBox* box, double height)
 {
-	ganv_item_set(GANV_ITEM(box),
-	              "y2", ganv_box_get_y1(box) + height,
-	              NULL);
+	box->impl->coords.y2 = ganv_box_get_y1(box) + height;
+	ganv_item_request_update(GANV_ITEM(box));
 }
 
 static void

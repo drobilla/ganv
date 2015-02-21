@@ -91,6 +91,8 @@ typedef void (*GanvEdgeFunc)(GanvEdge* edge, void* data);
  */
 typedef void (*GanvNodeFunc)(GanvNode* node, void* data);
 
+typedef int (*GanvPortOrderFunc)(const GanvPort*, const GanvPort*, void* data);
+
 /**
  * ganv_canvas_new:
  *
@@ -98,6 +100,22 @@ typedef void (*GanvNodeFunc)(GanvNode* node, void* data);
  */
 GanvCanvas*
 ganv_canvas_new(double width, double height);
+
+/**
+ * ganv_canvas_set_wrapper:
+ *
+ * Set the opaque wrapper object for the canvas.
+ */
+void
+ganv_canvas_set_wrapper(GanvCanvas* canvas, void* wrapper);
+
+/**
+ * ganv_canvas_get_wrapper:
+ *
+ * Return an opaque pointer to the wrapper for the canvas.
+ */
+void*
+ganv_canvas_get_wrapper(GanvCanvas* canvas);
 
 /**
  * ganv_canvas_clear:
@@ -591,6 +609,21 @@ ganv_canvas_get_move_cursor(const GanvCanvas* canvas);
  */
 void
 ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y);
+
+/**
+ * ganv_canvas_set_port_order:
+ * @canvas The canvas to set the default port order on.
+ * @port_cmp Port comparison function.
+ * @data Data to be passed to order.
+ *
+ * Set a comparator function to use as the default order for ports on modules.
+ * If left unset, ports are shown in the order they are added.
+ */
+void
+ganv_canvas_set_port_order(GanvCanvas*       canvas,
+                           GanvPortOrderFunc port_cmp,
+                           void*             data);
+
 
 G_END_DECLS
 

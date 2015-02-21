@@ -175,6 +175,10 @@ void ganv_item_get_bounds(GanvItem* item,
 
 void ganv_item_request_update(GanvItem* item);
 
+void ganv_item_set_wrapper(GanvItem* item, void* wrapper);
+
+void* ganv_item_get_wrapper(GanvItem* item);
+
 G_END_DECLS
 
 #endif  /* GANV_ITEM_H */

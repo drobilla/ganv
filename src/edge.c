@@ -282,10 +282,6 @@ ganv_edge_update(GanvItem* item, int flags)
 	GanvEdge*     edge = GANV_EDGE(item);
 	GanvEdgeImpl* impl = edge->impl;
 
-	if (parent_class->update) {
-		(*parent_class->update)(item, flags);
-	}
-
 	// Request redraw of old location
 	ganv_edge_request_redraw(item, &impl->old_coords);
 
@@ -316,6 +312,8 @@ ganv_edge_update(GanvItem* item, int flags)
 
 	// Request redraw of new location
 	ganv_edge_request_redraw(item, &impl->coords);
+
+	parent_class->update(item, flags);
 }
 
 static void

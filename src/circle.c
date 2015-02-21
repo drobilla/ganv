@@ -260,11 +260,6 @@ ganv_circle_update(GanvItem* item, int flags)
 	GanvCircleImpl* impl   = circle->impl;
 	impl->coords.width = circle->node.impl->border_width;
 
-	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-	if (item_class->update) {
-		(*item_class->update)(item, flags);
-	}
-
 	// Request redraw of old location
 	request_redraw(item, &impl->old_coords, TRUE);
 
@@ -279,6 +274,8 @@ ganv_circle_update(GanvItem* item, int flags)
 
 	// Request redraw of new location
 	request_redraw(item, &impl->coords, FALSE);
+
+	GANV_ITEM_CLASS(parent_class)->update(item, flags);
 }
 
 static void

@@ -94,8 +94,6 @@ ganv_group_update(GanvItem* item, int flags)
 {
 	GanvGroup* group = GANV_GROUP(item);
 
-	(*group_parent_class->update)(item, flags);
-
 	double min_x = 0.0;
 	double min_y = 0.0;
 	double max_x = 0.0;
@@ -115,6 +113,8 @@ ganv_group_update(GanvItem* item, int flags)
 	item->impl->y1 = min_y;
 	item->impl->x2 = max_x;
 	item->impl->y2 = max_y;
+
+	(*group_parent_class->update)(item, flags);
 }
 
 static void

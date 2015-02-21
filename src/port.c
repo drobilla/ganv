@@ -133,8 +133,13 @@ ganv_port_update(GanvItem* item, int flags)
 	if (impl->control) {
 		const double border_width = GANV_NODE(item)->impl->border_width;
 		impl->control->rect->impl->coords.border_width = border_width;
+		ganv_item_invoke_update(GANV_ITEM(impl->control->rect), flags);
 	}
 
+	if (impl->value_label) {
+		ganv_item_invoke_update(GANV_ITEM(port->impl->value_label), flags);
+	}
+	
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	item_class->update(item, flags);
 }
@@ -316,14 +321,12 @@ ganv_port_resize(GanvNode* self)
 		ganv_box_set_width(&port->box, labels_w);
 		ganv_box_set_height(&port->box,
 		                    MAX(label_h, vlabel_h) + (PORT_LABEL_VPAD * 2.0));
-		ganv_item_set(GANV_ITEM(node->impl->label),
-		              "x", PORT_LABEL_HPAD,
-		              "y", PORT_LABEL_VPAD,
-		              NULL);
+
+		ganv_port_place_labels(port);
 	}
 
-	if (parent_class->parent_class.resize) {
-		parent_class->parent_class.resize(self);
+	if (GANV_NODE_CLASS(parent_class)->resize) {
+		GANV_NODE_CLASS(parent_class)->resize(self);
 	}
 }
 
@@ -486,7 +489,9 @@ ganv_port_set_direction(GanvPort*     port,
 		box->impl->radius_bl = (is_input ? 4.0 : 0.0);
 		break;
 	}
-	ganv_node_resize(node);
+
+	node->impl->must_resize = TRUE;
+	ganv_item_request_update(GANV_ITEM(node));
 }
 
 void
@@ -552,7 +557,6 @@ ganv_port_set_value_label(GanvPort*   port,
 		                                            "color", 0xFFFFFFAA,
 		                                            "managed", TRUE,
 		                                            NULL));
-		ganv_port_resize(GANV_NODE(port));
 	}
 }
 
@@ -582,7 +586,7 @@ ganv_port_update_control_slider(GanvPort* port, float value, gboolean force)
 	if (value > impl->control->max) {
 		value = impl->control->max;
 	}
-	
+
 	if (!force && value == impl->control->value) {
 		return;  // No change, do nothing
 	}

@@ -186,6 +186,7 @@ panic_root_destroyed(GtkObject* object, gpointer data)
 struct GanvCanvasImpl {
 	GanvCanvasImpl(GanvCanvas* canvas)
 		: _gcanvas(canvas)
+		, _wrapper(NULL)
 		, _connect_port(NULL)
 		, _last_selected_port(NULL)
 		, _drag_edge(NULL)
@@ -255,10 +256,12 @@ struct GanvCanvasImpl {
 
 		_animate_idle_id = 0;
 
+		_port_order.port_cmp = NULL;
+		_port_order.data     = NULL;
+
 		gtk_layout_set_hadjustment(GTK_LAYOUT(canvas), NULL);
 		gtk_layout_set_vadjustment(GTK_LAYOUT(canvas), NULL);
 
-		_wrapper_key = g_quark_from_string("ganvmm");
 		_move_cursor = gdk_cursor_new(GDK_FLEUR);
 	}
 
@@ -327,7 +330,8 @@ struct GanvCanvasImpl {
 
 	void move_contents_to_internal(double x, double y, double min_x, double min_y);
 
-	GanvCanvas* _gcanvas;
+	GanvCanvas*   _gcanvas;
+	Ganv::Canvas* _wrapper;
 
 	Items         _items;       ///< Items on this canvas
 	Edges         _edges;       ///< Edges ordered (src, dst)
@@ -348,9 +352,10 @@ struct GanvCanvasImpl {
 	enum DragState { NOT_DRAGGING, EDGE, SCROLL, SELECT };
 	DragState      _drag_state;
 
-	GQuark     _wrapper_key;
 	GdkCursor* _move_cursor;
 	guint      _animate_idle_id;
+
+	PortOrderCtx _port_order;
 
 	/* Root canvas item */
 	GanvItem* root;
@@ -1693,7 +1698,7 @@ on_disconnect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
 Canvas::Canvas(double width, double height)
 	: _gobj(GANV_CANVAS(ganv_canvas_new(width, height)))
 {
-	g_object_set_qdata(G_OBJECT(_gobj->impl->_gcanvas), wrapper_key(), this);
+	ganv_canvas_set_wrapper(_gobj, this);
 
 	g_signal_connect_after(ganv_canvas_root(_gobj), "event",
 	                       G_CALLBACK(on_event_after), this);
@@ -1741,12 +1746,6 @@ Canvas::get_edge(Node* tail, Node* head) const
 		return Glib::wrap(e);
 	}
 	return NULL;
-}
-
-GQuark
-Canvas::wrapper_key()
-{
-	return _gobj->impl->_wrapper_key;
 }
 
 } // namespace Ganv
@@ -2756,6 +2755,18 @@ ganv_canvas_new(double width, double height)
 	ganv_canvas_set_scroll_region(canvas, 0.0, 0.0, width, height);
 
 	return canvas;
+}
+
+void
+ganv_canvas_set_wrapper(GanvCanvas* canvas, void* wrapper)
+{
+	canvas->impl->_wrapper = (Ganv::Canvas*)wrapper;
+}
+
+void*
+ganv_canvas_get_wrapper(GanvCanvas* canvas)
+{
+	return canvas->impl->_wrapper;
 }
 
 /* Map handler for the canvas */
@@ -4101,6 +4112,23 @@ ganv_canvas_world_to_window(GanvCanvas* canvas, double worldx, double worldy,
 	if (winy) {
 		*winy = (canvas->impl->pixels_per_unit) * (worldy - canvas->impl->scroll_y1) + canvas->impl->zoom_yofs;
 	}
+}
+
+void
+ganv_canvas_set_port_order(GanvCanvas*       canvas,
+                           GanvPortOrderFunc port_cmp,
+                           void*             data)
+{
+	g_return_if_fail(GANV_IS_CANVAS(canvas));
+
+	canvas->impl->_port_order.port_cmp = port_cmp;
+	canvas->impl->_port_order.data     = data;
+}
+
+PortOrderCtx
+ganv_canvas_get_port_order(GanvCanvas* canvas)
+{
+	return canvas->impl->_port_order;
 }
 
 } // extern "C"

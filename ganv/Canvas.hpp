@@ -25,8 +25,6 @@
 #include "ganv/canvas.h"
 #include "ganv/wrap.hpp"
 
-GANV_GLIB_WRAP(Canvas)
-
 /** Ganv namespace, everything is defined under this.
  *
  * @ingroup Ganv
@@ -121,6 +119,10 @@ public:
 	RW_PROPERTY(double, height)
 	RW_PROPERTY(GanvDirection, direction);
 
+	void set_port_order(GanvPortOrderFunc port_cmp, void* data) {
+		ganv_canvas_set_port_order(gobj(), port_cmp, data);
+	}
+
 	Gtk::Layout& widget() {
 		return *Glib::wrap(&_gobj->layout);
 	}
@@ -142,5 +144,15 @@ private:
 };
 
 } // namespace Ganv
+
+namespace Glib {
+
+static inline Ganv::Canvas*
+wrap(GanvCanvas* canvas)
+{
+	return (Ganv::Canvas*)ganv_canvas_get_wrapper(canvas);
+}
+
+} // namespace Glib
 
 #endif // GANV_CANVAS_HPP

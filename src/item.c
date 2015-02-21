@@ -78,6 +78,7 @@ ganv_item_init(GanvItem* item)
 	item->object.flags |= GANV_ITEM_VISIBLE;
 	item->impl          = impl;
 	item->impl->managed = FALSE;
+	item->impl->wrapper = NULL;
 }
 
 /**
@@ -218,9 +219,10 @@ ganv_item_construct(GanvItem* item, GanvItem* parent,
 {
 	g_return_if_fail(GANV_IS_ITEM(item));
 
-	item->impl->parent = parent;
-	item->impl->canvas = item->impl->parent->impl->canvas;
-	item->impl->layer = 0;
+	item->impl->parent  = parent;
+	item->impl->wrapper = NULL;
+	item->impl->canvas  = item->impl->parent->impl->canvas;
+	item->impl->layer   = 0;
 
 	g_object_set_valist(G_OBJECT(item), first_arg_name, args);
 
@@ -343,6 +345,7 @@ ganv_item_invoke_update(GanvItem* item, int flags)
 	if (child_flags & GCI_UPDATE_MASK) {
 		if (GANV_ITEM_GET_CLASS(item)->update) {
 			GANV_ITEM_GET_CLASS(item)->update(item, child_flags);
+			g_assert(!(GTK_OBJECT_FLAGS(item) & GANV_ITEM_NEED_UPDATE));
 		}
 	}
 }
@@ -595,12 +598,6 @@ ganv_item_get_bounds(GanvItem* item, double* x1, double* y1, double* x2, double*
 void
 ganv_item_request_update(GanvItem* item)
 {
-	/* Note: At some point, if this short-circuit was enabled, the canvas stopped
-	   updating items entirely when connected modules are removed. */
-	if (item->object.flags & GANV_ITEM_NEED_UPDATE) {
-		return;
-	}
-
 	if (!item->impl->canvas) {
 		/* Item is being / has been destroyed, ignore */
 		return;
@@ -608,13 +605,26 @@ ganv_item_request_update(GanvItem* item)
 
 	item->object.flags |= GANV_ITEM_NEED_UPDATE;
 
-	if (item->impl->parent != NULL) {
+	if (item->impl->parent != NULL &&
+	    !(item->impl->parent->object.flags & GANV_ITEM_NEED_UPDATE)) {
 		/* Recurse up the tree */
 		ganv_item_request_update(item->impl->parent);
 	} else {
 		/* Have reached the top of the tree, make sure the update call gets scheduled. */
 		ganv_canvas_request_update(item->impl->canvas);
 	}
+}
+
+void
+ganv_item_set_wrapper(GanvItem* item, void* wrapper)
+{
+	item->impl->wrapper = wrapper;
+}
+
+void*
+ganv_item_get_wrapper(GanvItem* item)
+{
+	return item->impl->wrapper;
 }
 
 static gboolean

@@ -63,7 +63,7 @@ ganv_module_init(GanvModule* module)
 	impl->embed_height  = 0;
 	impl->widest_input  = 0.0;
 	impl->widest_output = 0.0;
-	impl->must_resize   = TRUE;
+	impl->must_reorder  = FALSE;
 }
 
 static void
@@ -256,16 +256,15 @@ place_title(GanvModule* module, GanvDirection dir)
 
 	if (!canvas_title) {
 		return;
-	} else if (dir == GANV_DIRECTION_RIGHT) {
-		ganv_item_set(GANV_ITEM(canvas_title),
-		              "x", (ganv_box_get_width(box) - title_w) / 2.0,
-		              "y", 1.0,
-		              NULL);
+	}
+
+	GanvItem* t = GANV_ITEM(canvas_title);
+	if (dir == GANV_DIRECTION_RIGHT) {
+		t->impl->x = (ganv_box_get_width(box) - title_w) / 2.0;
+		t->impl->y = 1.0;
 	} else {
-		ganv_item_set(GANV_ITEM(canvas_title),
-		              "x", (ganv_box_get_width(box) - title_w) / 2.0,
-		              "y", ganv_module_get_empty_port_depth(module) + 1.0,
-		              NULL);
+		t->impl->x = (ganv_box_get_width(box) - title_w) / 2.0;
+		t->impl->y = ganv_module_get_empty_port_depth(module) + 1.0;
 	}
 }
 
@@ -392,7 +391,7 @@ resize_down(GanvModule* module)
 		// Offset to shift ports to make borders line up
 		const double border_off = (GANV_NODE(module)->impl->border_width -
 		                           pnode->impl->border_width) / 2.0;
-		
+
 		if (p->impl->is_input) {
 			in_x = EDGE_PAD + (in_count++ * (port_breadth + PAD + 1.0));
 			ganv_node_move_to(pnode, in_x, -border_off);
@@ -436,12 +435,11 @@ measure_ports(GanvModule* module)
 }
 
 static void
-layout(GanvNode* self)
+ganv_module_resize(GanvNode* self)
 {
-	GanvModule*     module = GANV_MODULE(self);
-	GanvModuleImpl* impl   = module->impl;
-	GanvNode*       node   = GANV_NODE(self);
-	GanvCanvas*     canvas = ganv_item_get_canvas(GANV_ITEM(module));
+	GanvModule* module = GANV_MODULE(self);
+	GanvNode*   node   = GANV_NODE(self);
+	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(module));
 
 	double label_w = 0.0;
 	double label_h = 0.0;
@@ -466,16 +464,8 @@ layout(GanvNode* self)
 		break;
 	}
 
-	impl->must_resize = FALSE;
-}
-
-static void
-ganv_module_resize(GanvNode* self)
-{
-	layout(self);
-
-	if (parent_class->parent_class.resize) {
-		parent_class->parent_class.resize(self);
+	if (GANV_NODE_CLASS(parent_class)->resize) {
+		GANV_NODE_CLASS(parent_class)->resize(self);
 	}
 }
 
@@ -495,9 +485,9 @@ static void
 ganv_module_add_port(GanvModule* module,
                      GanvPort*   port)
 {
-	GanvCanvas*     canvas = ganv_item_get_canvas(GANV_ITEM(module));
-	GanvModuleImpl* impl   = module->impl;
+	GanvModuleImpl* impl = module->impl;
 
+	// Update widest input/output measurements if necessary
 	const double width = ganv_port_get_natural_width(port);
 	if (port->impl->is_input && width > impl->widest_input) {
 		impl->widest_input = width;
@@ -505,11 +495,12 @@ ganv_module_add_port(GanvModule* module,
 		impl->widest_output = width;
 	}
 
-	impl->must_resize = TRUE;
-
+	// Add to port array
 	g_ptr_array_add(impl->ports, port);
-	place_title(module, ganv_canvas_get_direction(canvas));
-	ganv_item_request_update(GANV_ITEM(module));
+
+	// Request update with resize and reorder
+	GANV_NODE(module)->impl->must_resize = TRUE;
+	impl->must_reorder                   = TRUE;
 }
 
 static void
@@ -540,8 +531,7 @@ ganv_module_remove_port(GanvModule* module,
 			}
 		}
 
-		module->impl->must_resize = TRUE;
-		ganv_item_request_update(GANV_ITEM(module));
+		GANV_NODE(module)->impl->must_resize = TRUE;
 	} else {
 		fprintf(stderr, "Failed to find port to remove\n");
 	}
@@ -553,6 +543,10 @@ ganv_module_add(GanvItem* item, GanvItem* child)
 	if (GANV_IS_PORT(child)) {
 		ganv_module_add_port(GANV_MODULE(item), GANV_PORT(child));
 	}
+	ganv_item_request_update(item);
+	if (GANV_ITEM_CLASS(parent_class)->add) {
+		GANV_ITEM_CLASS(parent_class)->add(item, child);
+	}
 }
 
 static void
@@ -561,25 +555,40 @@ ganv_module_remove(GanvItem* item, GanvItem* child)
 	if (GANV_IS_PORT(child)) {
 		ganv_module_remove_port(GANV_MODULE(item), GANV_PORT(child));
 	}
+	ganv_item_request_update(item);
+	if (GANV_ITEM_CLASS(parent_class)->remove) {
+		GANV_ITEM_CLASS(parent_class)->remove(item, child);
+	}
+}
+
+static int
+ptr_sort(const GanvPort** a, const GanvPort** b, const PortOrderCtx* ctx)
+{
+	return ctx->port_cmp(*a, *b, ctx->data);
 }
 
 static void
 ganv_module_update(GanvItem* item, int flags)
 {
-	GanvNode*   node   = GANV_NODE(item);
 	GanvModule* module = GANV_MODULE(item);
+	GanvCanvas* canvas = ganv_item_get_canvas(item);
 
-	if (module->impl->must_resize) {
-		layout(node);
+	if (module->impl->must_reorder) {
+		// Sort ports array
+		PortOrderCtx ctx = ganv_canvas_get_port_order(canvas);
+		if (ctx.port_cmp) {
+			g_ptr_array_sort_with_data(module->impl->ports,
+			                           (GCompareDataFunc)ptr_sort,
+
+			                           &ctx);
+		}
+		module->impl->must_reorder = FALSE;
 	}
 
 	if (module->impl->embed_item) {
 		// Kick the embedded item to update position if we have moved
 		ganv_item_move(GANV_ITEM(module->impl->embed_item), 0.0, 0.0);
 	}
-
-	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
-	item_class->update(item, flags);
 
 	FOREACH_PORT(module->impl->ports, p) {
 		ganv_item_invoke_update(GANV_ITEM(*p), flags);
@@ -588,6 +597,8 @@ ganv_module_update(GanvItem* item, int flags)
 	if (module->impl->embed_item) {
 		ganv_item_invoke_update(GANV_ITEM(module->impl->embed_item), flags);
 	}
+
+	GANV_ITEM_CLASS(parent_class)->update(item, flags);
 }
 
 static void
@@ -763,10 +774,9 @@ on_embed_size_request(GtkWidget*      widget,
 		return;
 	}
 
-	impl->embed_width  = r->width;
-	impl->embed_height = r->height;
-
-	impl->must_resize = TRUE;
+	impl->embed_width                    = r->width;
+	impl->embed_height                   = r->height;
+	GANV_NODE(module)->impl->must_resize = TRUE;
 
 	GtkAllocation allocation;
 	allocation.width = r->width;
@@ -784,43 +794,46 @@ ganv_module_embed(GanvModule* module,
                   GtkWidget*  widget)
 {
 	GanvModuleImpl* impl = module->impl;
+	if (!widget && !impl->embed_item) {
+		return;
+	}
 
 	if (impl->embed_item) {
+		// Free existing embedded widget
 		gtk_object_destroy(GTK_OBJECT(impl->embed_item));
 		impl->embed_item = NULL;
 	}
 
 	if (!widget) {
-		impl->embed_width  = 0;
-		impl->embed_height = 0;
-		impl->must_resize  = TRUE;
+		// Removing an existing embedded widget
+		impl->embed_width                    = 0;
+		impl->embed_height                   = 0;
+		GANV_NODE(module)->impl->must_resize = TRUE;
+		ganv_item_request_update(GANV_ITEM(module));
 		return;
 	}
 
 	double title_w, title_h;
 	title_size(module, &title_w, &title_h);
 
-	const double y = 4.0 + title_h;
 	impl->embed_item = ganv_item_new(
 		GANV_ITEM(module),
 		ganv_widget_get_type(),
 		"x", 2.0,
-		"y", y,
+		"y", 4.0 + title_h,
 		"widget", widget,
 		NULL);
 
-	gtk_widget_show_all(widget);
-
 	GtkRequisition r;
+	gtk_widget_show_all(widget);
 	gtk_widget_size_request(widget, &r);
 	on_embed_size_request(widget, &r, module);
-
 	ganv_item_show(impl->embed_item);
 
 	g_signal_connect(widget, "size-request",
 	                 G_CALLBACK(on_embed_size_request), module);
 
-	layout(GANV_NODE(module));
+	GANV_NODE(module)->impl->must_resize = TRUE;
 	ganv_item_request_update(GANV_ITEM(module));
 }
 
@@ -831,8 +844,8 @@ ganv_module_set_direction(GanvModule*   module,
 	FOREACH_PORT(module->impl->ports, p) {
 		ganv_port_set_direction(*p, direction);
 	}
-	module->impl->must_resize = TRUE;
-	ganv_module_resize(GANV_NODE(module));
+	GANV_NODE(module)->impl->must_resize = TRUE;
+	ganv_item_request_update(GANV_ITEM(module));
 }
 
 void

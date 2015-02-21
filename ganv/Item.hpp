@@ -40,9 +40,8 @@ public:
 	Item(GanvItem* gobj)
 		: _gobj(gobj)
 	{
-		GQuark wrapper_key = g_quark_from_string("ganvmm");
+		ganv_item_set_wrapper(gobj, this);
 		if (gobj && ganv_item_get_parent(gobj)) {
-			g_object_set_qdata(G_OBJECT(_gobj), wrapper_key, this);
 			g_signal_connect(
 				G_OBJECT(_gobj), "event", G_CALLBACK(on_item_event), this);
 		}

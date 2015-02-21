@@ -95,7 +95,7 @@ struct _GanvModuleImpl
 	int        embed_height;
 	double     widest_input;
 	double     widest_output;
-	gboolean   must_resize;
+	gboolean   must_reorder;
 };
 
 /* Node */
@@ -123,6 +123,7 @@ struct _GanvNodeImpl {
 	gboolean          draggable;
 	gboolean          show_label;
 	gboolean          grabbed;
+	gboolean          must_resize;
 #ifdef GANV_FDGL
 	Vector            force;
 	Vector            vel;
@@ -161,6 +162,9 @@ struct _GanvItemImpl {
 
 	/* Parent for this item */
 	GanvItem* parent;
+
+	/* Wrapper object for this item, if any */
+	void* wrapper;
 
 	/* Layer (z order), higher values are on top */
 	guint layer;
@@ -247,6 +251,11 @@ struct _GanvTextImpl
 };
 
 /* Canvas */
+
+typedef struct {
+	GanvPortOrderFunc port_cmp;
+	void*             data;
+} PortOrderCtx;
 
 void
 ganv_canvas_move_selected_items(GanvCanvas* canvas,
@@ -341,6 +350,9 @@ ganv_canvas_request_redraw_c(GanvCanvas* canvas,
 void
 ganv_canvas_request_redraw_w(GanvCanvas* canvas,
                              double x1, double y1, double x2, double y2);
+
+PortOrderCtx
+ganv_canvas_get_port_order(GanvCanvas* canvas);
 
 /* Edge */
 

@@ -140,24 +140,34 @@ ganv_text_set_property(GObject*      object,
 	GanvTextImpl* impl = text->impl;
 
 	switch (prop_id) {
-		SET_CASE(X, double, impl->coords.x);
-		SET_CASE(Y, double, impl->coords.y);
-		SET_CASE(WIDTH, double, impl->coords.width);
-		SET_CASE(HEIGHT, double, impl->coords.height);
-		SET_CASE(COLOR, uint, impl->color)
-		SET_CASE(FONT_SIZE, double, impl->font_size)
+	case PROP_X:
+		impl->coords.x = g_value_get_double(value);
+		break;
+	case PROP_Y:
+		impl->coords.y = g_value_get_double(value);
+		break;
+	case PROP_COLOR:
+		impl->color = g_value_get_uint(value);
+		break;
+	case PROP_FONT_SIZE:
+		impl->font_size    = g_value_get_double(value);
+		impl->needs_layout = TRUE;
+		break;
 	case PROP_TEXT:
 		free(impl->text);
-		impl->text = g_value_dup_string(value);
+		impl->text         = g_value_dup_string(value);
 		impl->needs_layout = TRUE;
-		if (GANV_IS_NODE(GANV_ITEM(text)->impl->parent)) {
-			ganv_node_resize(GANV_NODE(GANV_ITEM(text)->impl->parent));
-		}
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-		break;
+		return;
 	}
+	if (impl->needs_layout) {
+		if (GANV_IS_NODE(GANV_ITEM(text)->impl->parent)) {
+			GANV_NODE(GANV_ITEM(text)->impl->parent)->impl->must_resize = TRUE;
+		}
+	}
+	ganv_item_request_update(GANV_ITEM(text));
 }
 
 static void
@@ -219,14 +229,14 @@ ganv_text_bounds(GanvItem* item,
 static void
 ganv_text_update(GanvItem* item, int flags)
 {
-	parent_class->update(item, flags);
-
 	// Update world-relative bounding box
 	ganv_text_bounds(item, &item->impl->x1, &item->impl->y1, &item->impl->x2, &item->impl->y2);
 	ganv_item_i2w_pair(item, &item->impl->x1, &item->impl->y1, &item->impl->x2, &item->impl->y2);
 
 	ganv_canvas_request_redraw_w(
 		item->impl->canvas, item->impl->x1, item->impl->y1, item->impl->x2, item->impl->y2);
+
+	parent_class->update(item, flags);
 }
 
 static double
@@ -334,7 +344,7 @@ ganv_text_class_init(GanvTextClass* klass)
 			_("The current width of the text."),
 			-G_MAXDOUBLE, G_MAXDOUBLE,
 			1.0,
-			G_PARAM_READWRITE));
+			G_PARAM_READABLE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_HEIGHT, g_param_spec_double(
@@ -343,7 +353,7 @@ ganv_text_class_init(GanvTextClass* klass)
 			_("The current height of the text."),
 			-G_MAXDOUBLE, G_MAXDOUBLE,
 			1.0,
-			G_PARAM_READWRITE));
+			G_PARAM_READABLE));
 
 	g_object_class_install_property(
 		gobject_class, PROP_COLOR, g_param_spec_uint(

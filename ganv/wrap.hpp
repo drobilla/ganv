@@ -115,11 +115,16 @@ private: \
 	wrap(Ganv##Name* gobj) \
 	{ \
 		if (gobj) { \
-			GQuark key = g_quark_from_string("ganvmm"); \
-			return (Ganv::Name*)g_object_get_qdata(G_OBJECT(gobj), key); \
+			return (Ganv::Name*)ganv_item_get_wrapper(GANV_ITEM(gobj)); \
 		} else { \
 			return NULL; \
 		} \
+	} \
+	/** Return a Ganv::CPPType wrapper for a CType. */ \
+	static inline const Ganv::Name* \
+	wrap(const Ganv##Name* gobj) \
+	{ \
+		return wrap((Ganv##Name*)gobj); \
 	} \
 	}
 
