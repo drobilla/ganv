@@ -2535,15 +2535,22 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 		/* Dot node positions are supposedly node centers, but things only
 		   match up if x is interpreted as center and y as top...
 		*/
-		const double x = cx - (w / 2.0);
-		const double y = -cy - (h / 2.0);
+		double x = cx - (w / 2.0);
+		double y = -cy - (h / 2.0);
 
 		ganv_node_move_to(i->first, x, y);
 
+		if (GANV_IS_CIRCLE(i->first)) {
+			// Offset least x and y to avoid cutting off circles at origin
+			const double r = ganv_circle_get_radius(GANV_CIRCLE(i->first));
+			x -= r;
+			y -= r;
+		}
+			
 		least_x = std::min(least_x, x);
 		least_y = std::min(least_y, y);
-		most_x  = std::max(most_x, x);
-		most_y  = std::max(most_y, y);
+		most_x  = std::max(most_x, x + w);
+		most_y  = std::max(most_y, y + h);
 	}
 
 	// Reset numeric locale to original value
