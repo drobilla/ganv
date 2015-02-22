@@ -189,12 +189,13 @@ ganv_circle_vector(const GanvNode* self,
 	const double other_x = GANV_ITEM(other)->impl->x;
 	const double other_y = GANV_ITEM(other)->impl->y;
 
+	const double border  = circle->node.impl->border_width;
 	const double xdist = other_x - cx;
 	const double ydist = other_y - cy;
 	const double h     = sqrt((xdist * xdist) + (ydist * ydist));
 	const double theta = asin(xdist / (h + DBL_EPSILON));
 	const double y_mod = (cy < other_y) ? 1 : -1;
-	const double ret_h = h - circle->impl->coords.radius;
+	const double ret_h = h - circle->impl->coords.radius - border / 2.0;
 	const double ret_x = other_x - sin(theta) * ret_h;
 	const double ret_y = other_y - cos(theta) * ret_h * y_mod;
 
@@ -296,19 +297,23 @@ ganv_circle_draw(GanvItem* item,
 	ganv_node_get_draw_properties(
 		&circle->node, &dash_length, &border_color, &fill_color);
 
+	// Fill
 	cairo_new_path(cr);
+	cairo_arc(cr,
+	          x,
+	          y,
+	          impl->coords.radius + (impl->coords.width / 2.0),
+	          0, 2 * G_PI);
+	color_to_rgba(fill_color, &r, &g, &b, &a);
+	cairo_set_source_rgba(cr, r, g, b, a);
+	cairo_fill(cr);
+
+	// Border
 	cairo_arc(cr,
 	          x,
 	          y,
 	          impl->coords.radius,
 	          0, 2 * G_PI);
-
-	// Fill
-	color_to_rgba(fill_color, &r, &g, &b, &a);
-	cairo_set_source_rgba(cr, r, g, b, a);
-	cairo_fill_preserve(cr);
-
-	// Border
 	color_to_rgba(border_color, &r, &g, &b, &a);
 	cairo_set_source_rgba(cr, r, g, b, a);
 	cairo_set_line_width(cr, impl->coords.width);

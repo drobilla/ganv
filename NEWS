@@ -7,6 +7,7 @@ ganv (1.5.2) unstable;
   * Distinguish edge color from port color slighly.
   * Add support for PDF and PS export.
   * Improve text rendering at high zoom.
+  * Improve appearance of graphs with circle nodes.
   * Improve update performance.
   * Add API to specify module port order.
   * Fix various minor visual alignment/sizing issues.
@@ -14,7 +15,7 @@ ganv (1.5.2) unstable;
   * Fix compilation with --no-fdgl (patch from Vlad Glagolev).
   * Fix crash when destroying canvas.
 
- -- David Robillard <d@drobilla.net>  Sat, 21 Feb 2015 17:21:25 -0500
+ -- David Robillard <d@drobilla.net>  Sat, 21 Feb 2015 19:39:35 -0500
 
 ganv (1.4.2) stable;
 

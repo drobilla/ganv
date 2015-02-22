@@ -375,12 +375,6 @@ ganv_edge_draw(GanvItem* item,
 		cairo_curve_to(cr, src_x1, src_y1, src_x2, src_y2, join_x, join_y);
 		cairo_curve_to(cr, dst_x2, dst_y2, dst_x1, dst_y1, dst_x, dst_y);
 
-		if (impl->coords.arrowhead) {
-			cairo_line_to(cr, dst_x - 12, dst_y - 4);
-			cairo_move_to(cr, dst_x, dst_y);
-			cairo_line_to(cr, dst_x - 12, dst_y + 4);
-		}
-
 #ifdef GANV_DEBUG_CURVES
 		cairo_stroke(cr);
 		cairo_save(cr);
@@ -413,27 +407,41 @@ ganv_edge_draw(GanvItem* item,
 		cairo_restore(cr);
 #endif
 
+		cairo_stroke(cr);
+		if (impl->coords.arrowhead) {
+			cairo_move_to(cr, dst_x - 12, dst_y - 4);
+			cairo_line_to(cr, dst_x, dst_y);
+			cairo_line_to(cr, dst_x - 12, dst_y + 4);
+			cairo_close_path(cr);
+			cairo_stroke_preserve(cr);
+			cairo_fill(cr);
+		}
+
 	} else {
 		// Straight line from (x1, y1) to (x2, y2)
 		cairo_move_to(cr, src_x, src_y);
 		cairo_line_to(cr, dst_x, dst_y);
+		cairo_stroke(cr);
 
 		if (impl->coords.arrowhead) {
 			const double ah  = sqrt(dx * dx + dy * dy);
-			const double adx = dx / ah * 10.0;
-			const double ady = dy / ah * 10.0;
+			const double adx = dx / ah * 8.0;
+			const double ady = dy / ah * 8.0;
 
-			cairo_line_to(cr,
+			cairo_move_to(cr,
 			              dst_x + adx - ady/1.5,
 			              dst_y + ady + adx/1.5);
-			cairo_move_to(cr, dst_x, dst_y);
+			cairo_set_line_join(cr, CAIRO_LINE_JOIN_BEVEL);
+			cairo_line_to(cr, dst_x, dst_y);
+			cairo_set_line_join(cr, CAIRO_LINE_JOIN_MITER);
 			cairo_line_to(cr,
 			              dst_x + adx + ady/1.5,
 			              dst_y + ady - adx/1.5);
+			cairo_close_path(cr);
+			cairo_stroke_preserve(cr);
+			cairo_fill(cr);
 		}
 	}
-
-	cairo_stroke(cr);
 
 	if (impl->coords.handle_radius > 0.0) {
 		cairo_move_to(cr, join_x, join_y);
