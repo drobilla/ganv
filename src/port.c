@@ -273,12 +273,12 @@ ganv_port_place_labels(GanvPort* port)
 		if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_RIGHT) {
 			ganv_item_set(GANV_ITEM(impl->value_label),
 			              "x", PORT_LABEL_HPAD,
-			              "y", (port_h - vlabel_h) / 2.0,
+			              "y", (port_h - vlabel_h) / 2.0 - PORT_LABEL_VPAD,
 			              NULL);
 		} else {
 			ganv_item_set(GANV_ITEM(impl->value_label),
 			              "x", (port_w - vlabel_w) / 2.0,
-			              "y", (port_h - vlabel_h) / 2.0,
+			              "y", (port_h - vlabel_h) / 2.0 - PORT_LABEL_VPAD,
 			              NULL);
 		}
 		vlabel_w += PORT_LABEL_HPAD;
@@ -288,7 +288,7 @@ ganv_port_place_labels(GanvPort* port)
 		if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_RIGHT) {
 			ganv_item_set(GANV_ITEM(label),
 			              "x", vlabel_w + PORT_LABEL_HPAD,
-			              "y", (port_h - label_h) / 2.0,
+			              "y", (port_h - label_h) / 2.0 - PORT_LABEL_VPAD,
 			              NULL);
 		}
 	}
