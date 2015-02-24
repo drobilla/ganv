@@ -131,15 +131,13 @@ ganv_port_update(GanvItem* item, int flags)
 	GanvPortImpl* impl = port->impl;
 
 	if (impl->control) {
-		const double border_width = GANV_NODE(item)->impl->border_width;
-		impl->control->rect->impl->coords.border_width = border_width;
 		ganv_item_invoke_update(GANV_ITEM(impl->control->rect), flags);
 	}
 
 	if (impl->value_label) {
 		ganv_item_invoke_update(GANV_ITEM(port->impl->value_label), flags);
 	}
-	
+
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);
 	item_class->update(item, flags);
 }
@@ -163,8 +161,9 @@ ganv_port_draw(GanvItem* item,
 		ganv_item_i2w_pair(GANV_ITEM(port),
 		                   &coords.x1, &coords.y1, &coords.x2, &coords.y2);
 		ganv_box_path(GANV_BOX(port), cr,
-		              coords.x1 - pad, coords.y1 - pad,
-		              coords.x2 + pad, coords.y2 + pad);
+		              coords.x1 + pad, coords.y1 + pad,
+		              coords.x2 - pad, coords.y2 - pad,
+		              -pad);
 		cairo_clip(cr);
 
 		GanvItem* const rect = GANV_ITEM(port->impl->control->rect);
@@ -362,10 +361,9 @@ ganv_port_set_height(GanvBox* box,
 	GanvPort* port = GANV_PORT(box);
 	parent_class->set_height(box, height);
 	if (port->impl->control) {
-		double control_y1;
-		g_object_get(port->impl->control->rect, "y1", &control_y1, NULL);
 		ganv_item_set(GANV_ITEM(port->impl->control->rect),
-		              "y2", control_y1 + height,
+		              "y1", box->impl->coords.border_width / 2.0,
+		              "y2", height - box->impl->coords.border_width / 2.0,
 		              NULL);
 	}
 	ganv_port_place_labels(port);
@@ -497,9 +495,8 @@ ganv_port_set_direction(GanvPort*     port,
 void
 ganv_port_show_control(GanvPort* port)
 {
-	GanvNode* node = GANV_NODE(port);
-
-	guint color = highlight_color(node->impl->fill_color, 0x40);
+	const guint  color        = 0xFFFFFF66;
+	const double border_width = GANV_NODE(port)->impl->border_width;
 
 	GanvPortControl* control = (GanvPortControl*)malloc(sizeof(GanvPortControl));
 	port->impl->control = control;
@@ -512,10 +509,10 @@ ganv_port_show_control(GanvPort* port)
 	control->rect       = GANV_BOX(
 		ganv_item_new(GANV_ITEM(port),
 		              ganv_box_get_type(),
-		              "x1", 0.0,
-		              "y1", 0.0,
+		              "x1", border_width / 2.0,
+		              "y1", border_width / 2.0,
 		              "x2", 0.0,
-		              "y2", ganv_box_get_height(&port->box),
+		              "y2", ganv_box_get_height(&port->box) - border_width / 2.0,
 		              "fill-color", color,
 		              "border-color", color,
 		              "border-width", 0.0,
@@ -554,7 +551,7 @@ ganv_port_set_value_label(GanvPort*   port,
 		                                            ganv_text_get_type(),
 		                                            "text", str,
 		                                            "font-size", points,
-		                                            "color", 0xFFFFFFAA,
+		                                            "color", DEFAULT_TEXT_COLOR,
 		                                            "managed", TRUE,
 		                                            NULL));
 	}
@@ -591,9 +588,12 @@ ganv_port_update_control_slider(GanvPort* port, float value, gboolean force)
 		return;  // No change, do nothing
 	}
 
+	const double span = (ganv_box_get_width(&port->box) -
+	                     GANV_NODE(port)->impl->border_width);
+
 	const double w = (value - impl->control->min)
 		/ (impl->control->max - impl->control->min)
-		* ganv_box_get_width(&port->box);
+		* span;
 
 	if (isnan(w)) {
 		return;  // Shouldn't happen, but ignore crazy values

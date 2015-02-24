@@ -26,9 +26,9 @@
 #include "./color.h"
 #include "./gettext.h"
 
+#include "color.h"
 #include "ganv-private.h"
 
-// TODO: Very sloppy clipping for arrow heads
 #define ARROW_DEPTH   32
 #define ARROW_BREADTH 32
 
@@ -443,7 +443,8 @@ ganv_edge_draw(GanvItem* item,
 		}
 	}
 
-	if (impl->coords.handle_radius > 0.0) {
+	if (!ganv_canvas_exporting(item->impl->canvas) &&
+	    impl->coords.handle_radius > 0.0) {
 		cairo_move_to(cr, join_x, join_y);
 		cairo_arc(cr, join_x, join_y, impl->coords.handle_radius, 0, 2 * G_PI);
 		cairo_fill(cr);
@@ -635,7 +636,7 @@ ganv_edge_new(GanvCanvas* canvas,
 	if (!edge->impl->color) {
 		const guint tail_color = GANV_NODE(tail)->impl->fill_color;
 		g_object_set(G_OBJECT(edge),
-		             "color", highlight_color(tail_color, 48),
+		             "color", EDGE_COLOR(tail_color),
 		             NULL);
 	}
 

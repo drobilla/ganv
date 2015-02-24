@@ -354,6 +354,9 @@ ganv_canvas_request_redraw_w(GanvCanvas* canvas,
 PortOrderCtx
 ganv_canvas_get_port_order(GanvCanvas* canvas);
 
+gboolean
+ganv_canvas_exporting(GanvCanvas* canvas);
+
 /* Edge */
 
 void
@@ -373,7 +376,8 @@ ganv_edge_tick(GanvEdge* edge, double seconds);
 
 void
 ganv_box_path(GanvBox* box,
-              cairo_t* cr, double x1, double y1, double x2, double  y2);
+              cairo_t* cr, double x1, double y1, double x2, double  y2,
+              double dr);
 
 void
 ganv_box_request_redraw(GanvItem*            item,

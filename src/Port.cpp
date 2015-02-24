@@ -39,7 +39,7 @@ Port::Port(Module&            module,
 	: Box(module.canvas(),
 	      GANV_BOX(ganv_port_new(module.gobj(), is_input,
 	                             "fill-color", color,
-	                             "border-color", highlight_color(color, 0x20),
+	                             "border-color", PORT_BORDER_COLOR(color),
 	                             "border-width", 2.0,
 	                             "label", name.c_str(),
 	                             NULL)))

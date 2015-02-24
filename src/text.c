@@ -59,7 +59,7 @@ ganv_text_init(GanvText* text)
 	impl->layout       = NULL;
 	impl->text         = NULL;
 	impl->font_size    = 0.0;
-	impl->color        = 0xFFFFFFFF;
+	impl->color        = DEFAULT_TEXT_COLOR;
 	impl->needs_layout = FALSE;
 }
 

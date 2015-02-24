@@ -25,6 +25,8 @@ def options(opt):
                    help='Build unit tests')
     opt.add_option('--no-graphviz', action='store_true', dest='no_graphviz',
                    help='Do not compile with graphviz support')
+    opt.add_option('--light-theme', action='store_true', dest='light_theme',
+                   help='Use light coloured theme')
     opt.add_option('--no-fdgl', action='store_true', dest='no_fdgl',
                    help='Use experimental force-directed graph layout')
     opt.add_option('--no-nls', action='store_true', dest='no_nls',
@@ -61,6 +63,9 @@ def configure(conf):
 
     if not Options.options.no_fdgl:
         autowaf.define(conf, 'GANV_FDGL', 1)
+
+    if Options.options.light_theme:
+        autowaf.define(conf, 'GANV_USE_LIGHT_THEME', 1)
 
     if not Options.options.no_nls:
         conf.check(function_name = 'dgettext',

@@ -201,7 +201,8 @@ ganv_box_update(GanvItem* item, int flags)
 
 void
 ganv_box_path(GanvBox* box,
-              cairo_t* cr, double x1, double y1, double x2, double  y2)
+              cairo_t* cr, double x1, double y1, double x2, double y2,
+              double dr)
 {
 	static const double degrees = G_PI / 180.0;
 
@@ -215,18 +216,18 @@ ganv_box_path(GanvBox* box,
 		// Rounded rectangle
 		cairo_new_sub_path(cr);
 		cairo_arc(cr,
-		          x2 - impl->radius_tr,
-		          y1 + impl->radius_tr,
-		          impl->radius_tr, -90 * degrees, 0 * degrees);
+		          x2 - impl->radius_tr - dr,
+		          y1 + impl->radius_tr + dr,
+		          impl->radius_tr + dr, -90 * degrees, 0 * degrees);
 		cairo_arc(cr,
-		          x2 - impl->radius_br, y2 - impl->radius_br,
-		          impl->radius_br, 0 * degrees, 90 * degrees);
+		          x2 - impl->radius_br - dr, y2 - impl->radius_br - dr,
+		          impl->radius_br + dr, 0 * degrees, 90 * degrees);
 		cairo_arc(cr,
-		          x1 + impl->radius_bl, y2 - impl->radius_bl,
-		          impl->radius_bl, 90 * degrees, 180 * degrees);
+		          x1 + impl->radius_bl + dr, y2 - impl->radius_bl - dr,
+		          impl->radius_bl + dr, 90 * degrees, 180 * degrees);
 		cairo_arc(cr,
-		          x1 + impl->radius_tl, y1 + impl->radius_tl,
-		          impl->radius_tl, 180 * degrees, 270 * degrees);
+		          x1 + impl->radius_tl + dr, y1 + impl->radius_tl + dr,
+		          impl->radius_tl + dr, 180 * degrees, 270 * degrees);
 		cairo_close_path(cr);
 	}
 }
@@ -255,15 +256,15 @@ ganv_box_draw(GanvItem* item,
 		const double y = 0.0 - (STACKED_OFFSET * i);
 
 		// Trace basic box path
-		ganv_box_path(box, cr, x1 - x, y1 - y, x2 - x, y2 - y);
+		ganv_box_path(box, cr, x1 - x, y1 - y, x2 - x, y2 - y, 0.0);
 
 		// Fill
 		color_to_rgba(fill_color, &r, &g, &b, &a);
 		cairo_set_source_rgba(cr, r, g, b, a);
-		cairo_fill_preserve(cr);
 
 		// Border
 		if (impl->coords.border_width > 0.0) {
+			cairo_fill_preserve(cr);
 			color_to_rgba(border_color, &r, &g, &b, &a);
 			cairo_set_source_rgba(cr, r, g, b, a);
 			cairo_set_line_width(cr, impl->coords.border_width);
@@ -272,8 +273,10 @@ ganv_box_draw(GanvItem* item,
 			} else {
 				cairo_set_dash(cr, &dash_length, 0, 0);
 			}
+			cairo_stroke(cr);
+		} else {
+			cairo_fill(cr);
 		}
-		cairo_stroke(cr);
 	}
 
 	GanvItemClass* item_class = GANV_ITEM_CLASS(parent_class);

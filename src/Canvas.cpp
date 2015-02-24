@@ -247,6 +247,7 @@ struct GanvCanvasImpl {
 		this->left_grabbed_item    = FALSE;
 		this->in_repick            = FALSE;
 		this->locked               = FALSE;
+		this->exporting            = FALSE;
 
 #ifdef GANV_FDGL
 		this->layout_idle_id = 0;
@@ -452,6 +453,9 @@ struct GanvCanvasImpl {
 
 	/* Disable changes to canvas */
 	gboolean locked;
+
+	/* True if the current draw is an export */
+	gboolean exporting;
 
 #ifdef GANV_FDGL
 	guint    layout_idle_id;
@@ -2606,9 +2610,11 @@ ganv_canvas_export_image(GanvCanvas* canvas,
 
 	// Draw to recording surface
 	cairo_t* cr = cairo_create(rec_surface);
+	canvas->impl->exporting = TRUE;
 	(*GANV_ITEM_GET_CLASS(canvas->impl->root)->draw)(
 		canvas->impl->root, cr,
 		0, 0, canvas->impl->width, canvas->impl->height);
+	canvas->impl->exporting = FALSE;
 	cairo_destroy(cr);
 
 	// Get draw extent
@@ -2634,7 +2640,9 @@ ganv_canvas_export_image(GanvCanvas* canvas,
 	// Draw recording to image surface
 	cr = cairo_create(img);
 	if (draw_background) {
-		cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+		double r, g, b, a;
+		color_to_rgba(DEFAULT_BACKGROUND_COLOR, &r, &g, &b, &a);
+		cairo_set_source_rgba(cr, r, g, b, a);
 		cairo_rectangle(cr, 0, 0, w + 2 * pad, h + 2 * pad);
 		cairo_fill(cr);
 	}
@@ -3664,7 +3672,9 @@ ganv_canvas_paint_rect(GanvCanvas* canvas, gint x0, gint y0, gint x1, gint y1)
 		ganv_canvas_c2w(canvas, draw_width, draw_height, &ww, &wh);
 
 		// Draw background
-		cairo_set_source_rgba(cr, 0, 0, 0, 1.0);
+		double r, g, b, a;
+		color_to_rgba(DEFAULT_BACKGROUND_COLOR, &r, &g, &b, &a);
+		cairo_set_source_rgba(cr, r, g, b, a);
 		cairo_rectangle(cr, wx1, wy1, ww, wh);
 		cairo_fill(cr);
 
@@ -4136,6 +4146,12 @@ PortOrderCtx
 ganv_canvas_get_port_order(GanvCanvas* canvas)
 {
 	return canvas->impl->_port_order;
+}
+
+gboolean
+ganv_canvas_exporting(GanvCanvas* canvas)
+{
+	return canvas->impl->exporting;
 }
 
 } // extern "C"

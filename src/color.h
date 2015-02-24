@@ -18,9 +18,21 @@
 
 #include <glib.h>
 
-#define DEFAULT_TEXT_COLOR   0xFFFFFFFF
-#define DEFAULT_FILL_COLOR   0x1E2224FF
-#define DEFAULT_BORDER_COLOR 0x3E4244FF
+#ifdef GANV_USE_LIGHT_THEME
+#    define DEFAULT_BACKGROUND_COLOR 0xFFFFFFFF
+#    define DEFAULT_TEXT_COLOR       0x000000FF
+#    define DEFAULT_FILL_COLOR       0xEEEEEEFF
+#    define DEFAULT_BORDER_COLOR     0x000000FF
+#    define PORT_BORDER_COLOR(fill)  0x000000FF
+#    define EDGE_COLOR(base)         highlight_color(tail_color, -48)
+#else
+#    define DEFAULT_BACKGROUND_COLOR 0x000000FF
+#    define DEFAULT_TEXT_COLOR       0xFFFFFFFF
+#    define DEFAULT_FILL_COLOR       0x1E2224FF
+#    define DEFAULT_BORDER_COLOR     0x3E4244FF
+#    define PORT_BORDER_COLOR(fill)  highlight_color(fill, 0x20)
+#    define EDGE_COLOR(base)         highlight_color(tail_color, 48)
+#endif
 
 static inline void
 color_to_rgba(guint color, double* r, double* g, double* b, double* a)
