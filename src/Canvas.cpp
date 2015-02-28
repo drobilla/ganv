@@ -268,6 +268,7 @@ struct GanvCanvasImpl {
 
 	~GanvCanvasImpl()
 	{
+		g_source_remove(_animate_idle_id);
 		while (g_idle_remove_by_data(this)) ;
 		ganv_canvas_clear(_gcanvas);
 		gdk_cursor_unref(_move_cursor);
@@ -2877,6 +2878,7 @@ ganv_canvas_unrealize(GtkWidget* widget)
 
 	GanvCanvas* canvas = GANV_CANVAS(widget);
 
+	g_source_remove(canvas->impl->_animate_idle_id);
 	while (g_idle_remove_by_data(canvas->impl)) {}
 
 	shutdown_transients(canvas);
