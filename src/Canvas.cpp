@@ -2155,6 +2155,7 @@ ganv_canvas_clear_selection(GanvCanvas* canvas)
 	}
 
 	GanvCanvasImpl::SelectedEdges edges(canvas->impl->_selected_edges);
+	canvas->impl->_selected_edges.clear();
 	FOREACH_SELECTED_EDGE(edges, c) {
 		ganv_item_set(GANV_ITEM(*c), "selected", FALSE, NULL);
 	}
