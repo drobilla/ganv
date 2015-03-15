@@ -45,6 +45,7 @@ struct _GanvBoxImpl {
 	double        radius_tr;
 	double        radius_br;
 	double        radius_bl;
+	gboolean      beveled;
 };
 
 /* Circle */

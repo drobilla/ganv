@@ -25,7 +25,7 @@
 #include "./ganv-private.h"
 #include "./gettext.h"
 
-static const double PORT_LABEL_HPAD = 2.0;
+static const double PORT_LABEL_HPAD = 4.0;
 static const double PORT_LABEL_VPAD = 1.0;
 
 static void
@@ -475,16 +475,16 @@ ganv_port_set_direction(GanvPort*     port,
 	gboolean  is_input = port->impl->is_input;
 	switch (direction) {
 	case GANV_DIRECTION_RIGHT:
-		box->impl->radius_tl = (is_input ? 0.0 : 4.0);
-		box->impl->radius_tr = (is_input ? 4.0 : 0.0);
-		box->impl->radius_br = (is_input ? 4.0 : 0.0);
-		box->impl->radius_bl = (is_input ? 0.0 : 4.0);
+		box->impl->radius_tl = (is_input ? 0.0 : 5.0);
+		box->impl->radius_tr = (is_input ? 5.0 : 0.0);
+		box->impl->radius_br = (is_input ? 5.0 : 0.0);
+		box->impl->radius_bl = (is_input ? 0.0 : 5.0);
 		break;
 	case GANV_DIRECTION_DOWN:
-		box->impl->radius_tl = (is_input ? 0.0 : 4.0);
-		box->impl->radius_tr = (is_input ? 0.0 : 4.0);
-		box->impl->radius_br = (is_input ? 4.0 : 0.0);
-		box->impl->radius_bl = (is_input ? 4.0 : 0.0);
+		box->impl->radius_tl = (is_input ? 0.0 : 5.0);
+		box->impl->radius_tr = (is_input ? 0.0 : 5.0);
+		box->impl->radius_br = (is_input ? 5.0 : 0.0);
+		box->impl->radius_bl = (is_input ? 5.0 : 0.0);
 		break;
 	}
 

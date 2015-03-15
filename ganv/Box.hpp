@@ -29,6 +29,7 @@ public:
 	{}
 
 	RW_PROPERTY(const char*, label);
+	RW_PROPERTY(gboolean, beveled);
 
 	METHODRET0(ganv_box, double, get_x1)
 	METHODRET0(ganv_box, double, get_y1)

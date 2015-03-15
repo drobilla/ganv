@@ -1,4 +1,4 @@
-ganv (1.5.2) unstable;
+ganv (1.5.3) unstable;
 
   * Fix positioning of embedded widgets when changing layout.
   * Fix unexpected node jumping when dragging new connections.
@@ -10,12 +10,13 @@ ganv (1.5.2) unstable;
   * Improve appearance of graphs with circle nodes.
   * Improve update performance.
   * Add API to specify module port order.
+  * Add support for beveled box corners.
   * Fix various minor visual alignment/sizing issues.
   * Fix size of vertical flow modules.
   * Fix compilation with --no-fdgl (patch from Vlad Glagolev).
   * Fix crash when destroying canvas.
 
- -- David Robillard <d@drobilla.net>  Sat, 21 Feb 2015 19:39:35 -0500
+ -- David Robillard <d@drobilla.net>  Sat, 14 Mar 2015 21:31:47 -0400
 
 ganv (1.4.2) stable;
 

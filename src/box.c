@@ -41,7 +41,8 @@ enum {
 	PROP_RADIUS_TR,
 	PROP_RADIUS_BR,
 	PROP_RADIUS_BL,
-	PROP_STACKED
+	PROP_STACKED,
+	PROP_BEVELED
 };
 
 static void
@@ -58,6 +59,7 @@ ganv_box_init(GanvBox* box)
 	box->impl->radius_tr           = 0.0;
 	box->impl->radius_br           = 0.0;
 	box->impl->radius_bl           = 0.0;
+	box->impl->beveled             = FALSE;
 }
 
 static void
@@ -94,6 +96,7 @@ ganv_box_set_property(GObject*      object,
 		SET_CASE(RADIUS_BR, double, impl->radius_br);
 		SET_CASE(RADIUS_BL, double, impl->radius_bl);
 		SET_CASE(STACKED, boolean, coords->stacked);
+		SET_CASE(BEVELED, boolean, impl->beveled);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -123,6 +126,7 @@ ganv_box_get_property(GObject*    object,
 		GET_CASE(RADIUS_BR, double, impl->radius_br);
 		GET_CASE(RADIUS_BL, double, impl->radius_bl);
 		GET_CASE(STACKED, boolean, impl->coords.stacked);
+		GET_CASE(BEVELED, boolean, impl->beveled);
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -212,6 +216,19 @@ ganv_box_path(GanvBox* box,
 	    && impl->radius_br == 0.0 && impl->radius_bl == 0.0) {
 		// Simple rectangle
 		cairo_rectangle(cr, x1, y1, x2 - x1, y2 - y1);
+	} else if (impl->beveled) {
+		// Beveled rectangle
+		cairo_new_sub_path(cr);
+		cairo_move_to(cr, x1 + impl->radius_tl, y1);
+		cairo_line_to(cr, x2 - impl->radius_tr, y1);
+		cairo_line_to(cr, x2,                   y1 + impl->radius_tr);
+		cairo_line_to(cr, x2,                   y2 - impl->radius_br);
+		cairo_line_to(cr, x2 - impl->radius_br, y2);
+		cairo_line_to(cr, x1 + impl->radius_bl, y2);
+		cairo_line_to(cr, x1,                   y2 - impl->radius_bl);
+		cairo_line_to(cr, x1,                   y2 - impl->radius_bl);
+		cairo_line_to(cr, x1,                   y1 + impl->radius_tl);
+		cairo_close_path(cr);
 	} else {
 		// Rounded rectangle
 		cairo_new_sub_path(cr);
@@ -449,7 +466,15 @@ ganv_box_class_init(GanvBoxClass* klass)
 		gobject_class, PROP_STACKED, g_param_spec_boolean(
 			"stacked",
 			_("Stacked"),
-			_("Whether to show the box with a stacked appearance."),
+			_("Show box with a stacked appearance."),
+			FALSE,
+			G_PARAM_READWRITE));
+
+	g_object_class_install_property(
+		gobject_class, PROP_BEVELED, g_param_spec_boolean(
+			"beveled",
+			_("Beveled"),
+			_("Show radiused corners with a sharp bevel."),
 			FALSE,
 			G_PARAM_READWRITE));
 
