@@ -1,4 +1,4 @@
-ganv (1.5.3) unstable;
+ganv (1.4.3) unstable;
 
   * Fix positioning of embedded widgets when changing layout.
   * Fix unexpected node jumping when dragging new connections.
@@ -15,8 +15,9 @@ ganv (1.5.3) unstable;
   * Fix size of vertical flow modules.
   * Fix compilation with --no-fdgl (patch from Vlad Glagolev).
   * Fix crash when destroying canvas.
+  * Upgrade to waf 1.8.14
 
- -- David Robillard <d@drobilla.net>  Sat, 14 Mar 2015 21:31:47 -0400
+ -- David Robillard <d@drobilla.net>  Fri, 02 Oct 2015 21:08:24 -0400
 
 ganv (1.4.2) stable;
 
