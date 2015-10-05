@@ -77,6 +77,12 @@ ganv_edge_select(GanvEdge* edge);
 void
 ganv_edge_unselect(GanvEdge* edge);
 
+void
+ganv_edge_highlight(GanvEdge* edge);
+
+void
+ganv_edge_unhighlight(GanvEdge* edge);
+
 /**
  * ganv_edge_disconnect:
  *

@@ -689,6 +689,18 @@ ganv_edge_unselect(GanvEdge* edge)
 }
 
 void
+ganv_edge_highlight(GanvEdge* edge)
+{
+	ganv_edge_set_highlighted(edge, TRUE);
+}
+
+void
+ganv_edge_unhighlight(GanvEdge* edge)
+{
+	ganv_edge_set_highlighted(edge, FALSE);
+}
+
+void
 ganv_edge_set_highlighted(GanvEdge* edge, gboolean highlighted)
 {
 	edge->impl->highlighted = highlighted;

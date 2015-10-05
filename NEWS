@@ -5,6 +5,7 @@ ganv (1.4.3) unstable;
   * Preserve selection for quickly making several connections.
   * Dampen sprung layout energy over time to prevent oscillation.
   * Distinguish edge color from port color slighly.
+  * Highlight connected edges on port hover.
   * Add support for PDF and PS export.
   * Improve text rendering at high zoom.
   * Improve appearance of graphs with circle nodes.
@@ -17,7 +18,7 @@ ganv (1.4.3) unstable;
   * Fix crash when destroying canvas.
   * Upgrade to waf 1.8.14
 
- -- David Robillard <d@drobilla.net>  Fri, 02 Oct 2015 21:08:24 -0400
+ -- David Robillard <d@drobilla.net>  Sun, 04 Oct 2015 21:23:59 -0400
 
 ganv (1.4.2) stable;
 

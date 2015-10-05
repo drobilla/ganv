@@ -333,6 +333,7 @@ struct GanvCanvasImpl {
 
 	void ports_joined(GanvPort* port1, GanvPort* port2);
 	void port_clicked(GdkEvent* event, GanvPort* port);
+	void highlight_port(GanvPort* port, bool highlight);
 
 	void move_contents_to_internal(double x, double y, double min_x, double min_y);
 
@@ -1418,7 +1419,7 @@ void
 GanvCanvasImpl::end_connect_drag()
 {
 	if (_connect_port) {
-		g_object_set(G_OBJECT(_connect_port), "highlighted", FALSE, NULL);
+		highlight_port(_connect_port, false);
 	}
 	gtk_object_destroy(GTK_OBJECT(_drag_edge));
 	gtk_object_destroy(GTK_OBJECT(_drag_node));
@@ -1557,7 +1558,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 		gboolean selected;
 		g_object_get(G_OBJECT(port), "selected", &selected, NULL);
 		if (!control_dragging && !selected) {
-			g_object_set(G_OBJECT(port), "highlighted", TRUE, NULL);
+			highlight_port(port, true);
 			return true;
 		}
 		break;
@@ -1574,7 +1575,7 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 				NULL, event->crossing.time);
 			return true;
 		} else if (!control_dragging) {
-			g_object_set(G_OBJECT(port), "highlighted", FALSE, NULL);
+			highlight_port(port, false);
 			return true;
 		}
 		break;
@@ -1594,8 +1595,8 @@ GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 		return;
 	}
 
-	g_object_set(G_OBJECT(port1), "highlighted", FALSE, NULL);
-	g_object_set(G_OBJECT(port2), "highlighted", FALSE, NULL);
+	highlight_port(port1, false);
+	highlight_port(port2, false);
 
 	GanvNode* src_node;
 	GanvNode* dst_node;
@@ -1629,6 +1630,18 @@ GanvCanvasImpl::port_clicked(GdkEvent* event, GanvPort* port)
 	} else {
 		select_port_toggle(port, event->button.state);
 	}
+}
+
+void
+GanvCanvasImpl::highlight_port(GanvPort* port, bool highlight)
+{
+	g_object_set(G_OBJECT(port), "highlighted", highlight, NULL);
+	ganv_canvas_for_each_edge_on(_gcanvas,
+	                             GANV_NODE(port),
+	                             (highlight
+	                              ? (GanvEdgeFunc)ganv_edge_highlight
+	                              : (GanvEdgeFunc)ganv_edge_unhighlight),
+	                             NULL);
 }
 
 /* Update animated "rubber band" selection effect. */
