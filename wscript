@@ -23,6 +23,8 @@ def options(opt):
     autowaf.set_options(opt)
     opt.add_option('--test', action='store_true', dest='build_tests',
                    help='Build unit tests')
+    opt.add_option('--no-coverage', action='store_true', dest='no_coverage',
+                   help='Do not use gcov for code coverage')
     opt.add_option('--no-graphviz', action='store_true', dest='no_graphviz',
                    help='Do not compile with graphviz support')
     opt.add_option('--light-theme', action='store_true', dest='light_theme',
@@ -47,6 +49,9 @@ def configure(conf):
                       atleast_version='2.0.0', mandatory=True)
     autowaf.check_pkg(conf, 'gtkmm-2.4', uselib_store='GTKMM',
                       atleast_version='2.10.0', mandatory=True)
+
+    if conf.env.BUILD_TESTS and not Options.options.no_coverage:
+        conf.check_cc(lib='gcov', define_name='HAVE_GCOV', mandatory=False)
 
     if Options.options.gir:
         autowaf.check_pkg(conf, 'gobject-introspection-1.0',
@@ -154,6 +159,12 @@ def build(bld):
         target       = 'src/ganv_bench')
 
     if bld.env.BUILD_TESTS:
+        test_libs   = []
+        test_cflags = ['']
+        if bld.is_defined('HAVE_GCOV'):
+            test_libs   += ['gcov']
+            test_cflags += ['-fprofile-arcs', '-ftest-coverage']
+
         # Static library for test program
         bld(features     = 'c cstlib cxx cxxshlib',
             source       = ganv_source,
@@ -162,16 +173,17 @@ def build(bld):
             target       = 'ganv_profiled',
             uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
             install_path = '',
-            cflags       = [ '-fprofile-arcs', '-ftest-coverage' ])
+            cflags       = test_cflags)
 
         # Test program (C)
         bld(features     = 'cxx cxxprogram',
             source       = 'src/ganv_test.c',
             includes     = ['.', './src'],
             use          = 'libganv_profiled',
-            lib          = ['gcov'],
+            lib          = test_libs,
             uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
-            target       = 'src/ganv_test')
+            target       = 'src/ganv_test',
+            cflags       = test_cflags)
 
     # Documentation
     #autowaf.build_dox(bld, 'GANV', GANV_VERSION, top, out)
