@@ -745,6 +745,9 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 				ss << edge->impl->head << (flow_right ? ":w" : ":n");
 				agsafeset(e, (char*)"headport", (char*)ss.str().c_str(), (char*)"");
 			}
+			if (!ganv_edge_get_constraining(edge)) {
+				agsafeset(e, (char*)"constraint", "false", (char*)"");
+			}
 		} else {
 			std::cerr << "Unable to find graphviz node" << std::endl;
 		}
@@ -861,8 +864,12 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 	// Calculate attractive spring forces for edges
 	FOREACH_EDGE(_edges, i) {
 		const GanvEdge* const edge = *i;
-		GanvNode*             tail = ganv_edge_get_tail(edge);
-		GanvNode*             head = ganv_edge_get_head(edge);
+		if (!ganv_edge_get_constraining(edge)) {
+			continue;
+		}
+
+		GanvNode* tail = ganv_edge_get_tail(edge);
+		GanvNode* head = ganv_edge_get_head(edge);
 		if (GANV_IS_PORT(tail)) {
 			tail = GANV_NODE(ganv_port_get_module(GANV_PORT(tail)));
 		}

@@ -47,6 +47,7 @@ enum {
 	PROP_DASH_LENGTH,
 	PROP_DASH_OFFSET,
 	PROP_COLOR,
+	PROP_CONSTRAINING,
 	PROP_CURVED,
 	PROP_ARROWHEAD,
 	PROP_SELECTED,
@@ -72,6 +73,7 @@ ganv_edge_init(GanvEdge* edge)
 	memset(&impl->coords, '\0', sizeof(GanvEdgeCoords));
 	impl->coords.width         = 2.0;
 	impl->coords.handle_radius = 4.0;
+	impl->coords.constraining  = TRUE;
 	impl->coords.curved        = FALSE;
 	impl->coords.arrowhead     = FALSE;
 
@@ -120,6 +122,7 @@ ganv_edge_set_property(GObject*      object,
 		SET_CASE(DASH_LENGTH, double, impl->dash_length);
 		SET_CASE(DASH_OFFSET, double, impl->dash_offset);
 		SET_CASE(COLOR, uint, impl->color);
+		SET_CASE(CONSTRAINING, boolean, impl->coords.constraining);
 		SET_CASE(CURVED, boolean, impl->coords.curved);
 		SET_CASE(ARROWHEAD, boolean, impl->coords.arrowhead);
 		SET_CASE(SELECTED, boolean, impl->selected);
@@ -151,6 +154,7 @@ ganv_edge_get_property(GObject*    object,
 		GET_CASE(DASH_LENGTH, double, impl->dash_length);
 		GET_CASE(DASH_OFFSET, double, impl->dash_offset);
 		GET_CASE(COLOR, uint, impl->color);
+		GET_CASE(CONSTRAINING, boolean, impl->coords.constraining);
 		GET_CASE(CURVED, boolean, impl->coords.curved);
 		GET_CASE(ARROWHEAD, boolean, impl->coords.arrowhead);
 		GET_CASE(SELECTED, boolean, impl->selected);
@@ -564,6 +568,14 @@ ganv_edge_class_init(GanvEdgeClass* klass)
 			G_PARAM_READWRITE));
 
 	g_object_class_install_property(
+		gobject_class, PROP_CONSTRAINING, g_param_spec_boolean(
+			"constraining",
+			_("Constraining"),
+			_("Whether edge should constrain the layout."),
+			1,
+			G_PARAM_READWRITE));
+
+	g_object_class_install_property(
 		gobject_class, PROP_CURVED, g_param_spec_boolean(
 			"curved",
 			_("Curved"),
@@ -650,6 +662,19 @@ void
 ganv_edge_update_location(GanvEdge* edge)
 {
 	ganv_item_request_update(GANV_ITEM(edge));
+}
+
+gboolean
+ganv_edge_get_constraining(const GanvEdge* edge)
+{
+	return edge->impl->coords.constraining;
+}
+
+void
+ganv_edge_set_constraining(GanvEdge* edge, gboolean constraining)
+{
+	edge->impl->coords.constraining = constraining;
+	ganv_edge_request_redraw(GANV_ITEM(edge), &edge->impl->coords);
 }
 
 gboolean

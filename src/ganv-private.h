@@ -68,6 +68,7 @@ typedef struct {
 	double   cx1, cy1, cx2, cy2;
 	double   handle_x, handle_y, handle_radius;
 	double   width;
+	gboolean constraining;
 	gboolean curved;
 	gboolean arrowhead;
 } GanvEdgeCoords;

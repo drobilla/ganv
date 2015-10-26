@@ -67,6 +67,7 @@ public:
 		return ganv_edge_is_within(gobj(), x1, y1, x2, y2);
 	}
 
+	RW_PROPERTY(gboolean, constraining)
 	RW_PROPERTY(gboolean, curved)
 	RW_PROPERTY(gboolean, selected)
 	RW_PROPERTY(gboolean, highlighted)

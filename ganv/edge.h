@@ -65,6 +65,12 @@ ganv_edge_get_curved(const GanvEdge* edge);
 void
 ganv_edge_set_curved(GanvEdge* edge, gboolean curved);
 
+gboolean
+ganv_edge_get_constraining(const GanvEdge* edge);
+
+void
+ganv_edge_set_constraining(GanvEdge* edge, gboolean constraining);
+
 void
 ganv_edge_set_selected(GanvEdge* edge, gboolean selected);
 
