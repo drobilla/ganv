@@ -21,6 +21,7 @@
 #ifdef GANV_USE_LIGHT_THEME
 #    define DEFAULT_BACKGROUND_COLOR 0xFFFFFFFF
 #    define DEFAULT_TEXT_COLOR       0x000000FF
+#    define DIM_TEXT_COLOR           0x333333BB
 #    define DEFAULT_FILL_COLOR       0xEEEEEEFF
 #    define DEFAULT_BORDER_COLOR     0x000000FF
 #    define PORT_BORDER_COLOR(fill)  0x000000FF
@@ -28,6 +29,7 @@
 #else
 #    define DEFAULT_BACKGROUND_COLOR 0x000000FF
 #    define DEFAULT_TEXT_COLOR       0xFFFFFFFF
+#    define DIM_TEXT_COLOR           0xCCCCCCBB
 #    define DEFAULT_FILL_COLOR       0x1E2224FF
 #    define DEFAULT_BORDER_COLOR     0x3E4244FF
 #    define PORT_BORDER_COLOR(fill)  highlight_color(fill, 0x20)

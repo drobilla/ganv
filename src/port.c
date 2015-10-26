@@ -545,13 +545,10 @@ ganv_port_set_value_label(GanvPort*   port,
 		              "text", str,
 		              NULL);
 	} else {
-		GanvCanvas*  canvas = GANV_ITEM(port)->impl->canvas;
-		const double points = lrint(ganv_canvas_get_font_size(canvas) * 0.8);
 		impl->value_label = GANV_TEXT(ganv_item_new(GANV_ITEM(port),
 		                                            ganv_text_get_type(),
 		                                            "text", str,
-		                                            "font-size", points,
-		                                            "color", DEFAULT_TEXT_COLOR,
+		                                            "color", DIM_TEXT_COLOR,
 		                                            "managed", TRUE,
 		                                            NULL));
 	}
