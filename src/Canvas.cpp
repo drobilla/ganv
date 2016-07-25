@@ -2576,7 +2576,7 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 			x -= r;
 			y -= r;
 		}
-			
+
 		least_x = std::min(least_x, x);
 		least_y = std::min(least_y, y);
 		most_x  = std::max(most_x, x + w);

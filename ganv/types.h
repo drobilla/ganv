@@ -24,4 +24,3 @@ typedef struct _GanvPort   GanvPort;
 typedef struct _GanvBox    GanvBox;
 
 #endif  /* GANV_TYPES_H */
-

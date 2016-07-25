@@ -29,4 +29,3 @@
 #include "ganv/types.h"
 
 #endif  /* GANV_GANV_H */
-
