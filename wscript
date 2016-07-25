@@ -39,6 +39,9 @@ def configure(conf):
     autowaf.display_header('Ganv Configuration')
     autowaf.set_c99_mode(conf)
 
+    conf.check_cxx(cxxflags=["-std=c++0x"])
+    conf.env.append_unique('CXXFLAGS', ['-std=c++0x'])
+
     autowaf.check_pkg(conf, 'gtk+-2.0', uselib_store='GTK',
                       atleast_version='2.0.0', mandatory=True)
     autowaf.check_pkg(conf, 'gtkmm-2.4', uselib_store='GTKMM',
