@@ -1,5 +1,5 @@
 /* This file is part of Ganv.
- * Copyright 2007-2013 David Robillard <http://drobilla.net>
+ * Copyright 2007-2016 David Robillard <http://drobilla.net>
  *
  * Ganv is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
@@ -299,38 +299,34 @@ resize_right(GanvModule* module)
 	}
 
 	// Move ports to appropriate locations
-	int      i              = 0;
 	gboolean last_was_input = FALSE;
-	double   y              = 0.0;
-	double   h              = 0.0;
+	double   y              = header_height;
 	FOREACH_PORT(impl->ports, pi) {
 		GanvPort* const p     = (*pi);
 		GanvBox*  const pbox  = GANV_BOX(p);
 		GanvNode* const pnode = GANV_NODE(p);
-		h = ganv_box_get_height(pbox);
+		const double    h     = ganv_box_get_height(pbox);
 
 		// Offset to shift ports to make borders line up
 		const double border_off = (GANV_NODE(module)->impl->border_width -
 		                           pnode->impl->border_width) / 2.0;
 
 		if (p->impl->is_input) {
-			y = header_height + (i * (h + pnode->impl->border_width + 1.0));
-			++i;
-			ganv_node_move_to(pnode, -border_off, y);
+			ganv_node_move_to(pnode, -border_off, y + 1.0);
 			ganv_box_set_width(pbox, m.input_width);
 			last_was_input = TRUE;
+			y += h + pnode->impl->border_width + 1.0;
 
 			ganv_canvas_for_each_edge_to(
 				canvas, pnode,
 				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		} else {
-			if (!m.horiz || !last_was_input) {
-				y = header_height + (i * (h + pnode->impl->border_width + 1.0));
-				++i;
-			}
-			ganv_node_move_to(pnode, m.width - m.output_width + border_off, y);
+			ganv_node_move_to(pnode, m.width - m.output_width + border_off, y + 1.0);
 			ganv_box_set_width(pbox, m.output_width);
 			last_was_input = FALSE;
+			if (!m.horiz || !last_was_input) {
+				y += h + pnode->impl->border_width + 1.0;
+			}
 
 			ganv_canvas_for_each_edge_from(
 				canvas, pnode,
@@ -338,11 +334,7 @@ resize_right(GanvModule* module)
 		}
 	}
 
-	if (impl->ports->len == 0) {
-		h += header_height;
-	}
-
-	double height = y + h + EDGE_PAD;
+	double height = y + EDGE_PAD;
 	if (impl->embed_item && m.embed_between)
 		height = MAX(height, impl->embed_height + header_height + 2.0);
 
