@@ -20,11 +20,7 @@ out     = 'build'       # Build directory
 def options(opt):
     opt.load('compiler_c')
     opt.load('compiler_cxx')
-    autowaf.set_options(opt)
-    opt.add_option('--test', action='store_true', dest='build_tests',
-                   help='Build unit tests')
-    opt.add_option('--no-coverage', action='store_true', dest='no_coverage',
-                   help='Do not use gcov for code coverage')
+    autowaf.set_options(opt, test=True)
     opt.add_option('--no-graphviz', action='store_true', dest='no_graphviz',
                    help='Do not compile with graphviz support')
     opt.add_option('--light-theme', action='store_true', dest='light_theme',
@@ -43,15 +39,10 @@ def configure(conf):
     autowaf.display_header('Ganv Configuration')
     autowaf.set_c99_mode(conf)
 
-    conf.env.BUILD_TESTS = Options.options.build_tests
-
     autowaf.check_pkg(conf, 'gtk+-2.0', uselib_store='GTK',
                       atleast_version='2.0.0', mandatory=True)
     autowaf.check_pkg(conf, 'gtkmm-2.4', uselib_store='GTKMM',
                       atleast_version='2.10.0', mandatory=True)
-
-    if conf.env.BUILD_TESTS and not Options.options.no_coverage:
-        conf.check_cc(lib='gcov', define_name='HAVE_GCOV', mandatory=False)
 
     if Options.options.gir:
         autowaf.check_pkg(conf, 'gobject-introspection-1.0',
@@ -161,9 +152,10 @@ def build(bld):
     if bld.env.BUILD_TESTS:
         test_libs   = []
         test_cflags = ['']
-        if bld.is_defined('HAVE_GCOV'):
-            test_libs   += ['gcov']
-            test_cflags += ['-fprofile-arcs', '-ftest-coverage']
+        test_linkflags  = ['']
+        if not bld.env.NO_COVERAGE:
+            test_cflags    += ['--coverage']
+            test_linkflags += ['--coverage']
 
         # Static library for test program
         bld(features     = 'c cstlib cxx cxxshlib',
@@ -173,7 +165,8 @@ def build(bld):
             target       = 'ganv_profiled',
             uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
             install_path = '',
-            cflags       = test_cflags)
+            cflags       = test_cflags,
+            linkflags    = test_linkflags)
 
         # Test program (C)
         bld(features     = 'cxx cxxprogram',
@@ -183,7 +176,8 @@ def build(bld):
             lib          = test_libs,
             uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
             target       = 'src/ganv_test',
-            cflags       = test_cflags)
+            cflags       = test_cflags,
+            linkflags    = test_linkflags)
 
     # Documentation
     #autowaf.build_dox(bld, 'GANV', GANV_VERSION, top, out)
