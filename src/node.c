@@ -154,7 +154,6 @@ ganv_node_set_property(GObject*      object,
 	GanvNodeImpl* impl = node->impl;
 
 	switch (prop_id) {
-		SET_CASE(PARTNER, object, impl->partner);
 		SET_CASE(DASH_LENGTH, double, impl->dash_length);
 		SET_CASE(DASH_OFFSET, double, impl->dash_offset);
 		SET_CASE(BORDER_WIDTH, double, impl->border_width);
@@ -166,6 +165,9 @@ ganv_node_set_property(GObject*      object,
 		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
 		SET_CASE(DRAGGABLE, boolean, impl->draggable);
 		SET_CASE(GRABBED, boolean, impl->grabbed);
+	case PROP_PARTNER:
+		impl->partner = (GanvNode*)g_value_get_object(value);
+		break;
 	case PROP_SELECTED:
 		if (impl->selected != g_value_get_boolean(value)) {
 			GanvItem* item = GANV_ITEM(object);

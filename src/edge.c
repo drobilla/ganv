@@ -110,13 +110,12 @@ ganv_edge_set_property(GObject*      object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_EDGE(object));
 
+	GanvItem*       item   = GANV_ITEM(object);
 	GanvEdge*       edge   = GANV_EDGE(object);
 	GanvEdgeImpl*   impl   = edge->impl;
 	GanvEdgeCoords* coords = &impl->coords;
 
 	switch (prop_id) {
-		SET_CASE(TAIL, object, impl->tail);
-		SET_CASE(HEAD, object, impl->head);
 		SET_CASE(WIDTH, double, coords->width);
 		SET_CASE(HANDLE_RADIUS, double, coords->handle_radius);
 		SET_CASE(DASH_LENGTH, double, impl->dash_length);
@@ -128,6 +127,22 @@ ganv_edge_set_property(GObject*      object,
 		SET_CASE(SELECTED, boolean, impl->selected);
 		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
 		SET_CASE(GHOST, boolean, impl->ghost);
+	case PROP_TAIL: {
+		const gobject tmp = g_value_get_object(value);
+		if (impl->tail != tmp) {
+			impl->tail = GANV_NODE(tmp);
+			ganv_item_request_update(item);
+		}
+		break;
+	}
+	case PROP_HEAD: {
+		const gobject tmp = g_value_get_object(value);
+		if (impl->head != tmp) {
+			impl->head = GANV_NODE(tmp);
+			ganv_item_request_update(item);
+		}
+		break;
+	}
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;

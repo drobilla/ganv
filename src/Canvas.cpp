@@ -746,7 +746,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 				agsafeset(e, (char*)"headport", (char*)ss.str().c_str(), (char*)"");
 			}
 			if (!ganv_edge_get_constraining(edge)) {
-				agsafeset(e, (char*)"constraint", "false", (char*)"");
+				agsafeset(e, (char*)"constraint", (char*)"false", (char*)"");
 			}
 		} else {
 			std::cerr << "Unable to find graphviz node" << std::endl;

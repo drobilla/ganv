@@ -218,7 +218,7 @@ ganv_widget_set_property(GObject*      object,
 
 	case PROP_ANCHOR:
 		if (witem->impl->anchor != (GtkAnchorType)g_value_get_enum(value)) {
-			witem->impl->anchor = g_value_get_enum(value);
+			witem->impl->anchor = (GtkAnchorType)g_value_get_enum(value);
 			update        = TRUE;
 		}
 		break;
@@ -436,7 +436,7 @@ ganv_widget_class_init(GanvWidgetClass* klass)
 	GtkObjectClass* object_class  = (GtkObjectClass*)klass;
 	GanvItemClass*  item_class    = (GanvItemClass*)klass;
 
-	parent_class = g_type_class_peek_parent(klass);
+	parent_class = (GanvItemClass*)g_type_class_peek_parent(klass);
 
 	g_type_class_add_private(klass, sizeof(GanvWidgetImpl));
 
@@ -448,7 +448,7 @@ ganv_widget_class_init(GanvWidgetClass* klass)
 			"widget", _("Widget"),
 			_("The widget to embed in this item."),
 			GTK_TYPE_WIDGET,
-			(G_PARAM_READABLE | G_PARAM_WRITABLE)));
+			(GParamFlags)(G_PARAM_READABLE | G_PARAM_WRITABLE)));
 
 	g_object_class_install_property(
 		gobject_class, PROP_X, g_param_spec_double(

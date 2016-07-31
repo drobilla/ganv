@@ -43,7 +43,7 @@ G_DEFINE_TYPE(GanvModule, ganv_module, GANV_TYPE_BOX)
 static GanvBoxClass* parent_class;
 
 enum {
-	PROP_0,
+	PROP_0
 };
 
 static void

@@ -42,7 +42,7 @@
 enum {
 	GANV_CANVAS_UPDATE_REQUESTED  = 1 << 0,
 	GANV_CANVAS_UPDATE_AFFINE     = 1 << 1,
-	GANV_CANVAS_UPDATE_VISIBILITY = 1 << 2,
+	GANV_CANVAS_UPDATE_VISIBILITY = 1 << 2
 };
 
 #define GCI_UPDATE_MASK (GANV_CANVAS_UPDATE_REQUESTED \
@@ -662,7 +662,7 @@ ganv_item_class_init(GanvItemClass* klass)
 		(gobject_class, ITEM_PROP_PARENT,
 		 g_param_spec_object("parent", NULL, NULL,
 		                     GANV_TYPE_ITEM,
-		                     (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+		                     (GParamFlags)(G_PARAM_READABLE | G_PARAM_WRITABLE)));
 
 	g_object_class_install_property
 		(gobject_class, ITEM_PROP_X,
@@ -670,14 +670,14 @@ ganv_item_class_init(GanvItemClass* klass)
 		                     _("X"),
 		                     _("X"),
 		                     -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
-		                     (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+		                     (GParamFlags)(G_PARAM_READABLE | G_PARAM_WRITABLE)));
 	g_object_class_install_property
 		(gobject_class, ITEM_PROP_Y,
 		 g_param_spec_double("y",
 		                     _("Y"),
 		                     _("Y"),
 		                     -G_MAXDOUBLE, G_MAXDOUBLE, 0.0,
-		                     (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+		                     (GParamFlags)(G_PARAM_READABLE | G_PARAM_WRITABLE)));
 
 	g_object_class_install_property
 		(gobject_class, ITEM_PROP_MANAGED,
@@ -685,7 +685,7 @@ ganv_item_class_init(GanvItemClass* klass)
 		                      _("Managed"),
 		                      _("Whether the item is managed by its parent"),
 		                      0,
-		                      (G_PARAM_READABLE | G_PARAM_WRITABLE)));
+		                      (GParamFlags)(G_PARAM_READABLE | G_PARAM_WRITABLE)));
 
 	item_signals[ITEM_EVENT]
 		= g_signal_new("event",

@@ -24,12 +24,9 @@ typedef gpointer gobject;
 #define SET_CASE(prop, type, field) \
 	case PROP_##prop: { \
 		const g##type tmp = g_value_get_##type(value); \
-		if (field != tmp) { \
-			field = tmp; \
-			GanvItem* item = GANV_ITEM(object); \
-			if (item->impl->canvas) { \
-				ganv_item_request_update(item); \
-			} \
+		if ((field) != tmp) { \
+			(field) = tmp; \
+			ganv_item_request_update(GANV_ITEM(object)); \
 		} \
 		break; \
 	}

@@ -41,7 +41,7 @@ enum {
 	GANV_ITEM_ALWAYS_REDRAW = 1 << 3,
 	GANV_ITEM_VISIBLE       = 1 << 4,
 	GANV_ITEM_NEED_UPDATE   = 1 << 5,
-	GANV_ITEM_NEED_VIS      = 1 << 6,
+	GANV_ITEM_NEED_VIS      = 1 << 6
 };
 
 #define GANV_TYPE_ITEM            (ganv_item_get_type())
