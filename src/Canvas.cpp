@@ -19,6 +19,7 @@
  */
 
 #define _POSIX_C_SOURCE 200809L // strdup
+#define _XOPEN_SOURCE   600 // isascii on BSD
 
 #include <math.h>
 #include <stdio.h>
