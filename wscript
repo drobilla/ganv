@@ -244,3 +244,14 @@ def test(ctx):
 def i18n(bld):
     autowaf.build_i18n(bld, '..', 'ganv', APPNAME, ganv_source,
                        'David Robillard')
+
+def posts(ctx):
+    path = str(ctx.path.abspath())
+    autowaf.news_to_posts(
+        os.path.join(path, 'NEWS'),
+        {'title'        : 'Ganv',
+         'description'  : autowaf.get_blurb(os.path.join(path, 'README')),
+         'dist_pattern' : 'http://download.drobilla.net/ganv-%s.tar.bz2'},
+        { 'Author' : 'drobilla',
+          'Tags'   : 'Hacking, LAD, LV2' },
+        os.path.join(out, 'posts'))
