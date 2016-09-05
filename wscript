@@ -253,5 +253,5 @@ def posts(ctx):
          'description'  : autowaf.get_blurb(os.path.join(path, 'README')),
          'dist_pattern' : 'http://download.drobilla.net/ganv-%s.tar.bz2'},
         { 'Author' : 'drobilla',
-          'Tags'   : 'Hacking, LAD, LV2' },
+          'Tags'   : 'Hacking, LAD, LV2, Ganv' },
         os.path.join(out, 'posts'))
