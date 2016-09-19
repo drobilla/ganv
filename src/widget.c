@@ -1,5 +1,5 @@
 /* This file is part of Ganv.
- * Copyright 2007-2013 David Robillard <http://drobilla.net>
+ * Copyright 2007-2016 David Robillard <http://drobilla.net>
  *
  * Ganv is free software: you can redistribute it and/or modify it under the
  * terms of the GNU General Public License as published by the Free Software
