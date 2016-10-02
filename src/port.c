@@ -639,7 +639,7 @@ ganv_port_set_control_value_internal(GanvPort* port,
 	ganv_port_set_control_value(port, value);
 
 	// Fire signal to notify user value has changed
-	const double dvalue = value;
+	const double dvalue = port->impl->control->value;
 	g_signal_emit(port, port_signals[PORT_VALUE_CHANGED], 0, dvalue, NULL);
 }
 
