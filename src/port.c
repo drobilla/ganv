@@ -495,6 +495,10 @@ ganv_port_set_direction(GanvPort*     port,
 void
 ganv_port_show_control(GanvPort* port)
 {
+	if (port->impl->control) {
+		return;
+	}
+
 	const guint  color        = 0xFFFFFF66;
 	const double border_width = GANV_NODE(port)->impl->border_width;
 
@@ -503,7 +507,7 @@ ganv_port_show_control(GanvPort* port)
 
 	control->value      = 0.0f;
 	control->min        = 0.0f;
-	control->max        = 0.0f;
+	control->max        = 1.0f;
 	control->is_toggle  = FALSE;
 	control->is_integer = FALSE;
 	control->rect       = GANV_BOX(
