@@ -201,9 +201,11 @@ measure(GanvModule* module, Metrics* m)
 
 	m->width = (canvas_title) ? title_w + 10.0 : 1.0;
 
-	// Title is wide, put inputs and outputs beside each other
-	m->horiz = (impl->widest_input + impl->widest_output + 10.0
-	            < MAX(m->width, impl->embed_width));
+	// Title is wide or there is an embedded widget,
+	// put inputs and outputs beside each other
+	m->horiz = (impl->embed_item ||
+	            (impl->widest_input + impl->widest_output + 10.0
+	             < MAX(m->width, impl->embed_width)));
 
 	// Fit ports to module (or vice-versa)
 	m->input_width  = impl->widest_input;
@@ -299,8 +301,8 @@ resize_right(GanvModule* module)
 	}
 
 	// Move ports to appropriate locations
-	gboolean last_was_input = FALSE;
-	double   y              = header_height;
+	double   in_y           = header_height;
+	double   out_y          = header_height;
 	FOREACH_PORT(impl->ports, pi) {
 		GanvPort* const p     = (*pi);
 		GanvBox*  const pbox  = GANV_BOX(p);
@@ -312,29 +314,30 @@ resize_right(GanvModule* module)
 		                           pnode->impl->border_width) / 2.0;
 
 		if (p->impl->is_input) {
-			ganv_node_move_to(pnode, -border_off, y + 1.0);
+			ganv_node_move_to(pnode, -border_off, in_y + 1.0);
 			ganv_box_set_width(pbox, m.input_width);
-			last_was_input = TRUE;
-			y += h + pnode->impl->border_width + 1.0;
+			in_y += h + pnode->impl->border_width + 1.0;
 
 			ganv_canvas_for_each_edge_to(
 				canvas, pnode,
 				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		} else {
-			ganv_node_move_to(pnode, m.width - m.output_width + border_off, y + 1.0);
+			ganv_node_move_to(pnode, m.width - m.output_width + border_off, out_y + 1.0);
 			ganv_box_set_width(pbox, m.output_width);
-			last_was_input = FALSE;
-			if (!m.horiz || !last_was_input) {
-				y += h + pnode->impl->border_width + 1.0;
-			}
+			out_y += h + pnode->impl->border_width + 1.0;
 
 			ganv_canvas_for_each_edge_from(
 				canvas, pnode,
 				(GanvEdgeFunc)ganv_edge_update_location, NULL);
 		}
+
+		if (!m.horiz) {
+			in_y  = MAX(in_y, out_y);
+			out_y = MAX(in_y, out_y);
+		}
 	}
 
-	double height = y + EDGE_PAD;
+	double height = MAX(in_y, out_y) + EDGE_PAD;
 	if (impl->embed_item && m.embed_between)
 		height = MAX(height, impl->embed_height + header_height + 2.0);
 

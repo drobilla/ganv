@@ -1,6 +1,7 @@
 ganv (1.4.3) unstable;
 
   * Fix positioning of embedded widgets when changing layout.
+  * Fix port position on modules with embedded widgets.
   * Fix unexpected node jumping when dragging new connections.
   * Preserve selection for quickly making several connections.
   * Dampen sprung layout energy over time to prevent oscillation.
@@ -19,7 +20,7 @@ ganv (1.4.3) unstable;
   * Fix crash when destroying canvas.
   * Upgrade to waf 1.8.14
 
- -- David Robillard <d@drobilla.net>  Mon, 26 Oct 2015 13:30:01 -0400
+ -- David Robillard <d@drobilla.net>  Fri, 14 Oct 2016 18:55:26 -0400
 
 ganv (1.4.2) stable;
 
