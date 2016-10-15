@@ -191,6 +191,8 @@ ganv_box_update(GanvItem* item, int flags)
 	impl->old_coords = impl->coords;
 	coords_i2w(item, &impl->old_coords);
 
+	// Call parent class update method, resizing if necessary
+	GANV_ITEM_CLASS(parent_class)->update(item, flags);
 	ganv_box_normalize(box);
 
 	// Update world-relative bounding box
@@ -199,8 +201,6 @@ ganv_box_update(GanvItem* item, int flags)
 
 	// Request redraw of new location
 	ganv_box_request_redraw(item, &impl->coords, FALSE);
-
-	GANV_ITEM_CLASS(parent_class)->update(item, flags);
 }
 
 void
