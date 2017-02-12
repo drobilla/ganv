@@ -59,6 +59,11 @@
 #include "./gettext.h"
 
 #if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
+// Deal with graphviz API amateur hour...
+#    define _DLL_BLD 0
+#    define _dll_import 0
+#    define _BLD_cdt 0
+#    define _PACKAGE_ast 0
 #    include <gvc.h>
 #endif
 #ifdef GANV_FDGL
