@@ -114,10 +114,10 @@ public:
 	METHOD0(ganv_canvas, get_move_cursor);
 	METHOD2(ganv_canvas, move_contents_to, double, x, double, y);
 
-	RW_PROPERTY(gboolean, locked);
+	RW_PROPERTY(gboolean, locked)
 	RW_PROPERTY(double, width)
 	RW_PROPERTY(double, height)
-	RW_PROPERTY(GanvDirection, direction);
+	RW_PROPERTY(GanvDirection, direction)
 
 	void set_port_order(GanvPortOrderFunc port_cmp, void* data) {
 		ganv_canvas_set_port_order(gobj(), port_cmp, data);

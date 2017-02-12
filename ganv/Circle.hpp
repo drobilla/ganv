@@ -66,9 +66,9 @@ public:
 				       NULL)))
 	{}
 
-	RW_PROPERTY(double, radius);
-	RW_PROPERTY(double, radius_ems);
-	RW_PROPERTY(gboolean, fit_label);
+	RW_PROPERTY(double, radius)
+	RW_PROPERTY(double, radius_ems)
+	RW_PROPERTY(gboolean, fit_label)
 
 	GanvCircle*       gobj()       { return GANV_CIRCLE(_gobj); }
 	const GanvCircle* gobj() const { return GANV_CIRCLE(_gobj); }
