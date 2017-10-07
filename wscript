@@ -17,20 +17,21 @@ VERSION = GANV_VERSION  # Package version for waf dist
 top     = '.'           # Source directory
 out     = 'build'       # Build directory
 
-def options(opt):
-    opt.load('compiler_c')
-    opt.load('compiler_cxx')
-    autowaf.set_options(opt, test=True)
+def options(ctx):
+    ctx.load('compiler_c')
+    ctx.load('compiler_cxx')
+    autowaf.set_options(ctx, test=True)
+    opt = ctx.get_option_group('Configuration options')
     opt.add_option('--no-graphviz', action='store_true', dest='no_graphviz',
-                   help='Do not compile with graphviz support')
+                   help='do not compile with graphviz support')
     opt.add_option('--light-theme', action='store_true', dest='light_theme',
-                   help='Use light coloured theme')
+                   help='use light coloured theme')
     opt.add_option('--no-fdgl', action='store_true', dest='no_fdgl',
-                   help='Use experimental force-directed graph layout')
+                   help='use experimental force-directed graph layout')
     opt.add_option('--no-nls', action='store_true', dest='no_nls',
-                   help='Disable i18n (native language support)')
+                   help='disable i18n (native language support)')
     opt.add_option('--gir', action='store_true', dest='gir',
-                   help='Build GObject introspection data')
+                   help='build GObject introspection data')
 
 def configure(conf):
     conf.load('compiler_c')
