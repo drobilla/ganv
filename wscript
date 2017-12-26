@@ -34,10 +34,10 @@ def options(ctx):
                    help='build GObject introspection data')
 
 def configure(conf):
-    conf.load('compiler_c')
-    conf.load('compiler_cxx')
-    autowaf.configure(conf)
     autowaf.display_header('Ganv Configuration')
+    conf.load('compiler_c', cache=True)
+    conf.load('compiler_cxx', cache=True)
+    conf.load('autowaf', cache=True)
 
     autowaf.check_pkg(conf, 'gtk+-2.0', uselib_store='GTK',
                       atleast_version='2.0.0', mandatory=True)
@@ -64,16 +64,17 @@ def configure(conf):
         autowaf.define(conf, 'GANV_USE_LIGHT_THEME', 1)
 
     if not Options.options.no_nls:
-        conf.check(function_name = 'dgettext',
-                   header_name   = 'libintl.h',
-                   lib           = 'intl',
-                   define_name   = 'ENABLE_NLS',
-                   mandatory     = False)
+        autowaf.check_function(conf, 'cxx',  'dgettext',
+                               header_name = 'libintl.h',
+                               lib         = 'intl',
+                               define_name = 'ENABLE_NLS',
+                               mandatory   = False)
 
     conf.env.LIB_GANV = ['ganv-%s' % GANV_MAJOR_VERSION]
 
     conf.write_config_header('ganv_config.h', remove=False)
 
+    autowaf.display_summary(conf)
     autowaf.display_msg(conf, "Static (Graphviz) arrange",
                         bool(conf.env.HAVE_AGRAPH_2_20 or
                              conf.env.HAVE_AGRAPH_2_30))
