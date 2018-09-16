@@ -39,9 +39,9 @@ def configure(conf):
     autowaf.set_c_lang(conf, 'c99')
 
     autowaf.check_pkg(conf, 'gtk+-2.0', uselib_store='GTK',
-                      atleast_version='2.0.0', mandatory=True)
+                      atleast_version='2.0.0', system=True, mandatory=True)
     autowaf.check_pkg(conf, 'gtkmm-2.4', uselib_store='GTKMM',
-                      atleast_version='2.10.0', mandatory=True)
+                      atleast_version='2.10.0', system=True, mandatory=True)
 
     if Options.options.gir:
         autowaf.check_pkg(conf, 'gobject-introspection-1.0',
@@ -51,7 +51,7 @@ def configure(conf):
 
     if not Options.options.no_graphviz:
         autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH',
-                          atleast_version='2.30', mandatory=False)
+                          atleast_version='2.30', system=True, mandatory=False)
 
     if not Options.options.no_fdgl:
         autowaf.define(conf, 'GANV_FDGL', 1)
