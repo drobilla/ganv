@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+
 import os
-import waflib.Options as Options
-import waflib.Utils as Utils
-import waflib.extras.autowaf as autowaf
+
+from waflib import Options, Utils
+from waflib.extras import autowaf
 
 # Library and package version (UNIX style major, minor, micro)
 # major increment <=> incompatible changes
@@ -22,16 +23,13 @@ def options(ctx):
     ctx.load('compiler_cxx')
     autowaf.set_options(ctx, test=True)
     opt = ctx.get_option_group('Configuration options')
-    opt.add_option('--no-graphviz', action='store_true', dest='no_graphviz',
-                   help='do not compile with graphviz support')
-    opt.add_option('--light-theme', action='store_true', dest='light_theme',
-                   help='use light coloured theme')
-    opt.add_option('--no-fdgl', action='store_true', dest='no_fdgl',
-                   help='use experimental force-directed graph layout')
-    opt.add_option('--no-nls', action='store_true', dest='no_nls',
-                   help='disable i18n (native language support)')
-    opt.add_option('--gir', action='store_true', dest='gir',
-                   help='build GObject introspection data')
+    autowaf.add_flags(
+        opt,
+        {'no-graphviz': 'do not compile with graphviz support',
+         'light-theme': 'use light coloured theme',
+         'no-fdgl': 'use experimental force-directed graph layout',
+         'no-nls': 'disable i18n (native language support)',
+         'gir': 'build GObject introspection data'})
 
 def configure(conf):
     autowaf.display_header('Ganv Configuration')
@@ -68,19 +66,16 @@ def configure(conf):
                                define_name = 'ENABLE_NLS',
                                mandatory   = False)
 
-    conf.env.LIB_GANV = ['ganv-%s' % GANV_MAJOR_VERSION]
-
+    autowaf.set_lib_env(conf, 'ganv', GANV_VERSION)
     conf.write_config_header('ganv_config.h', remove=False)
 
-    autowaf.display_summary(conf)
-    autowaf.display_msg(conf, "Static (Graphviz) arrange",
-                        bool(conf.env.HAVE_AGRAPH))
-    autowaf.display_msg(conf, "Interactive force-directed arrange",
-                        bool(conf.env.GANV_FDGL))
-    autowaf.display_msg(conf, "Native language support", bool(conf.env.ENABLE_NLS))
-    autowaf.display_msg(conf, "GObject introspection", bool(conf.env.HAVE_GIR))
-    autowaf.display_msg(conf, "Unit tests", bool(conf.env.BUILD_TESTS))
-    print('')
+    autowaf.display_summary(
+        conf,
+        {'Static (Graphviz) arrange': bool(conf.env.HAVE_AGRAPH_2_20),
+         'Interactive force-directed arrange': bool(conf.env.GANV_FDGL),
+         'Native language support': bool(conf.env.ENABLE_NLS),
+         'GObject introspection': bool(conf.env.HAVE_GIR),
+         'Unit tests': bool(conf.env.BUILD_TESTS)})
 
 ganv_source = [
     'src/Canvas.cpp',
