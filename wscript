@@ -52,11 +52,8 @@ def configure(conf):
         conf.find_program('yelp-build', var='YELP_BUILD', mandatory=False)
 
     if not Options.options.no_graphviz:
-        autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH_2_30',
+        autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH',
                           atleast_version='2.30', mandatory=False)
-        if not conf.env.HAVE_AGRAPH_2_30:
-            autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH_2_20',
-                              atleast_version='2.20', mandatory=False)
 
     if not Options.options.no_fdgl:
         autowaf.define(conf, 'GANV_FDGL', 1)
@@ -77,8 +74,7 @@ def configure(conf):
 
     autowaf.display_summary(conf)
     autowaf.display_msg(conf, "Static (Graphviz) arrange",
-                        bool(conf.env.HAVE_AGRAPH_2_20 or
-                             conf.env.HAVE_AGRAPH_2_30))
+                        bool(conf.env.HAVE_AGRAPH))
     autowaf.display_msg(conf, "Interactive force-directed arrange",
                         bool(conf.env.GANV_FDGL))
     autowaf.display_msg(conf, "Native language support", bool(conf.env.ENABLE_NLS))
@@ -115,7 +111,7 @@ def build(bld):
 
     # Pkgconfig file
     autowaf.build_pc(bld, 'GANV', GANV_VERSION, GANV_MAJOR_VERSION,
-                     'GTKMM AGRAPH_2_20 AGRAPH_2_30',
+                     'GTKMM AGRAPH',
                      {'GANV_MAJOR_VERSION' : GANV_MAJOR_VERSION})
 
     bld(rule = 'glib-genmarshal --prefix=ganv_marshal --header ${SRC} > ${TGT}',
@@ -137,7 +133,7 @@ def build(bld):
               includes        = ['.', './src'],
               name            = 'libganv',
               target          = 'ganv-%s' % GANV_MAJOR_VERSION,
-              uselib          = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
+              uselib          = 'GTKMM AGRAPH',
               vnum            = GANV_VERSION,
               install_path    = '${LIBDIR}')
     if bld.is_defined('ENABLE_NLS'):
@@ -148,7 +144,7 @@ def build(bld):
         source       = 'src/ganv_bench.cpp',
         includes     = ['.', './src'],
         use          = 'libganv',
-        uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
+        uselib       = 'GTKMM AGRAPH',
         target       = 'src/ganv_bench')
 
     if bld.env.BUILD_TESTS:
@@ -165,7 +161,7 @@ def build(bld):
             includes     = ['.', './src'],
             name         = 'libganv_profiled',
             target       = 'ganv_profiled',
-            uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
+            uselib       = 'GTKMM AGRAPH',
             install_path = '',
             cflags       = test_cflags,
             linkflags    = test_linkflags)
@@ -176,7 +172,7 @@ def build(bld):
             includes     = ['.', './src'],
             use          = 'libganv_profiled',
             lib          = test_libs,
-            uselib       = 'GTKMM AGRAPH_2_20 AGRAPH_2_30',
+            uselib       = 'GTKMM AGRAPH',
             target       = 'src/ganv_test',
             cflags       = test_cflags,
             linkflags    = test_linkflags)

@@ -58,7 +58,7 @@
 #include "./ganv-private.h"
 #include "./gettext.h"
 
-#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
+#ifdef HAVE_AGRAPH
 // Deal with graphviz API amateur hour...
 #    define _DLL_BLD 0
 #    define _dll_import 0
@@ -142,7 +142,7 @@ typedef std::set<GanvNode*> Items;
 	for (SelectedPorts::iterator p = _selected_ports.begin(); \
 	     p != _selected_ports.end(); ++p)
 
-#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
+#ifdef HAVE_AGRAPH
 class GVNodes : public std::map<GanvNode*, Agnode_t*> {
 public:
 	GVNodes() : gvc(0), G(0) {}
@@ -301,7 +301,7 @@ struct GanvCanvasImpl {
 
 	void unselect_ports();
 
-#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
+#ifdef HAVE_AGRAPH
 	GVNodes layout_dot(const std::string& filename);
 #endif
 
@@ -558,7 +558,7 @@ select_edges(GanvPort* port, void* data)
 	}
 }
 
-#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
+#ifdef HAVE_AGRAPH
 static void
 gv_set(void* subject, const char* key, double value)
 {
@@ -576,15 +576,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 
 	GVC_t* gvc = gvContext();
 
-#ifndef HAVE_AGRAPH_2_30
-#define agstrdup_html(g, str) agstrdup_html(str)
-#define agedge(g, t, h, name, flag) agedge(g, t, h)
-#define agnode(g, name, flag) agnode(g, name)
-#define agattr(g, t, k, v) agraphattr(g, k, v)
-	Agraph_t* G = agopen((char*)"g", AGDIGRAPH);
-#else
 	Agraph_t* G = agopen((char*)"g", Agdirected, NULL);
-#endif
 
 	agsafeset(G, (char*)"splines", (char*)"false", (char*)"");
 	agsafeset(G, (char*)"compound", (char*)"true", (char*)"");
@@ -2537,7 +2529,7 @@ ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y)
 void
 ganv_canvas_arrange(GanvCanvas* canvas)
 {
-#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
+#ifdef HAVE_AGRAPH
 	GVNodes nodes = canvas->impl->layout_dot((char*)"");
 
 	double least_x=HUGE_VAL, least_y=HUGE_VAL, most_x=0, most_y=0;
@@ -2689,7 +2681,7 @@ ganv_canvas_export_image(GanvCanvas* canvas,
 void
 ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename)
 {
-#if defined(HAVE_AGRAPH_2_20) || defined(HAVE_AGRAPH_2_30)
+#ifdef HAVE_AGRAPH
 	GVNodes nodes = canvas->impl->layout_dot(filename);
 	nodes.cleanup();
 #endif
