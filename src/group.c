@@ -30,15 +30,15 @@ enum {
 	GROUP_PROP_0
 };
 
-G_DEFINE_TYPE(GanvGroup, ganv_group, GANV_TYPE_ITEM)
+G_DEFINE_TYPE_WITH_CODE(GanvGroup, ganv_group, GANV_TYPE_ITEM,
+                        G_ADD_PRIVATE(GanvGroup))
 
 static GanvItemClass* group_parent_class;
 
 static void
 ganv_group_init(GanvGroup* group)
 {
-	GanvGroupPrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		group, GANV_TYPE_GROUP, GanvGroupPrivate);
+	GanvGroupPrivate* impl = ganv_group_get_instance_private(group);
 
 	group->impl                = impl;
 	group->impl->item_list     = NULL;
@@ -427,8 +427,6 @@ ganv_group_class_init(GanvGroupClass* klass)
 	item_class    = (GanvItemClass*)klass;
 
 	group_parent_class = (GanvItemClass*)g_type_class_peek_parent(klass);
-
-	g_type_class_add_private(klass, sizeof(GanvGroupPrivate));
 
 	gobject_class->set_property = ganv_group_set_property;
 	gobject_class->get_property = ganv_group_get_property;

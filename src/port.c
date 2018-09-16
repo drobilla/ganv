@@ -31,7 +31,8 @@ static const double PORT_LABEL_VPAD = 1.0;
 static void
 ganv_port_update_control_slider(GanvPort* port, float value, gboolean force);
 
-G_DEFINE_TYPE(GanvPort, ganv_port, GANV_TYPE_BOX)
+G_DEFINE_TYPE_WITH_CODE(GanvPort, ganv_port, GANV_TYPE_BOX,
+                        G_ADD_PRIVATE(GanvPort))
 
 static GanvBoxClass* parent_class;
 
@@ -51,8 +52,7 @@ static guint port_signals[PORT_LAST_SIGNAL];
 static void
 ganv_port_init(GanvPort* port)
 {
-	port->impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		port, GANV_TYPE_PORT, GanvPortPrivate);
+	port->impl = ganv_port_get_instance_private(port);
 
 	port->impl->control         = NULL;
 	port->impl->value_label     = NULL;
@@ -387,8 +387,6 @@ ganv_port_class_init(GanvPortClass* klass)
 	GanvBoxClass*   box_class     = (GanvBoxClass*)klass;
 
 	parent_class = GANV_BOX_CLASS(g_type_class_peek_parent(klass));
-
-	g_type_class_add_private(klass, sizeof(GanvPortPrivate));
 
 	gobject_class->set_property = ganv_port_set_property;
 	gobject_class->get_property = ganv_port_get_property;

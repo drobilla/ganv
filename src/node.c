@@ -24,7 +24,8 @@
 
 guint signal_moved;
 
-G_DEFINE_TYPE(GanvNode, ganv_node, GANV_TYPE_ITEM)
+G_DEFINE_TYPE_WITH_CODE(GanvNode, ganv_node, GANV_TYPE_ITEM,
+                        G_ADD_PRIVATE(GanvNode))
 
 static GanvItemClass* parent_class;
 
@@ -51,8 +52,7 @@ enum {
 static void
 ganv_node_init(GanvNode* node)
 {
-	GanvNodePrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		node, GANV_TYPE_NODE, GanvNodePrivate);
+	GanvNodePrivate* impl = ganv_node_get_instance_private(node);
 
 	node->impl = impl;
 
@@ -544,8 +544,6 @@ ganv_node_class_init(GanvNodeClass* klass)
 	GanvItemClass*  item_class    = (GanvItemClass*)klass;
 
 	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(klass));
-
-	g_type_class_add_private(klass, sizeof(GanvNodePrivate));
 
 	gobject_class->set_property = ganv_node_set_property;
 	gobject_class->get_property = ganv_node_get_property;

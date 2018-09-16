@@ -1785,7 +1785,8 @@ extern "C" {
 #include "./color.h"
 #include "./gettext.h"
 
-G_DEFINE_TYPE(GanvCanvas, ganv_canvas, GTK_TYPE_LAYOUT)
+G_DEFINE_TYPE_WITH_CODE(GanvCanvas, ganv_canvas, GTK_TYPE_LAYOUT,
+                        G_ADD_PRIVATE(GanvCanvas))
 
 enum {
 	PROP_0,
@@ -1884,8 +1885,6 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 	GtkWidgetClass* widget_class  = (GtkWidgetClass*)klass;
 
 	canvas_parent_class = GTK_LAYOUT_CLASS(g_type_class_peek_parent(klass));
-
-	g_type_class_add_private(klass, sizeof(GanvCanvasPrivate));
 
 	gobject_class->set_property = ganv_canvas_set_property;
 	gobject_class->get_property = ganv_canvas_get_property;

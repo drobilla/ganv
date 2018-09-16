@@ -55,15 +55,15 @@ enum {
 	PROP_GHOST
 };
 
-G_DEFINE_TYPE(GanvEdge, ganv_edge, GANV_TYPE_ITEM)
+G_DEFINE_TYPE_WITH_CODE(GanvEdge, ganv_edge, GANV_TYPE_ITEM,
+                        G_ADD_PRIVATE(GanvEdge))
 
 static GanvItemClass* parent_class;
 
 static void
 ganv_edge_init(GanvEdge* edge)
 {
-	GanvEdgePrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		edge, GANV_TYPE_EDGE, GanvEdgePrivate);
+	GanvEdgePrivate* impl = ganv_edge_get_instance_private(edge);
 
 	edge->impl = impl;
 
@@ -515,8 +515,6 @@ ganv_edge_class_init(GanvEdgeClass* klass)
 	GanvItemClass*  item_class    = (GanvItemClass*)klass;
 
 	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(klass));
-
-	g_type_class_add_private(klass, sizeof(GanvEdgePrivate));
 
 	gobject_class->set_property = ganv_edge_set_property;
 	gobject_class->get_property = ganv_edge_get_property;

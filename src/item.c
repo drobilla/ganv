@@ -64,7 +64,8 @@ enum {
 
 static guint item_signals[ITEM_LAST_SIGNAL];
 
-G_DEFINE_TYPE(GanvItem, ganv_item, GTK_TYPE_OBJECT)
+G_DEFINE_TYPE_WITH_CODE(GanvItem, ganv_item, GTK_TYPE_OBJECT,
+                        G_ADD_PRIVATE(GanvItem))
 
 static GtkObjectClass* item_parent_class;
 
@@ -72,8 +73,7 @@ static GtkObjectClass* item_parent_class;
 static void
 ganv_item_init(GanvItem* item)
 {
-	GanvItemPrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		item, GANV_TYPE_ITEM, GanvItemPrivate);
+	GanvItemPrivate* impl = ganv_item_get_instance_private(item);
 
 	item->object.flags |= GANV_ITEM_VISIBLE;
 	item->impl          = impl;
@@ -652,8 +652,6 @@ ganv_item_class_init(GanvItemClass* klass)
 	gobject_class = (GObjectClass*)klass;
 
 	item_parent_class = (GtkObjectClass*)g_type_class_peek_parent(klass);
-
-	g_type_class_add_private(klass, sizeof(GanvItemPrivate));
 
 	gobject_class->set_property = ganv_item_set_property;
 	gobject_class->get_property = ganv_item_get_property;

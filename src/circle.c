@@ -24,7 +24,8 @@
 #include "./gettext.h"
 #include "./ganv-private.h"
 
-G_DEFINE_TYPE(GanvCircle, ganv_circle, GANV_TYPE_NODE)
+G_DEFINE_TYPE_WITH_CODE(GanvCircle, ganv_circle, GANV_TYPE_NODE,
+                        G_ADD_PRIVATE(GanvCircle))
 
 static GanvNodeClass* parent_class;
 
@@ -38,8 +39,7 @@ enum {
 static void
 ganv_circle_init(GanvCircle* circle)
 {
-	circle->impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		circle, GANV_TYPE_CIRCLE, GanvCirclePrivate);
+	circle->impl = ganv_circle_get_instance_private(circle);
 
 	memset(&circle->impl->coords, '\0', sizeof(GanvCircleCoords));
 	circle->impl->coords.radius     = 0.0;
@@ -365,8 +365,6 @@ ganv_circle_class_init(GanvCircleClass* klass)
 	GanvNodeClass*  node_class    = (GanvNodeClass*)klass;
 
 	parent_class = GANV_NODE_CLASS(g_type_class_peek_parent(klass));
-
-	g_type_class_add_private(klass, sizeof(GanvCirclePrivate));
 
 	gobject_class->set_property = ganv_circle_set_property;
 	gobject_class->get_property = ganv_circle_get_property;

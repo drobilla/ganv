@@ -27,7 +27,8 @@
 #include "./gettext.h"
 #include "./ganv-private.h"
 
-G_DEFINE_TYPE(GanvWidget, ganv_widget, GANV_TYPE_ITEM)
+G_DEFINE_TYPE_WITH_CODE(GanvWidget, ganv_widget, GANV_TYPE_ITEM,
+                        G_ADD_PRIVATE(GanvWidget))
 
 static GanvItemClass* parent_class;
 
@@ -45,8 +46,7 @@ enum {
 static void
 ganv_widget_init(GanvWidget* witem)
 {
-	GanvWidgetPrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		witem, GANV_TYPE_WIDGET, GanvWidgetPrivate);
+	GanvWidgetPrivate* impl = ganv_widget_get_instance_private(witem);
 
 	witem->impl              = impl;
 	witem->impl->x           = 0.0;
@@ -437,8 +437,6 @@ ganv_widget_class_init(GanvWidgetClass* klass)
 	GanvItemClass*  item_class    = (GanvItemClass*)klass;
 
 	parent_class = (GanvItemClass*)g_type_class_peek_parent(klass);
-
-	g_type_class_add_private(klass, sizeof(GanvWidgetPrivate));
 
 	gobject_class->set_property = ganv_widget_set_property;
 	gobject_class->get_property = ganv_widget_get_property;

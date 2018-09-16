@@ -27,7 +27,8 @@
 
 static const double STACKED_OFFSET = 4.0;
 
-G_DEFINE_TYPE(GanvBox, ganv_box, GANV_TYPE_NODE)
+G_DEFINE_TYPE_WITH_CODE(GanvBox, ganv_box, GANV_TYPE_NODE,
+                        G_ADD_PRIVATE(GanvBox))
 
 static GanvNodeClass* parent_class;
 
@@ -48,8 +49,7 @@ enum {
 static void
 ganv_box_init(GanvBox* box)
 {
-	box->impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		box, GANV_TYPE_BOX, GanvBoxPrivate);
+	box->impl = ganv_box_get_instance_private(box);
 
 	memset(&box->impl->coords, '\0', sizeof(GanvBoxCoords));
 
@@ -384,8 +384,6 @@ ganv_box_class_init(GanvBoxClass* klass)
 	GanvNodeClass*  node_class    = (GanvNodeClass*)klass;
 
 	parent_class = GANV_NODE_CLASS(g_type_class_peek_parent(klass));
-
-	g_type_class_add_private(klass, sizeof(GanvBoxPrivate));
 
 	gobject_class->set_property = ganv_box_set_property;
 	gobject_class->get_property = ganv_box_get_property;

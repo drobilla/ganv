@@ -38,7 +38,8 @@ static const double PAD              = 2.0;
 static const double EDGE_PAD         = 5.0;
 static const double MODULE_LABEL_PAD = 2.0;
 
-G_DEFINE_TYPE(GanvModule, ganv_module, GANV_TYPE_BOX)
+G_DEFINE_TYPE_WITH_CODE(GanvModule, ganv_module, GANV_TYPE_BOX,
+                        G_ADD_PRIVATE(GanvModule))
 
 static GanvBoxClass* parent_class;
 
@@ -49,8 +50,7 @@ enum {
 static void
 ganv_module_init(GanvModule* module)
 {
-	GanvModulePrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		module, GANV_TYPE_MODULE, GanvModulePrivate);
+	GanvModulePrivate* impl = ganv_module_get_instance_private(module);
 
 	module->impl = impl;
 
@@ -696,8 +696,6 @@ ganv_module_class_init(GanvModuleClass* klass)
 	GanvNodeClass*  node_class    = (GanvNodeClass*)klass;
 
 	parent_class = GANV_BOX_CLASS(g_type_class_peek_parent(klass));
-
-	g_type_class_add_private(klass, sizeof(GanvModulePrivate));
 
 	gobject_class->set_property = ganv_module_set_property;
 	gobject_class->get_property = ganv_module_get_property;
