@@ -27,9 +27,9 @@ G_BEGIN_DECLS
 #define GANV_IS_CIRCLE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_CIRCLE))
 #define GANV_CIRCLE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_CIRCLE, GanvCircleClass))
 
-typedef struct _GanvCircle      GanvCircle;
-typedef struct _GanvCircleClass GanvCircleClass;
-typedef struct _GanvCircleImpl  GanvCircleImpl;
+typedef struct _GanvCircle        GanvCircle;
+typedef struct _GanvCircleClass   GanvCircleClass;
+typedef struct _GanvCirclePrivate GanvCirclePrivate;
 
 /**
  * GanvCircle:
@@ -38,8 +38,8 @@ typedef struct _GanvCircleImpl  GanvCircleImpl;
  * any child nodes (though, like any #GanvNode, it may have a label).
  */
 struct _GanvCircle {
-	GanvNode        node;
-	GanvCircleImpl* impl;
+	GanvNode           node;
+	GanvCirclePrivate* impl;
 };
 
 struct _GanvCircleClass {

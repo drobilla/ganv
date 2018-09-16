@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 #define GANV_IS_CANVAS_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_CANVAS))
 #define GANV_CANVAS_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_CANVAS, GanvCanvasClass))
 
-typedef struct GanvCanvasImpl   GanvCanvasImpl;
+typedef struct GanvCanvasImpl   GanvCanvasPrivate;
 typedef struct _GanvCanvasClass GanvCanvasClass;
 
 /**
@@ -52,8 +52,8 @@ typedef enum {
 } GanvDirection;
 
 struct _GanvCanvas {
-	GtkLayout       layout;
-	GanvCanvasImpl* impl;
+	GtkLayout          layout;
+	GanvCanvasPrivate* impl;
 };
 
 struct _GanvCanvasClass {

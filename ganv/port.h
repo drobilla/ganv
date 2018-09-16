@@ -29,12 +29,12 @@ G_BEGIN_DECLS
 #define GANV_IS_PORT_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_PORT))
 #define GANV_PORT_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_PORT, GanvPortClass))
 
-typedef struct _GanvPortClass GanvPortClass;
-typedef struct _GanvPortImpl  GanvPortImpl;
+typedef struct _GanvPortClass   GanvPortClass;
+typedef struct _GanvPortPrivate GanvPortPrivate;
 
 struct _GanvPort {
-	GanvBox       box;
-	GanvPortImpl* impl;
+	GanvBox          box;
+	GanvPortPrivate* impl;
 };
 
 struct _GanvPortClass {

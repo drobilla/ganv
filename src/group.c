@@ -37,8 +37,8 @@ static GanvItemClass* group_parent_class;
 static void
 ganv_group_init(GanvGroup* group)
 {
-	GanvGroupImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		group, GANV_TYPE_GROUP, GanvGroupImpl);
+	GanvGroupPrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		group, GANV_TYPE_GROUP, GanvGroupPrivate);
 
 	group->impl                = impl;
 	group->impl->item_list     = NULL;
@@ -428,7 +428,7 @@ ganv_group_class_init(GanvGroupClass* klass)
 
 	group_parent_class = (GanvItemClass*)g_type_class_peek_parent(klass);
 
-	g_type_class_add_private(klass, sizeof(GanvGroupImpl));
+	g_type_class_add_private(klass, sizeof(GanvGroupPrivate));
 
 	gobject_class->set_property = ganv_group_set_property;
 	gobject_class->get_property = ganv_group_get_property;

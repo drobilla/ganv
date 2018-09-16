@@ -62,8 +62,8 @@ static GanvItemClass* parent_class;
 static void
 ganv_edge_init(GanvEdge* edge)
 {
-	GanvEdgeImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		edge, GANV_TYPE_EDGE, GanvEdgeImpl);
+	GanvEdgePrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		edge, GANV_TYPE_EDGE, GanvEdgePrivate);
 
 	edge->impl = impl;
 
@@ -110,10 +110,10 @@ ganv_edge_set_property(GObject*      object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_EDGE(object));
 
-	GanvItem*       item   = GANV_ITEM(object);
-	GanvEdge*       edge   = GANV_EDGE(object);
-	GanvEdgeImpl*   impl   = edge->impl;
-	GanvEdgeCoords* coords = &impl->coords;
+	GanvItem*        item   = GANV_ITEM(object);
+	GanvEdge*        edge   = GANV_EDGE(object);
+	GanvEdgePrivate* impl   = edge->impl;
+	GanvEdgeCoords*  coords = &impl->coords;
 
 	switch (prop_id) {
 		SET_CASE(WIDTH, double, coords->width);
@@ -158,8 +158,8 @@ ganv_edge_get_property(GObject*    object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_EDGE(object));
 
-	GanvEdge*     edge = GANV_EDGE(object);
-	GanvEdgeImpl* impl = edge->impl;
+	GanvEdge*        edge = GANV_EDGE(object);
+	GanvEdgePrivate* impl = edge->impl;
 
 	switch (prop_id) {
 		GET_CASE(TAIL, object, impl->tail);
@@ -250,10 +250,10 @@ ganv_edge_bounds(GanvItem* item,
                  double* x1, double* y1,
                  double* x2, double* y2)
 {
-	GanvEdge*       edge   = GANV_EDGE(item);
-	GanvEdgeImpl*   impl   = edge->impl;
-	GanvEdgeCoords* coords = &impl->coords;
-	const double    w      = coords->width;
+	GanvEdge*        edge   = GANV_EDGE(item);
+	GanvEdgePrivate* impl   = edge->impl;
+	GanvEdgeCoords*  coords = &impl->coords;
+	const double     w      = coords->width;
 
 	if (coords->curved) {
 		*x1 = MIN(coords->x1, MIN(coords->cx1, MIN(coords->x2, coords->cx2))) - w;
@@ -271,7 +271,7 @@ ganv_edge_bounds(GanvItem* item,
 void
 ganv_edge_get_coords(const GanvEdge* edge, GanvEdgeCoords* coords)
 {
-	GanvEdgeImpl* impl = edge->impl;
+	GanvEdgePrivate* impl = edge->impl;
 
 	GANV_NODE_GET_CLASS(impl->tail)->tail_vector(
 		impl->tail, impl->head,
@@ -298,8 +298,8 @@ ganv_edge_get_coords(const GanvEdge* edge, GanvEdgeCoords* coords)
 static void
 ganv_edge_update(GanvItem* item, int flags)
 {
-	GanvEdge*     edge = GANV_EDGE(item);
-	GanvEdgeImpl* impl = edge->impl;
+	GanvEdge*        edge = GANV_EDGE(item);
+	GanvEdgePrivate* impl = edge->impl;
 
 	// Request redraw of old location
 	ganv_edge_request_redraw(item, &impl->old_coords);
@@ -339,8 +339,8 @@ static void
 ganv_edge_draw(GanvItem* item,
                cairo_t* cr, double cx, double cy, double cw, double ch)
 {
-	GanvEdge*     edge = GANV_EDGE(item);
-	GanvEdgeImpl* impl = edge->impl;
+	GanvEdge*        edge = GANV_EDGE(item);
+	GanvEdgePrivate* impl = edge->impl;
 
 	double src_x = impl->coords.x1;
 	double src_y = impl->coords.y1;
@@ -516,7 +516,7 @@ ganv_edge_class_init(GanvEdgeClass* klass)
 
 	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(klass, sizeof(GanvEdgeImpl));
+	g_type_class_add_private(klass, sizeof(GanvEdgePrivate));
 
 	gobject_class->set_property = ganv_edge_set_property;
 	gobject_class->get_property = ganv_edge_get_property;

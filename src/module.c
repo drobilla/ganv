@@ -49,8 +49,8 @@ enum {
 static void
 ganv_module_init(GanvModule* module)
 {
-	GanvModuleImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		module, GANV_TYPE_MODULE, GanvModuleImpl);
+	GanvModulePrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		module, GANV_TYPE_MODULE, GanvModulePrivate);
 
 	module->impl = impl;
 
@@ -72,8 +72,8 @@ ganv_module_destroy(GtkObject* object)
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_MODULE(object));
 
-	GanvModule*     module = GANV_MODULE(object);
-	GanvModuleImpl* impl   = module->impl;
+	GanvModule*        module = GANV_MODULE(object);
+	GanvModulePrivate* impl   = module->impl;
 
 	if (impl->ports) {
 		FOREACH_PORT(impl->ports, p) {
@@ -155,9 +155,9 @@ measure(GanvModule* module, Metrics* m)
 	double title_w, title_h;
 	title_size(module, &title_w, &title_h);
 
-	GanvCanvas*     canvas       = ganv_item_get_canvas(GANV_ITEM(module));
-	GanvText*       canvas_title = GANV_NODE(module)->impl->label;
-	GanvModuleImpl* impl         = module->impl;
+	GanvCanvas*        canvas       = ganv_item_get_canvas(GANV_ITEM(module));
+	GanvText*          canvas_title = GANV_NODE(module)->impl->label;
+	GanvModulePrivate* impl         = module->impl;
 
 	if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_DOWN) {
 		double contents_width = 0.0;
@@ -273,8 +273,8 @@ place_title(GanvModule* module, GanvDirection dir)
 static void
 resize_right(GanvModule* module)
 {
-	GanvCanvas*     canvas = ganv_item_get_canvas(GANV_ITEM(module));
-	GanvModuleImpl* impl   = module->impl;
+	GanvCanvas*        canvas = ganv_item_get_canvas(GANV_ITEM(module));
+	GanvModulePrivate* impl   = module->impl;
 
 	Metrics m;
 	measure(module, &m);
@@ -349,8 +349,8 @@ resize_right(GanvModule* module)
 static void
 resize_down(GanvModule* module)
 {
-	GanvCanvas*     canvas = ganv_item_get_canvas(GANV_ITEM(module));
-	GanvModuleImpl* impl   = module->impl;
+	GanvCanvas*        canvas = ganv_item_get_canvas(GANV_ITEM(module));
+	GanvModulePrivate* impl   = module->impl;
 
 	Metrics m;
 	measure(module, &m);
@@ -410,7 +410,7 @@ resize_down(GanvModule* module)
 static void
 measure_ports(GanvModule* module)
 {
-	GanvModuleImpl* impl = module->impl;
+	GanvModulePrivate* impl = module->impl;
 
 	impl->widest_input  = 0.0;
 	impl->widest_output = 0.0;
@@ -480,7 +480,7 @@ static void
 ganv_module_add_port(GanvModule* module,
                      GanvPort*   port)
 {
-	GanvModuleImpl* impl = module->impl;
+	GanvModulePrivate* impl = module->impl;
 
 	// Update widest input/output measurements if necessary
 	const double width = ganv_port_get_natural_width(port);
@@ -697,7 +697,7 @@ ganv_module_class_init(GanvModuleClass* klass)
 
 	parent_class = GANV_BOX_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(klass, sizeof(GanvModuleImpl));
+	g_type_class_add_private(klass, sizeof(GanvModulePrivate));
 
 	gobject_class->set_property = ganv_module_set_property;
 	gobject_class->get_property = ganv_module_get_property;
@@ -763,8 +763,8 @@ on_embed_size_request(GtkWidget*      widget,
                       GtkRequisition* r,
                       void*           user_data)
 {
-	GanvModule*     module = GANV_MODULE(user_data);
-	GanvModuleImpl* impl   = module->impl;
+	GanvModule*        module = GANV_MODULE(user_data);
+	GanvModulePrivate* impl   = module->impl;
 	if (impl->embed_width == r->width && impl->embed_height == r->height) {
 		return;
 	}
@@ -788,7 +788,7 @@ void
 ganv_module_embed(GanvModule* module,
                   GtkWidget*  widget)
 {
-	GanvModuleImpl* impl = module->impl;
+	GanvModulePrivate* impl = module->impl;
 	if (!widget && !impl->embed_item) {
 		return;
 	}
@@ -848,9 +848,9 @@ ganv_module_for_each_port(GanvModule*  module,
                           GanvPortFunc f,
                           void*        data)
 {
-	GanvModuleImpl* impl = module->impl;
-	const int       len  = impl->ports->len;
-	GanvPort**      copy = (GanvPort**)malloc(sizeof(GanvPort*) * len);
+	GanvModulePrivate* impl = module->impl;
+	const int          len  = impl->ports->len;
+	GanvPort**         copy = (GanvPort**)malloc(sizeof(GanvPort*) * len);
 	memcpy(copy, impl->ports->pdata, sizeof(GanvPort*) * len);
 
 	for (int i = 0; i < len; ++i) {

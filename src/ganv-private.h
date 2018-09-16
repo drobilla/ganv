@@ -38,7 +38,7 @@ typedef struct {
 	gboolean stacked;
 } GanvBoxCoords;
 
-struct _GanvBoxImpl {
+struct _GanvBoxPrivate {
 	GanvBoxCoords coords;
 	GanvBoxCoords old_coords;
 	double        radius_tl;
@@ -55,7 +55,7 @@ typedef struct {
 	double width;
 } GanvCircleCoords;
 
-struct _GanvCircleImpl {
+struct _GanvCirclePrivate {
 	GanvCircleCoords coords;
 	GanvCircleCoords old_coords;
 	gboolean         fit_label;
@@ -73,7 +73,7 @@ typedef struct {
 	gboolean arrowhead;
 } GanvEdgeCoords;
 
-struct _GanvEdgeImpl
+struct _GanvEdgePrivate
 {
 	GanvNode*       tail;
 	GanvNode*       head;
@@ -89,7 +89,7 @@ struct _GanvEdgeImpl
 
 /* Module */
 
-struct _GanvModuleImpl
+struct _GanvModulePrivate
 {
 	GPtrArray* ports;
 	GanvItem*  embed_item;
@@ -109,7 +109,7 @@ typedef struct {
 } Vector;
 #endif
 
-struct _GanvNodeImpl {
+struct _GanvNodePrivate {
 	struct _GanvNode* partner;
 	GanvText*         label;
 	double            dash_length;
@@ -135,7 +135,7 @@ struct _GanvNodeImpl {
 
 /* Widget */
 
-struct _GanvWidgetImpl {
+struct _GanvWidgetPrivate {
 	GtkWidget* widget;          /* The child widget */
 
 	double        x, y;			/* Position at anchor */
@@ -152,13 +152,13 @@ struct _GanvWidgetImpl {
 };
 
 /* Group */
-struct _GanvGroupImpl {
+struct _GanvGroupPrivate {
 	GList* item_list;
 	GList* item_list_end;
 };
 
 /* Item */
-struct _GanvItemImpl {
+struct _GanvItemPrivate {
 	/* Parent canvas for this item */
 	struct _GanvCanvas* canvas;
 
@@ -224,7 +224,7 @@ typedef struct {
 	gboolean  is_integer;
 } GanvPortControl;
 
-struct _GanvPortImpl {
+struct _GanvPortPrivate {
 	GanvPortControl* control;
 	GanvText*        value_label;
 	gboolean         is_input;
@@ -241,7 +241,7 @@ typedef struct
 	double height;
 } GanvTextCoords;
 
-struct _GanvTextImpl
+struct _GanvTextPrivate
 {
 	PangoLayout*     layout;
 	char*            text;

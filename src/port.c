@@ -52,7 +52,7 @@ static void
 ganv_port_init(GanvPort* port)
 {
 	port->impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		port, GANV_TYPE_PORT, GanvPortImpl);
+		port, GANV_TYPE_PORT, GanvPortPrivate);
 
 	port->impl->control         = NULL;
 	port->impl->value_label     = NULL;
@@ -127,8 +127,8 @@ ganv_port_get_property(GObject*    object,
 static void
 ganv_port_update(GanvItem* item, int flags)
 {
-	GanvPort*     port = GANV_PORT(item);
-	GanvPortImpl* impl = port->impl;
+	GanvPort*        port = GANV_PORT(item);
+	GanvPortPrivate* impl = port->impl;
 
 	if (impl->control) {
 		ganv_item_invoke_update(GANV_ITEM(impl->control->rect), flags);
@@ -260,12 +260,12 @@ ganv_port_head_vector(const GanvNode* self,
 static void
 ganv_port_place_labels(GanvPort* port)
 {
-	GanvCanvas*   canvas   = ganv_item_get_canvas(GANV_ITEM(port));
-	GanvPortImpl* impl     = port->impl;
-	GanvText*     label    = GANV_NODE(port)->impl->label;
-	const double  port_w   = ganv_box_get_width(&port->box);
-	const double  port_h   = ganv_box_get_height(&port->box);
-	double        vlabel_w = 0.0;
+	GanvCanvas*      canvas   = ganv_item_get_canvas(GANV_ITEM(port));
+	GanvPortPrivate* impl     = port->impl;
+	GanvText*        label    = GANV_NODE(port)->impl->label;
+	const double     port_w   = ganv_box_get_width(&port->box);
+	const double     port_h   = ganv_box_get_height(&port->box);
+	double           vlabel_w = 0.0;
 	if (impl->value_label) {
 		const double vlabel_h = impl->value_label->impl->coords.height;
 		vlabel_w = impl->value_label->impl->coords.width;
@@ -388,7 +388,7 @@ ganv_port_class_init(GanvPortClass* klass)
 
 	parent_class = GANV_BOX_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(klass, sizeof(GanvPortImpl));
+	g_type_class_add_private(klass, sizeof(GanvPortPrivate));
 
 	gobject_class->set_property = ganv_port_set_property;
 	gobject_class->get_property = ganv_port_get_property;
@@ -537,7 +537,7 @@ void
 ganv_port_set_value_label(GanvPort*   port,
                           const char* str)
 {
-	GanvPortImpl* impl = port->impl;
+	GanvPortPrivate* impl = port->impl;
 
 	if (!str || str[0] == '\0') {
 		if (impl->value_label) {
@@ -561,7 +561,7 @@ ganv_port_set_value_label(GanvPort*   port,
 static void
 ganv_port_update_control_slider(GanvPort* port, float value, gboolean force)
 {
-	GanvPortImpl* impl = port->impl;
+	GanvPortPrivate* impl = port->impl;
 	if (!impl->control) {
 		return;
 	}

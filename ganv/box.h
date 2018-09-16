@@ -27,12 +27,12 @@ G_BEGIN_DECLS
 #define GANV_IS_BOX_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_BOX))
 #define GANV_BOX_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_BOX, GanvBoxClass))
 
-typedef struct _GanvBoxClass GanvBoxClass;
-typedef struct _GanvBoxImpl  GanvBoxImpl;
+typedef struct _GanvBoxClass   GanvBoxClass;
+typedef struct _GanvBoxPrivate GanvBoxPrivate;
 
 struct _GanvBox {
-	GanvNode     node;
-	GanvBoxImpl* impl;
+	GanvNode        node;
+	GanvBoxPrivate* impl;
 };
 
 /**

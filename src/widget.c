@@ -45,8 +45,8 @@ enum {
 static void
 ganv_widget_init(GanvWidget* witem)
 {
-	GanvWidgetImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		witem, GANV_TYPE_WIDGET, GanvWidgetImpl);
+	GanvWidgetPrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		witem, GANV_TYPE_WIDGET, GanvWidgetPrivate);
 
 	witem->impl              = impl;
 	witem->impl->x           = 0.0;
@@ -438,7 +438,7 @@ ganv_widget_class_init(GanvWidgetClass* klass)
 
 	parent_class = (GanvItemClass*)g_type_class_peek_parent(klass);
 
-	g_type_class_add_private(klass, sizeof(GanvWidgetImpl));
+	g_type_class_add_private(klass, sizeof(GanvWidgetPrivate));
 
 	gobject_class->set_property = ganv_widget_set_property;
 	gobject_class->get_property = ganv_widget_get_property;

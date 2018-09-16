@@ -477,9 +477,9 @@ struct GanvCanvasImpl {
 };
 
 typedef struct {
-	GanvItem      item;
-	GanvEdgeImpl* impl;
-	GanvEdgeImpl  impl_data;
+	GanvItem         item;
+	GanvEdgePrivate* impl;
+	GanvEdgePrivate  impl_data;
 } GanvEdgeKey;
 
 static void
@@ -1885,7 +1885,7 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 
 	canvas_parent_class = GTK_LAYOUT_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(klass, sizeof(GanvCanvasImpl));
+	g_type_class_add_private(klass, sizeof(GanvCanvasPrivate));
 
 	gobject_class->set_property = ganv_canvas_set_property;
 	gobject_class->get_property = ganv_canvas_get_property;

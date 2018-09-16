@@ -46,8 +46,8 @@ enum {
 static void
 ganv_text_init(GanvText* text)
 {
-	GanvTextImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		text, GANV_TYPE_TEXT, GanvTextImpl);
+	GanvTextPrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		text, GANV_TYPE_TEXT, GanvTextPrivate);
 
 	text->impl = impl;
 
@@ -69,8 +69,8 @@ ganv_text_destroy(GtkObject* object)
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_TEXT(object));
 
-	GanvText*     text = GANV_TEXT(object);
-	GanvTextImpl* impl = text->impl;
+	GanvText*        text = GANV_TEXT(object);
+	GanvTextPrivate* impl = text->impl;
 
 	if (impl->text) {
 		g_free(impl->text);
@@ -90,12 +90,12 @@ ganv_text_destroy(GtkObject* object)
 void
 ganv_text_layout(GanvText* text)
 {
-	GanvTextImpl* impl   = text->impl;
-	GanvItem*     item   = GANV_ITEM(text);
-	GanvCanvas*   canvas = ganv_item_get_canvas(item);
-	GtkWidget*    widget = GTK_WIDGET(canvas);
-	double        points = impl->font_size;
-	GtkStyle*     style  = gtk_rc_get_style(widget);
+	GanvTextPrivate* impl   = text->impl;
+	GanvItem*        item   = GANV_ITEM(text);
+	GanvCanvas*      canvas = ganv_item_get_canvas(item);
+	GtkWidget*       widget = GTK_WIDGET(canvas);
+	double           points = impl->font_size;
+	GtkStyle*        style  = gtk_rc_get_style(widget);
 
 	if (impl->font_size == 0.0) {
 		points = ganv_canvas_get_font_size(canvas);
@@ -136,8 +136,8 @@ ganv_text_set_property(GObject*      object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_TEXT(object));
 
-	GanvText*     text = GANV_TEXT(object);
-	GanvTextImpl* impl = text->impl;
+	GanvText*        text = GANV_TEXT(object);
+	GanvTextPrivate* impl = text->impl;
 
 	switch (prop_id) {
 	case PROP_X:
@@ -179,8 +179,8 @@ ganv_text_get_property(GObject*    object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_TEXT(object));
 
-	GanvText*     text = GANV_TEXT(object);
-	GanvTextImpl* impl = text->impl;
+	GanvText*        text = GANV_TEXT(object);
+	GanvTextPrivate* impl = text->impl;
 
 	if (impl->needs_layout && (prop_id == PROP_WIDTH
 	                           || prop_id == PROP_HEIGHT)) {
@@ -205,8 +205,8 @@ ganv_text_bounds_item(GanvItem* item,
                       double* x1, double* y1,
                       double* x2, double* y2)
 {
-	GanvText*     text = GANV_TEXT(item);
-	GanvTextImpl* impl = text->impl;
+	GanvText*        text = GANV_TEXT(item);
+	GanvTextPrivate* impl = text->impl;
 
 	if (impl->needs_layout) {
 		ganv_text_layout(text);
@@ -278,8 +278,8 @@ static void
 ganv_text_draw(GanvItem* item,
                cairo_t* cr, double cx, double cy, double cw, double ch)
 {
-	GanvText*     text = GANV_TEXT(item);
-	GanvTextImpl* impl = text->impl;
+	GanvText*        text = GANV_TEXT(item);
+	GanvTextPrivate* impl = text->impl;
 
 	double wx = impl->coords.x;
 	double wy = impl->coords.y;
@@ -306,7 +306,7 @@ ganv_text_class_init(GanvTextClass* klass)
 
 	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(klass, sizeof(GanvTextImpl));
+	g_type_class_add_private(klass, sizeof(GanvTextPrivate));
 
 	gobject_class->set_property = ganv_text_set_property;
 	gobject_class->get_property = ganv_text_get_property;

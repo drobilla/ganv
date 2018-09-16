@@ -29,12 +29,12 @@ G_BEGIN_DECLS
 #define GANV_IS_NODE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_NODE))
 #define GANV_NODE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_NODE, GanvNodeClass))
 
-typedef struct _GanvNodeClass GanvNodeClass;
-typedef struct _GanvNodeImpl  GanvNodeImpl;
+typedef struct _GanvNodeClass   GanvNodeClass;
+typedef struct _GanvNodePrivate GanvNodePrivate;
 
 struct _GanvNode {
-	GanvItem      item;
-	GanvNodeImpl* impl;
+	GanvItem         item;
+	GanvNodePrivate* impl;
 };
 
 struct _GanvNodeClass {

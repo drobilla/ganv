@@ -39,7 +39,7 @@ static void
 ganv_circle_init(GanvCircle* circle)
 {
 	circle->impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		circle, GANV_TYPE_CIRCLE, GanvCircleImpl);
+		circle, GANV_TYPE_CIRCLE, GanvCirclePrivate);
 
 	memset(&circle->impl->coords, '\0', sizeof(GanvCircleCoords));
 	circle->impl->coords.radius     = 0.0;
@@ -257,8 +257,8 @@ ganv_circle_bounds(GanvItem* item,
 static void
 ganv_circle_update(GanvItem* item, int flags)
 {
-	GanvCircle*     circle = GANV_CIRCLE(item);
-	GanvCircleImpl* impl   = circle->impl;
+	GanvCircle*        circle = GANV_CIRCLE(item);
+	GanvCirclePrivate* impl   = circle->impl;
 	impl->coords.width = circle->node.impl->border_width;
 
 	// Request redraw of old location
@@ -283,9 +283,9 @@ static void
 ganv_circle_draw(GanvItem* item,
                  cairo_t* cr, double cx, double cy, double cw, double ch)
 {
-	GanvNode*       node   = GANV_NODE(item);
-	GanvCircle*     circle = GANV_CIRCLE(item);
-	GanvCircleImpl* impl   = circle->impl;
+	GanvNode*          node   = GANV_NODE(item);
+	GanvCircle*        circle = GANV_CIRCLE(item);
+	GanvCirclePrivate* impl   = circle->impl;
 
 	double r, g, b, a;
 
@@ -366,7 +366,7 @@ ganv_circle_class_init(GanvCircleClass* klass)
 
 	parent_class = GANV_NODE_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(klass, sizeof(GanvCircleImpl));
+	g_type_class_add_private(klass, sizeof(GanvCirclePrivate));
 
 	gobject_class->set_property = ganv_circle_set_property;
 	gobject_class->get_property = ganv_circle_get_property;

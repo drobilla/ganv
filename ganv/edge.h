@@ -29,12 +29,12 @@ G_BEGIN_DECLS
 #define GANV_IS_EDGE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_EDGE))
 #define GANV_EDGE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_EDGE, GanvEdgeClass))
 
-typedef struct _GanvEdgeClass GanvEdgeClass;
-typedef struct _GanvEdgeImpl  GanvEdgeImpl;
+typedef struct _GanvEdgeClass   GanvEdgeClass;
+typedef struct _GanvEdgePrivate GanvEdgePrivate;
 
 struct _GanvEdge {
-	GanvItem      item;
-	GanvEdgeImpl* impl;
+	GanvItem         item;
+	GanvEdgePrivate* impl;
 };
 
 struct _GanvEdgeClass {

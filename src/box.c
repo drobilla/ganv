@@ -49,7 +49,7 @@ static void
 ganv_box_init(GanvBox* box)
 {
 	box->impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		box, GANV_TYPE_BOX, GanvBoxImpl);
+		box, GANV_TYPE_BOX, GanvBoxPrivate);
 
 	memset(&box->impl->coords, '\0', sizeof(GanvBoxCoords));
 
@@ -82,9 +82,9 @@ ganv_box_set_property(GObject*      object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_BOX(object));
 
-	GanvBox*       box    = GANV_BOX(object);
-	GanvBoxImpl*   impl   = box->impl;
-	GanvBoxCoords* coords = &impl->coords;
+	GanvBox*        box    = GANV_BOX(object);
+	GanvBoxPrivate* impl   = box->impl;
+	GanvBoxCoords*  coords = &impl->coords;
 
 	switch (prop_id) {
 		SET_CASE(X1, double, coords->x1);
@@ -112,9 +112,9 @@ ganv_box_get_property(GObject*    object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_BOX(object));
 
-	GanvBox*       box    = GANV_BOX(object);
-	GanvBoxImpl*   impl   = box->impl;
-	GanvBoxCoords* coords = &impl->coords;
+	GanvBox*        box    = GANV_BOX(object);
+	GanvBoxPrivate* impl   = box->impl;
+	GanvBoxCoords*  coords = &impl->coords;
 
 	switch (prop_id) {
 		GET_CASE(X1, double, coords->x1);
@@ -179,8 +179,8 @@ ganv_box_bounds(GanvItem* item,
 static void
 ganv_box_update(GanvItem* item, int flags)
 {
-	GanvBox*     box  = GANV_BOX(item);
-	GanvBoxImpl* impl = box->impl;
+	GanvBox*        box  = GANV_BOX(item);
+	GanvBoxPrivate* impl = box->impl;
 	impl->coords.border_width = box->node.impl->border_width;
 
 	// Request redraw of old location
@@ -210,7 +210,7 @@ ganv_box_path(GanvBox* box,
 {
 	static const double degrees = G_PI / 180.0;
 
-	GanvBoxImpl* impl = box->impl;
+	GanvBoxPrivate* impl = box->impl;
 
 	if (impl->radius_tl == 0.0 && impl->radius_tr == 0.0
 	    && impl->radius_br == 0.0 && impl->radius_bl == 0.0) {
@@ -253,8 +253,8 @@ static void
 ganv_box_draw(GanvItem* item,
               cairo_t* cr, double cx, double cy, double cw, double ch)
 {
-	GanvBox*     box  = GANV_BOX(item);
-	GanvBoxImpl* impl = box->impl;
+	GanvBox*        box  = GANV_BOX(item);
+	GanvBoxPrivate* impl = box->impl;
 
 	double x1 = impl->coords.x1;
 	double y1 = impl->coords.y1;
@@ -303,8 +303,8 @@ ganv_box_draw(GanvItem* item,
 static double
 ganv_box_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
-	GanvBox*     box  = GANV_BOX(item);
-	GanvBoxImpl* impl = box->impl;
+	GanvBox*        box  = GANV_BOX(item);
+	GanvBoxPrivate* impl = box->impl;
 
 	*actual_item = NULL;
 
@@ -385,7 +385,7 @@ ganv_box_class_init(GanvBoxClass* klass)
 
 	parent_class = GANV_NODE_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(klass, sizeof(GanvBoxImpl));
+	g_type_class_add_private(klass, sizeof(GanvBoxPrivate));
 
 	gobject_class->set_property = ganv_box_set_property;
 	gobject_class->get_property = ganv_box_get_property;

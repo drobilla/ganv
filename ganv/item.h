@@ -30,9 +30,9 @@ G_BEGIN_DECLS
 
 struct _GanvCanvas;
 
-typedef struct _GanvItem      GanvItem;
-typedef struct _GanvItemImpl  GanvItemImpl;
-typedef struct _GanvItemClass GanvItemClass;
+typedef struct _GanvItem        GanvItem;
+typedef struct _GanvItemPrivate GanvItemPrivate;
+typedef struct _GanvItemClass   GanvItemClass;
 
 /* Object flags for items */
 enum {
@@ -52,8 +52,8 @@ enum {
 #define GANV_ITEM_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GANV_TYPE_ITEM, GanvItemClass))
 
 struct _GanvItem {
-	GtkObject     object;
-	GanvItemImpl* impl;
+	GtkObject        object;
+	GanvItemPrivate* impl;
 };
 
 struct _GanvItemClass {

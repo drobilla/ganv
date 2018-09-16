@@ -30,14 +30,14 @@ G_BEGIN_DECLS
 #define GANV_IS_MODULE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_MODULE))
 #define GANV_MODULE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_MODULE, GanvModuleClass))
 
-typedef struct _GanvModuleClass GanvModuleClass;
-typedef struct _GanvModuleImpl  GanvModuleImpl;
+typedef struct _GanvModuleClass   GanvModuleClass;
+typedef struct _GanvModulePrivate GanvModulePrivate;
 
 typedef void (*GanvPortFunc)(GanvPort* port, void* data);
 
 struct _GanvModule {
-	GanvBox         box;
-	GanvModuleImpl* impl;
+	GanvBox            box;
+	GanvModulePrivate* impl;
 };
 
 struct _GanvModuleClass {

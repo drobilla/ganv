@@ -51,8 +51,8 @@ enum {
 static void
 ganv_node_init(GanvNode* node)
 {
-	GanvNodeImpl* impl = G_TYPE_INSTANCE_GET_PRIVATE(
-		node, GANV_TYPE_NODE, GanvNodeImpl);
+	GanvNodePrivate* impl = G_TYPE_INSTANCE_GET_PRIVATE(
+		node, GANV_TYPE_NODE, GanvNodePrivate);
 
 	node->impl = impl;
 
@@ -94,8 +94,8 @@ ganv_node_destroy(GtkObject* object)
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_NODE(object));
 
-	GanvNode*     node = GANV_NODE(object);
-	GanvNodeImpl* impl = node->impl;
+	GanvNode*        node = GANV_NODE(object);
+	GanvNodePrivate* impl = node->impl;
 	if (impl->label) {
 		g_object_unref(impl->label);
 		impl->label = NULL;
@@ -150,8 +150,8 @@ ganv_node_set_property(GObject*      object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_NODE(object));
 
-	GanvNode*     node = GANV_NODE(object);
-	GanvNodeImpl* impl = node->impl;
+	GanvNode*        node = GANV_NODE(object);
+	GanvNodePrivate* impl = node->impl;
 
 	switch (prop_id) {
 		SET_CASE(DASH_LENGTH, double, impl->dash_length);
@@ -212,8 +212,8 @@ ganv_node_get_property(GObject*    object,
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_NODE(object));
 
-	GanvNode*     node = GANV_NODE(object);
-	GanvNodeImpl* impl = node->impl;
+	GanvNode*        node = GANV_NODE(object);
+	GanvNodePrivate* impl = node->impl;
 
 	switch (prop_id) {
 		GET_CASE(PARTNER, object, impl->partner);
@@ -299,7 +299,7 @@ ganv_node_get_draw_properties(const GanvNode* node,
                               double*         border_color,
                               double*         fill_color)
 {
-	GanvNodeImpl* impl = node->impl;
+	GanvNodePrivate* impl = node->impl;
 
 	*dash_length  = impl->dash_length;
 	*border_color = impl->border_color;
@@ -319,7 +319,7 @@ ganv_node_get_draw_properties(const GanvNode* node,
 void
 ganv_node_set_label(GanvNode* node, const char* str)
 {
-	GanvNodeImpl* impl = node->impl;
+	GanvNodePrivate* impl = node->impl;
 	if (!str || str[0] == '\0') {
 		if (impl->label) {
 			gtk_object_destroy(GTK_OBJECT(impl->label));
@@ -545,7 +545,7 @@ ganv_node_class_init(GanvNodeClass* klass)
 
 	parent_class = GANV_ITEM_CLASS(g_type_class_peek_parent(klass));
 
-	g_type_class_add_private(klass, sizeof(GanvNodeImpl));
+	g_type_class_add_private(klass, sizeof(GanvNodePrivate));
 
 	gobject_class->set_property = ganv_node_set_property;
 	gobject_class->get_property = ganv_node_get_property;

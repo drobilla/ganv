@@ -31,13 +31,13 @@ G_BEGIN_DECLS
 #define GANV_IS_WIDGET_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GANV_TYPE_WIDGET))
 #define GANV_WIDGET_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GANV_TYPE_WIDGET, GanvWidgetClass))
 
-typedef struct _GanvWidget      GanvWidget;
-typedef struct _GanvWidgetImpl  GanvWidgetImpl;
-typedef struct _GanvWidgetClass GanvWidgetClass;
+typedef struct _GanvWidget        GanvWidget;
+typedef struct _GanvWidgetPrivate GanvWidgetPrivate;
+typedef struct _GanvWidgetClass   GanvWidgetClass;
 
 struct _GanvWidget {
-	GanvItem        item;
-	GanvWidgetImpl* impl;
+	GanvItem           item;
+	GanvWidgetPrivate* impl;
 };
 
 struct _GanvWidgetClass {

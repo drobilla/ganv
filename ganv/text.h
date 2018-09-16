@@ -27,13 +27,13 @@ G_BEGIN_DECLS
 #define GANV_IS_TEXT_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_TEXT))
 #define GANV_TEXT_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_TEXT, GanvTextClass))
 
-typedef struct _GanvText      GanvText;
-typedef struct _GanvTextClass GanvTextClass;
-typedef struct _GanvTextImpl  GanvTextImpl;
+typedef struct _GanvText        GanvText;
+typedef struct _GanvTextClass   GanvTextClass;
+typedef struct _GanvTextPrivate GanvTextPrivate;
 
 struct _GanvText {
-	GanvItem      item;
-	GanvTextImpl* impl;
+	GanvItem         item;
+	GanvTextPrivate* impl;
 };
 
 struct _GanvTextClass {
