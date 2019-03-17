@@ -21,10 +21,8 @@ out     = 'build'       # Build directory
 def options(ctx):
     ctx.load('compiler_c')
     ctx.load('compiler_cxx')
-    autowaf.set_options(ctx, test=True)
-    opt = ctx.get_option_group('Configuration options')
-    autowaf.add_flags(
-        opt,
+    ctx.add_flags(
+        ctx.configuration_options(),
         {'no-graphviz': 'do not compile with graphviz support',
          'light-theme': 'use light coloured theme',
          'no-fdgl': 'use experimental force-directed graph layout',
@@ -32,7 +30,6 @@ def options(ctx):
          'gir': 'build GObject introspection data'})
 
 def configure(conf):
-    autowaf.display_header('Ganv Configuration')
     conf.load('compiler_c', cache=True)
     conf.load('compiler_cxx', cache=True)
     conf.load('autowaf', cache=True)
@@ -226,10 +223,8 @@ def build(bld):
 
     bld.add_post_fun(autowaf.run_ldconfig)
 
-def test(ctx):
-    autowaf.pre_test(ctx, APPNAME)
-    autowaf.run_tests(ctx, APPNAME, ['src/ganv_test'], dirs=['./src'])
-    autowaf.post_test(ctx, APPNAME)
+def test(tst):
+    tst.run(['./src/ganv_test'])
 
 def i18n(bld):
     autowaf.build_i18n(bld, '..', 'ganv', APPNAME, ganv_source,
