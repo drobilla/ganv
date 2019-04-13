@@ -223,9 +223,6 @@ def build(bld):
 
     bld.add_post_fun(autowaf.run_ldconfig)
 
-def test(tst):
-    tst.run(['./src/ganv_test'])
-
 def i18n(bld):
     autowaf.build_i18n(bld, '..', 'ganv', APPNAME, ganv_source,
                        'David Robillard')
