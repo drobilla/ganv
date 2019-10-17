@@ -35,20 +35,21 @@ def configure(conf):
     conf.load('autowaf', cache=True)
     autowaf.set_c_lang(conf, 'c99')
 
-    autowaf.check_pkg(conf, 'gtk+-2.0', uselib_store='GTK',
-                      atleast_version='2.0.0', system=True, mandatory=True)
-    autowaf.check_pkg(conf, 'gtkmm-2.4', uselib_store='GTKMM',
-                      atleast_version='2.10.0', system=True, mandatory=True)
+    conf.check_pkg('gtk+-2.0', uselib_store='GTK', system=True)
+    conf.check_pkg('gtkmm-2.4 >= 2.10.0', uselib_store='GTKMM', system=True)
 
     if Options.options.gir:
-        autowaf.check_pkg(conf, 'gobject-introspection-1.0',
-                          uselib_store='GIR', mandatory=False)
+        conf.check_pkg('gobject-introspection-1.0',
+                       uselib_store='GIR',
+                       mandatory=False)
         conf.find_program('g-ir-doc-tool', var='G_IR_DOC_TOOL', mandatory=False)
         conf.find_program('yelp-build', var='YELP_BUILD', mandatory=False)
 
     if not Options.options.no_graphviz:
-        autowaf.check_pkg(conf, 'libgvc', uselib_store='AGRAPH',
-                          atleast_version='2.30', system=True, mandatory=False)
+        conf.check_pkg('libgvc >= 2.30',
+                       uselib_store='AGRAPH',
+                       system=True,
+                       mandatory=False)
 
     if not Options.options.no_fdgl:
         conf.define('GANV_FDGL', 1)
@@ -57,11 +58,11 @@ def configure(conf):
         conf.define('GANV_USE_LIGHT_THEME', 1)
 
     if not Options.options.no_nls:
-        autowaf.check_function(conf, 'cxx',  'dgettext',
-                               header_name = 'libintl.h',
-                               lib         = 'intl',
-                               define_name = 'ENABLE_NLS',
-                               mandatory   = False)
+        conf.check_function('cxx',  'dgettext',
+                            header_name = 'libintl.h',
+                            lib         = 'intl',
+                            define_name = 'ENABLE_NLS',
+                            mandatory   = False)
 
     autowaf.set_lib_env(conf, 'ganv', GANV_VERSION)
     conf.write_config_header('ganv_config.h', remove=False)
