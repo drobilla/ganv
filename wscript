@@ -51,10 +51,10 @@ def configure(conf):
                           atleast_version='2.30', system=True, mandatory=False)
 
     if not Options.options.no_fdgl:
-        autowaf.define(conf, 'GANV_FDGL', 1)
+        conf.define('GANV_FDGL', 1)
 
     if Options.options.light_theme:
-        autowaf.define(conf, 'GANV_USE_LIGHT_THEME', 1)
+        conf.define('GANV_USE_LIGHT_THEME', 1)
 
     if not Options.options.no_nls:
         autowaf.check_function(conf, 'cxx',  'dgettext',
@@ -69,7 +69,7 @@ def configure(conf):
     autowaf.display_summary(
         conf,
         {'Static (Graphviz) arrange': bool(conf.env.HAVE_AGRAPH_2_20),
-         'Interactive force-directed arrange': bool(conf.env.GANV_FDGL),
+         'Interactive force-directed arrange': conf.is_defined('GANV_FDGL'),
          'Native language support': bool(conf.env.ENABLE_NLS),
          'GObject introspection': bool(conf.env.HAVE_GIR),
          'Unit tests': bool(conf.env.BUILD_TESTS)})
