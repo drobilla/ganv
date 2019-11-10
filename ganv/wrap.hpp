@@ -124,7 +124,11 @@ private: \
 	static inline const Ganv::Name* \
 	wrap(const Ganv##Name* gobj) \
 	{ \
-		return wrap((Ganv##Name*)gobj); \
+		if (gobj) { \
+			return (const Ganv::Name*)ganv_item_get_wrapper(GANV_ITEM(gobj)); \
+		} else { \
+			return NULL; \
+		} \
 	} \
 	}
 
