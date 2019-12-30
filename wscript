@@ -46,10 +46,12 @@ def configure(conf):
         conf.find_program('yelp-build', var='YELP_BUILD', mandatory=False)
 
     if not Options.options.no_graphviz:
-        conf.check_pkg('libgvc >= 2.30',
+        conf.check_pkg('libgvc',
                        uselib_store='AGRAPH',
                        system=True,
                        mandatory=False)
+        if conf.env.HAVE_AGRAPH:
+            conf.define('HAVE_AGRAPH', 1)
 
     if not Options.options.no_fdgl:
         conf.define('GANV_FDGL', 1)
@@ -69,7 +71,7 @@ def configure(conf):
 
     autowaf.display_summary(
         conf,
-        {'Static (Graphviz) arrange': bool(conf.env.HAVE_AGRAPH_2_20),
+        {'Static (Graphviz) arrange': bool(conf.env.HAVE_AGRAPH),
          'Interactive force-directed arrange': conf.is_defined('GANV_FDGL'),
          'Native language support': bool(conf.env.ENABLE_NLS),
          'GObject introspection': bool(conf.env.HAVE_GIR),
