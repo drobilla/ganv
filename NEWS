@@ -1,4 +1,4 @@
-ganv (1.4.3) unstable;
+ganv (1.6.0) stable;
 
   * Add API to specify module port order.
   * Add support for PDF and PS export.
@@ -20,7 +20,7 @@ ganv (1.4.3) unstable;
   * Preserve selection for quickly making several connections.
   * Upgrade to waf 2.0.19
 
- -- David Robillard <d@drobilla.net>  Thu, 09 Apr 2020 10:42:58 +0000
+ -- David Robillard <d@drobilla.net>  Thu, 09 Apr 2020 11:45:01 +0000
 
 ganv (1.4.2) stable;
 

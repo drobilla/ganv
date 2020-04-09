@@ -9,7 +9,7 @@ from waflib.extras import autowaf
 # major increment <=> incompatible changes
 # minor increment <=> compatible changes (additions)
 # micro increment <=> no interface changes
-GANV_VERSION       = '1.5.4'
+GANV_VERSION       = '1.6.0'
 GANV_MAJOR_VERSION = '1'
 
 # Mandatory waf variables
@@ -17,6 +17,12 @@ APPNAME = 'ganv'        # Package name for waf dist
 VERSION = GANV_VERSION  # Package version for waf dist
 top     = '.'           # Source directory
 out     = 'build'       # Build directory
+
+# Release variables
+uri          = 'http://drobilla.net/sw/ganv'
+dist_pattern = 'http://download.drobilla.net/ganv-%d.%d.%d.tar.bz2'
+post_tags    = ['Hacking', 'LAD', 'Ganv']
+
 
 def options(ctx):
     ctx.load('compiler_c')
@@ -229,14 +235,3 @@ def build(bld):
 def i18n(bld):
     autowaf.build_i18n(bld, '..', 'ganv', APPNAME, ganv_source,
                        'David Robillard')
-
-def posts(ctx):
-    path = str(ctx.path.abspath())
-    autowaf.news_to_posts(
-        os.path.join(path, 'NEWS'),
-        {'title'        : 'Ganv',
-         'description'  : autowaf.get_blurb(os.path.join(path, 'README')),
-         'dist_pattern' : 'http://download.drobilla.net/ganv-%s.tar.bz2'},
-        { 'Author' : 'drobilla',
-          'Tags'   : 'Hacking, LAD, LV2, Ganv' },
-        os.path.join(out, 'posts'))
