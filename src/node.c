@@ -154,17 +154,17 @@ ganv_node_set_property(GObject*      object,
 	GanvNodePrivate* impl = node->impl;
 
 	switch (prop_id) {
-		SET_CASE(DASH_LENGTH, double, impl->dash_length);
-		SET_CASE(DASH_OFFSET, double, impl->dash_offset);
-		SET_CASE(BORDER_WIDTH, double, impl->border_width);
-		SET_CASE(FILL_COLOR, uint, impl->fill_color);
-		SET_CASE(BORDER_COLOR, uint, impl->border_color);
-		SET_CASE(CAN_TAIL, boolean, impl->can_tail);
-		SET_CASE(CAN_HEAD, boolean, impl->can_head);
-		SET_CASE(IS_SOURCE, boolean, impl->is_source);
-		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
-		SET_CASE(DRAGGABLE, boolean, impl->draggable);
-		SET_CASE(GRABBED, boolean, impl->grabbed);
+		SET_CASE(DASH_LENGTH, double, impl->dash_length)
+		SET_CASE(DASH_OFFSET, double, impl->dash_offset)
+		SET_CASE(BORDER_WIDTH, double, impl->border_width)
+		SET_CASE(FILL_COLOR, uint, impl->fill_color)
+		SET_CASE(BORDER_COLOR, uint, impl->border_color)
+		SET_CASE(CAN_TAIL, boolean, impl->can_tail)
+		SET_CASE(CAN_HEAD, boolean, impl->can_head)
+		SET_CASE(IS_SOURCE, boolean, impl->is_source)
+		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted)
+		SET_CASE(DRAGGABLE, boolean, impl->draggable)
+		SET_CASE(GRABBED, boolean, impl->grabbed)
 	case PROP_PARTNER:
 		impl->partner = (GanvNode*)g_value_get_object(value);
 		break;
@@ -216,20 +216,20 @@ ganv_node_get_property(GObject*    object,
 	GanvNodePrivate* impl = node->impl;
 
 	switch (prop_id) {
-		GET_CASE(PARTNER, object, impl->partner);
-		GET_CASE(LABEL, string, impl->label ? impl->label->impl->text : NULL);
-		GET_CASE(DASH_LENGTH, double, impl->dash_length);
-		GET_CASE(DASH_OFFSET, double, impl->dash_offset);
-		GET_CASE(BORDER_WIDTH, double, impl->border_width);
-		GET_CASE(FILL_COLOR, uint, impl->fill_color);
-		GET_CASE(BORDER_COLOR, uint, impl->border_color);
-		GET_CASE(CAN_TAIL, boolean, impl->can_tail);
-		GET_CASE(CAN_HEAD, boolean, impl->can_head);
-		GET_CASE(IS_SOURCE, boolean, impl->is_source);
-		GET_CASE(SELECTED, boolean, impl->selected);
-		GET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
-		GET_CASE(DRAGGABLE, boolean, impl->draggable);
-		GET_CASE(GRABBED, boolean, impl->grabbed);
+		GET_CASE(PARTNER, object, impl->partner)
+		GET_CASE(LABEL, string, impl->label ? impl->label->impl->text : NULL)
+		GET_CASE(DASH_LENGTH, double, impl->dash_length)
+		GET_CASE(DASH_OFFSET, double, impl->dash_offset)
+		GET_CASE(BORDER_WIDTH, double, impl->border_width)
+		GET_CASE(FILL_COLOR, uint, impl->fill_color)
+		GET_CASE(BORDER_COLOR, uint, impl->border_color)
+		GET_CASE(CAN_TAIL, boolean, impl->can_tail)
+		GET_CASE(CAN_HEAD, boolean, impl->can_head)
+		GET_CASE(IS_SOURCE, boolean, impl->is_source)
+		GET_CASE(SELECTED, boolean, impl->selected)
+		GET_CASE(HIGHLIGHTED, boolean, impl->highlighted)
+		GET_CASE(DRAGGABLE, boolean, impl->draggable)
+		GET_CASE(GRABBED, boolean, impl->grabbed)
 	case PROP_CANVAS:
 		g_value_set_object(value, ganv_item_get_canvas(GANV_ITEM(object)));
 		break;

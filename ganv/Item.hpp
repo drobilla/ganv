@@ -54,14 +54,14 @@ public:
 	RW_PROPERTY(double, x)
 	RW_PROPERTY(double, y)
 
-	METHOD0(ganv_item, raise);
-	METHOD0(ganv_item, lower);
-	METHOD2(ganv_item, move, double, dx, double, dy);
-	METHOD0(ganv_item, show);
-	METHOD0(ganv_item, hide);
-	METHOD2(ganv_item, i2w, double*, x, double*, y);
-	METHOD2(ganv_item, w2i, double*, x, double*, y);
-	METHOD0(ganv_item, grab_focus);
+	METHOD0(ganv_item, raise)
+	METHOD0(ganv_item, lower)
+	METHOD2(ganv_item, move, double, dx, double, dy)
+	METHOD0(ganv_item, show)
+	METHOD0(ganv_item, hide)
+	METHOD2(ganv_item, i2w, double*, x, double*, y)
+	METHOD2(ganv_item, w2i, double*, x, double*, y)
+	METHOD0(ganv_item, grab_focus)
 
 	Canvas* canvas() const {
 		return Glib::wrap(ganv_item_get_canvas(_gobj));

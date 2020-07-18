@@ -50,7 +50,7 @@ public:
 	METHODRET0(ganv_port, gboolean, is_input)
 	METHODRET0(ganv_port, gboolean, is_output)
 
-	METHODRET0(ganv_port, double, get_natural_width);
+	METHODRET0(ganv_port, double, get_natural_width)
 	METHODRET0(ganv_port, float, get_control_value)
 	METHODRET0(ganv_port, float, get_control_min)
 	METHODRET0(ganv_port, float, get_control_max)
@@ -61,7 +61,7 @@ public:
 	METHOD1(ganv_port, set_control_value, float, value)
 	METHOD1(ganv_port, set_control_min, float, min)
 	METHOD1(ganv_port, set_control_max, float, max)
-	METHOD1(ganv_port, set_value_label, const char*, str);
+	METHOD1(ganv_port, set_value_label, const char*, str)
 
 	sigc::signal<void, double> signal_value_changed;
 

@@ -72,9 +72,9 @@ ganv_circle_set_property(GObject*      object,
 	GanvCircle* circle = GANV_CIRCLE(object);
 
 	switch (prop_id) {
-		SET_CASE(RADIUS, double, circle->impl->coords.radius);
-		SET_CASE(RADIUS_EMS, double, circle->impl->coords.radius_ems);
-		SET_CASE(FIT_LABEL, boolean, circle->impl->fit_label);
+		SET_CASE(RADIUS, double, circle->impl->coords.radius)
+		SET_CASE(RADIUS_EMS, double, circle->impl->coords.radius_ems)
+		SET_CASE(FIT_LABEL, boolean, circle->impl->fit_label)
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -97,9 +97,9 @@ ganv_circle_get_property(GObject*    object,
 	GanvCircle* circle = GANV_CIRCLE(object);
 
 	switch (prop_id) {
-		GET_CASE(RADIUS, double, circle->impl->coords.radius);
-		GET_CASE(RADIUS_EMS, double, circle->impl->coords.radius_ems);
-		GET_CASE(FIT_LABEL, boolean, circle->impl->fit_label);
+		GET_CASE(RADIUS, double, circle->impl->coords.radius)
+		GET_CASE(RADIUS_EMS, double, circle->impl->coords.radius_ems)
+		GET_CASE(FIT_LABEL, boolean, circle->impl->fit_label)
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;

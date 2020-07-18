@@ -116,17 +116,17 @@ ganv_edge_set_property(GObject*      object,
 	GanvEdgeCoords*  coords = &impl->coords;
 
 	switch (prop_id) {
-		SET_CASE(WIDTH, double, coords->width);
-		SET_CASE(HANDLE_RADIUS, double, coords->handle_radius);
-		SET_CASE(DASH_LENGTH, double, impl->dash_length);
-		SET_CASE(DASH_OFFSET, double, impl->dash_offset);
-		SET_CASE(COLOR, uint, impl->color);
-		SET_CASE(CONSTRAINING, boolean, impl->coords.constraining);
-		SET_CASE(CURVED, boolean, impl->coords.curved);
-		SET_CASE(ARROWHEAD, boolean, impl->coords.arrowhead);
-		SET_CASE(SELECTED, boolean, impl->selected);
-		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
-		SET_CASE(GHOST, boolean, impl->ghost);
+		SET_CASE(WIDTH, double, coords->width)
+		SET_CASE(HANDLE_RADIUS, double, coords->handle_radius)
+		SET_CASE(DASH_LENGTH, double, impl->dash_length)
+		SET_CASE(DASH_OFFSET, double, impl->dash_offset)
+		SET_CASE(COLOR, uint, impl->color)
+		SET_CASE(CONSTRAINING, boolean, impl->coords.constraining)
+		SET_CASE(CURVED, boolean, impl->coords.curved)
+		SET_CASE(ARROWHEAD, boolean, impl->coords.arrowhead)
+		SET_CASE(SELECTED, boolean, impl->selected)
+		SET_CASE(HIGHLIGHTED, boolean, impl->highlighted)
+		SET_CASE(GHOST, boolean, impl->ghost)
 	case PROP_TAIL: {
 		const gobject tmp = g_value_get_object(value);
 		if (impl->tail != tmp) {
@@ -162,19 +162,19 @@ ganv_edge_get_property(GObject*    object,
 	GanvEdgePrivate* impl = edge->impl;
 
 	switch (prop_id) {
-		GET_CASE(TAIL, object, impl->tail);
-		GET_CASE(HEAD, object, impl->head);
-		GET_CASE(WIDTH, double, impl->coords.width);
-		SET_CASE(HANDLE_RADIUS, double, impl->coords.handle_radius);
-		GET_CASE(DASH_LENGTH, double, impl->dash_length);
-		GET_CASE(DASH_OFFSET, double, impl->dash_offset);
-		GET_CASE(COLOR, uint, impl->color);
-		GET_CASE(CONSTRAINING, boolean, impl->coords.constraining);
-		GET_CASE(CURVED, boolean, impl->coords.curved);
-		GET_CASE(ARROWHEAD, boolean, impl->coords.arrowhead);
-		GET_CASE(SELECTED, boolean, impl->selected);
-		GET_CASE(HIGHLIGHTED, boolean, impl->highlighted);
-		SET_CASE(GHOST, boolean, impl->ghost);
+		GET_CASE(TAIL, object, impl->tail)
+		GET_CASE(HEAD, object, impl->head)
+		GET_CASE(WIDTH, double, impl->coords.width)
+		SET_CASE(HANDLE_RADIUS, double, impl->coords.handle_radius)
+		GET_CASE(DASH_LENGTH, double, impl->dash_length)
+		GET_CASE(DASH_OFFSET, double, impl->dash_offset)
+		GET_CASE(COLOR, uint, impl->color)
+		GET_CASE(CONSTRAINING, boolean, impl->coords.constraining)
+		GET_CASE(CURVED, boolean, impl->coords.curved)
+		GET_CASE(ARROWHEAD, boolean, impl->coords.arrowhead)
+		GET_CASE(SELECTED, boolean, impl->selected)
+		GET_CASE(HIGHLIGHTED, boolean, impl->highlighted)
+		SET_CASE(GHOST, boolean, impl->ghost)
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;

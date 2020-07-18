@@ -1866,8 +1866,8 @@ ganv_canvas_get_property(GObject*    object,
 
 	switch (prop_id) {
 		GET_CASE(WIDTH, double, canvas->impl->width)
-			GET_CASE(HEIGHT, double, canvas->impl->height)
-			GET_CASE(LOCKED, boolean, canvas->impl->locked);
+		GET_CASE(HEIGHT, double, canvas->impl->height)
+		GET_CASE(LOCKED, boolean, canvas->impl->locked)
 	case PROP_FOCUSED_ITEM:
 		g_value_set_object(value, GANV_CANVAS(object)->impl->focused_item);
 		break;

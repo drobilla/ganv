@@ -87,16 +87,16 @@ ganv_box_set_property(GObject*      object,
 	GanvBoxCoords*  coords = &impl->coords;
 
 	switch (prop_id) {
-		SET_CASE(X1, double, coords->x1);
-		SET_CASE(Y1, double, coords->y1);
-		SET_CASE(X2, double, coords->x2);
-		SET_CASE(Y2, double, coords->y2);
-		SET_CASE(RADIUS_TL, double, impl->radius_tl);
-		SET_CASE(RADIUS_TR, double, impl->radius_tr);
-		SET_CASE(RADIUS_BR, double, impl->radius_br);
-		SET_CASE(RADIUS_BL, double, impl->radius_bl);
-		SET_CASE(STACKED, boolean, coords->stacked);
-		SET_CASE(BEVELED, boolean, impl->beveled);
+		SET_CASE(X1, double, coords->x1)
+		SET_CASE(Y1, double, coords->y1)
+		SET_CASE(X2, double, coords->x2)
+		SET_CASE(Y2, double, coords->y2)
+		SET_CASE(RADIUS_TL, double, impl->radius_tl)
+		SET_CASE(RADIUS_TR, double, impl->radius_tr)
+		SET_CASE(RADIUS_BR, double, impl->radius_br)
+		SET_CASE(RADIUS_BL, double, impl->radius_bl)
+		SET_CASE(STACKED, boolean, coords->stacked)
+		SET_CASE(BEVELED, boolean, impl->beveled)
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -117,16 +117,16 @@ ganv_box_get_property(GObject*    object,
 	GanvBoxCoords*  coords = &impl->coords;
 
 	switch (prop_id) {
-		GET_CASE(X1, double, coords->x1);
-		GET_CASE(X2, double, coords->x2);
-		GET_CASE(Y1, double, coords->y1);
-		GET_CASE(Y2, double, coords->y2);
-		GET_CASE(RADIUS_TL, double, impl->radius_tl);
-		GET_CASE(RADIUS_TR, double, impl->radius_tr);
-		GET_CASE(RADIUS_BR, double, impl->radius_br);
-		GET_CASE(RADIUS_BL, double, impl->radius_bl);
-		GET_CASE(STACKED, boolean, impl->coords.stacked);
-		GET_CASE(BEVELED, boolean, impl->beveled);
+		GET_CASE(X1, double, coords->x1)
+		GET_CASE(X2, double, coords->x2)
+		GET_CASE(Y1, double, coords->y1)
+		GET_CASE(Y2, double, coords->y2)
+		GET_CASE(RADIUS_TL, double, impl->radius_tl)
+		GET_CASE(RADIUS_TR, double, impl->radius_tr)
+		GET_CASE(RADIUS_BR, double, impl->radius_br)
+		GET_CASE(RADIUS_BL, double, impl->radius_bl)
+		GET_CASE(STACKED, boolean, impl->coords.stacked)
+		GET_CASE(BEVELED, boolean, impl->beveled)
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;

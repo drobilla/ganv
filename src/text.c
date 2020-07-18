@@ -188,12 +188,12 @@ ganv_text_get_property(GObject*    object,
 	}
 
 	switch (prop_id) {
-		GET_CASE(TEXT, string, impl->text);
-		GET_CASE(X, double, impl->coords.x);
-		GET_CASE(Y, double, impl->coords.y);
-		GET_CASE(WIDTH, double, impl->coords.width);
-		GET_CASE(HEIGHT, double, impl->coords.height);
-		GET_CASE(COLOR, uint, impl->color);
+		GET_CASE(TEXT, string, impl->text)
+		GET_CASE(X, double, impl->coords.x)
+		GET_CASE(Y, double, impl->coords.y)
+		GET_CASE(WIDTH, double, impl->coords.width)
+		GET_CASE(HEIGHT, double, impl->coords.height)
+		GET_CASE(COLOR, uint, impl->color)
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;

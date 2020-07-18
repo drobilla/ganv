@@ -63,7 +63,7 @@ public:
 	RW_PROPERTY(gboolean, draggable)
 	RW_PROPERTY(gboolean, grabbed)
 
-	RW_OBJECT_PROPERTY(Node*, partner);
+	RW_OBJECT_PROPERTY(Node*, partner)
 
 	GanvNode*       gobj()       { return GANV_NODE(_gobj); }
 	const GanvNode* gobj() const { return GANV_NODE(_gobj); }
@@ -71,7 +71,7 @@ public:
 	METHOD2(ganv_node, move, double, dx, double, dy)
 	METHOD2(ganv_node, move_to, double, x, double, y)
 
-	METHOD0(ganv_node, disconnect);
+	METHOD0(ganv_node, disconnect)
 
 	sigc::signal<void, double, double>& signal_moved() {
 		return _signal_moved;

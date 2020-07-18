@@ -74,8 +74,8 @@ public:
 	RW_PROPERTY(guint,    color)
 	RW_PROPERTY(gdouble,  handle_radius)
 
-	METHODRETWRAP0(ganv_edge, Node*, get_tail);
-	METHODRETWRAP0(ganv_edge, Node*, get_head);
+	METHODRETWRAP0(ganv_edge, Node*, get_tail)
+	METHODRETWRAP0(ganv_edge, Node*, get_head)
 
 	GanvEdge*       gobj()       { return (GanvEdge*)_gobj; }
 	const GanvEdge* gobj() const { return (GanvEdge*)_gobj; }

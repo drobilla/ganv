@@ -96,8 +96,8 @@ ganv_port_set_property(GObject*      object,
 	GanvPort* port = GANV_PORT(object);
 
 	switch (prop_id) {
-		SET_CASE(IS_INPUT, boolean, port->impl->is_input);
-		SET_CASE(IS_CONTROLLABLE, boolean, port->impl->is_controllable);
+		SET_CASE(IS_INPUT, boolean, port->impl->is_input)
+		SET_CASE(IS_CONTROLLABLE, boolean, port->impl->is_controllable)
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;
@@ -116,8 +116,8 @@ ganv_port_get_property(GObject*    object,
 	GanvPort* port = GANV_PORT(object);
 
 	switch (prop_id) {
-		GET_CASE(IS_INPUT, boolean, port->impl->is_input);
-		GET_CASE(IS_CONTROLLABLE, boolean, port->impl->is_controllable);
+		GET_CASE(IS_INPUT, boolean, port->impl->is_input)
+		GET_CASE(IS_CONTROLLABLE, boolean, port->impl->is_controllable)
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
 		break;

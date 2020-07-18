@@ -112,9 +112,9 @@ public:
 		return Glib::wrap(ganv_module_get_port(gobj(), index));
 	}
 
-	METHOD2(ganv_module, for_each_port, GanvPortFunc, f, void*, data);
+	METHOD2(ganv_module, for_each_port, GanvPortFunc, f, void*, data)
 
-	METHODRET0(ganv_module, guint, num_ports);
+	METHODRET0(ganv_module, guint, num_ports)
 
 	RW_PROPERTY(gboolean, stacked)
 
