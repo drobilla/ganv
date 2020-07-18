@@ -41,6 +41,77 @@ def configure(conf):
     conf.load('autowaf', cache=True)
     autowaf.set_c_lang(conf, 'c99')
 
+    if Options.options.ultra_strict:
+        autowaf.add_compiler_flags(conf.env, 'c', {
+            'clang': [
+                '-Wno-bad-function-cast',
+            ],
+            'gcc': [
+                '-Wno-bad-function-cast',
+            ]
+        })
+
+        autowaf.add_compiler_flags(conf.env, 'cxx', {
+            'clang': [
+                '-Wno-exit-time-destructors',
+                '-Wno-global-constructors',
+                '-Wno-missing-noreturn',
+                '-Wno-old-style-cast',
+                '-Wno-weak-vtables',
+                '-Wno-zero-as-null-pointer-constant',
+            ],
+            'gcc': [
+                '-Wno-effc++',
+                '-Wno-missing-noreturn',
+                '-Wno-old-style-cast',
+                '-Wno-suggest-override',
+                '-Wno-useless-cast',
+                '-Wno-zero-as-null-pointer-constant',
+            ]
+        })
+
+        autowaf.add_compiler_flags(conf.env, '*', {
+            'clang': [
+                '-Wno-cast-qual',
+                '-Wno-covered-switch-default',
+                '-Wno-disabled-macro-expansion',
+                '-Wno-documentation-unknown-command',
+                '-Wno-double-promotion',
+                '-Wno-float-conversion',
+                '-Wno-float-equal',
+                '-Wno-implicit-fallthrough',
+                '-Wno-implicit-float-conversion',
+                '-Wno-implicit-int-float-conversion',
+                '-Wno-padded',
+                '-Wno-reserved-id-macro',
+                '-Wno-shadow',
+                '-Wno-shorten-64-to-32',
+                '-Wno-sign-conversion',
+                '-Wno-switch-enum',
+                '-Wno-unused-macros',
+                '-Wno-unused-parameter',
+                '-Wno-used-but-marked-unused',
+            ],
+            'gcc': [
+                '-Wno-cast-function-type',
+                '-Wno-cast-qual',
+                '-Wno-conversion',
+                '-Wno-deprecated-declarations',
+                '-Wno-double-promotion',
+                '-Wno-float-conversion',
+                '-Wno-float-equal',
+                '-Wno-format',
+                '-Wno-implicit-fallthrough',
+                '-Wno-padded',
+                '-Wno-pedantic',
+                '-Wno-shadow',
+                '-Wno-sign-conversion',
+                '-Wno-switch-enum',
+                '-Wno-unused-macros',
+                '-Wno-unused-parameter',
+            ],
+        })
+
     conf.check_pkg('gtk+-2.0', uselib_store='GTK', system=True)
     conf.check_pkg('gtkmm-2.4 >= 2.10.0', uselib_store='GTKMM', system=True)
 
@@ -70,6 +141,8 @@ def configure(conf):
                             header_name = 'libintl.h',
                             lib         = 'intl',
                             define_name = 'ENABLE_NLS',
+                            return_type = 'char*',
+                            arg_types   = 'const char*,const char*',
                             mandatory   = False)
 
     autowaf.set_lib_env(conf, 'ganv', GANV_VERSION)
