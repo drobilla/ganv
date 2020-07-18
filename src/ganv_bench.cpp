@@ -29,8 +29,8 @@ using namespace Ganv;
 
 static const int MAX_NUM_PORTS = 16;
 
-vector<Node*> ins;
-vector<Node*> outs;
+static vector<Node*> ins;
+static vector<Node*> outs;
 
 static Module*
 make_module(Canvas* canvas)
