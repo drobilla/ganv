@@ -52,7 +52,7 @@ static guint port_signals[PORT_LAST_SIGNAL];
 static void
 ganv_port_init(GanvPort* port)
 {
-	port->impl = ganv_port_get_instance_private(port);
+	port->impl = (GanvPortPrivate*)ganv_port_get_instance_private(port);
 
 	port->impl->control         = NULL;
 	port->impl->value_label     = NULL;

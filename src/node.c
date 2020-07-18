@@ -52,7 +52,8 @@ enum {
 static void
 ganv_node_init(GanvNode* node)
 {
-	GanvNodePrivate* impl = ganv_node_get_instance_private(node);
+	GanvNodePrivate* impl =
+	    (GanvNodePrivate*)ganv_node_get_instance_private(node);
 
 	node->impl = impl;
 

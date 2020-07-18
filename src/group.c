@@ -38,7 +38,8 @@ static GanvItemClass* group_parent_class;
 static void
 ganv_group_init(GanvGroup* group)
 {
-	GanvGroupPrivate* impl = ganv_group_get_instance_private(group);
+	GanvGroupPrivate* impl =
+	    (GanvGroupPrivate*)ganv_group_get_instance_private(group);
 
 	group->impl                = impl;
 	group->impl->item_list     = NULL;

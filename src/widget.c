@@ -46,7 +46,8 @@ enum {
 static void
 ganv_widget_init(GanvWidget* witem)
 {
-	GanvWidgetPrivate* impl = ganv_widget_get_instance_private(witem);
+	GanvWidgetPrivate* impl =
+	    (GanvWidgetPrivate*)ganv_widget_get_instance_private(witem);
 
 	witem->impl              = impl;
 	witem->impl->x           = 0.0;

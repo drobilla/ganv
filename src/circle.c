@@ -39,7 +39,7 @@ enum {
 static void
 ganv_circle_init(GanvCircle* circle)
 {
-	circle->impl = ganv_circle_get_instance_private(circle);
+	circle->impl = (GanvCirclePrivate*)ganv_circle_get_instance_private(circle);
 
 	memset(&circle->impl->coords, '\0', sizeof(GanvCircleCoords));
 	circle->impl->coords.radius     = 0.0;

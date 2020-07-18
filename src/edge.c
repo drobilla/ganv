@@ -63,7 +63,8 @@ static GanvItemClass* parent_class;
 static void
 ganv_edge_init(GanvEdge* edge)
 {
-	GanvEdgePrivate* impl = ganv_edge_get_instance_private(edge);
+	GanvEdgePrivate* impl =
+	    (GanvEdgePrivate*)ganv_edge_get_instance_private(edge);
 
 	edge->impl = impl;
 

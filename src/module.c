@@ -50,7 +50,8 @@ enum {
 static void
 ganv_module_init(GanvModule* module)
 {
-	GanvModulePrivate* impl = ganv_module_get_instance_private(module);
+	GanvModulePrivate* impl =
+	    (GanvModulePrivate*)ganv_module_get_instance_private(module);
 
 	module->impl = impl;
 

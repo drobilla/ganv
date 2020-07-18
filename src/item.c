@@ -73,7 +73,8 @@ static GtkObjectClass* item_parent_class;
 static void
 ganv_item_init(GanvItem* item)
 {
-	GanvItemPrivate* impl = ganv_item_get_instance_private(item);
+	GanvItemPrivate* impl =
+	    (GanvItemPrivate*)ganv_item_get_instance_private(item);
 
 	item->object.flags |= GANV_ITEM_VISIBLE;
 	item->impl          = impl;

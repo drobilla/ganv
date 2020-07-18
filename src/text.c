@@ -47,7 +47,8 @@ enum {
 static void
 ganv_text_init(GanvText* text)
 {
-	GanvTextPrivate* impl = ganv_text_get_instance_private(text);
+	GanvTextPrivate* impl =
+	    (GanvTextPrivate*)ganv_text_get_instance_private(text);
 
 	text->impl = impl;
 

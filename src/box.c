@@ -49,7 +49,7 @@ enum {
 static void
 ganv_box_init(GanvBox* box)
 {
-	box->impl = ganv_box_get_instance_private(box);
+	box->impl = (GanvBoxPrivate*)ganv_box_get_instance_private(box);
 
 	memset(&box->impl->coords, '\0', sizeof(GanvBoxCoords));
 
