@@ -291,7 +291,10 @@ ganv_group_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2
 	GanvItem*  child;
 	GList*     list;
 	double     tx1, ty1, tx2, ty2;
-	double     minx, miny, maxx, maxy;
+	double     minx = DBL_MAX;
+	double     miny = DBL_MAX;
+	double     maxx = DBL_MIN;
+	double     maxy = DBL_MIN;
 	int        set;
 
 	group = GANV_GROUP(item);
