@@ -88,7 +88,7 @@ private:
 	template<typename T>
 	static void on_notify(GObject* gobj, GParamSpec* pspec, gpointer signal) {
 		T value;
-		g_object_get(gobj, g_param_spec_get_name(pspec), &value, NULL);
+		g_object_get(gobj, g_param_spec_get_name(pspec), &value, nullptr);
 		((sigc::signal<bool, T>*)signal)->emit(value);
 	}
 	*/
@@ -96,7 +96,7 @@ private:
 	                           GParamSpec* pspec,
 	                           gpointer    signal) {
 		gboolean value;
-		g_object_get(gobj, g_param_spec_get_name(pspec), &value, NULL);
+		g_object_get(gobj, g_param_spec_get_name(pspec), &value, nullptr);
 		static_cast<sigc::signal<bool, gboolean>*>(signal)->emit(value);
 	}
 };

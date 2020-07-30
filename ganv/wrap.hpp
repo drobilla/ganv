@@ -33,27 +33,27 @@ private: \
 #define RW_PROPERTY(type, name) \
 	virtual type get_##name() const { \
 		type value; \
-		g_object_get(G_OBJECT(_gobj), #name, &value, NULL); \
+		g_object_get(G_OBJECT(_gobj), #name, &value, nullptr); \
 		return value; \
 	} \
 	virtual void set_##name(type value) { \
-		g_object_set(G_OBJECT(_gobj), #name, value, NULL); \
+		g_object_set(G_OBJECT(_gobj), #name, value, nullptr); \
 	} \
 	SIGNAL1(name, type) \
 	public:
 
 #define RW_OBJECT_PROPERTY(type, name) \
 	type get_##name() const { \
-		if (!_gobj) return NULL; \
+		if (!_gobj) return nullptr; \
 		Ganv##type ptr; \
-		g_object_get(G_OBJECT(_gobj), #name, &ptr, NULL); \
+		g_object_get(G_OBJECT(_gobj), #name, &ptr, nullptr); \
 		return Glib::wrap(ptr); \
 	} \
 	void set_##name(type value) { \
 		if (!_gobj) return; \
 		ganv_item_set(GANV_ITEM(_gobj), \
 		              #name, value->gobj(), \
-		              NULL); \
+		              nullptr); \
 	}
 
 #define METHOD0(prefix, name) \
@@ -86,7 +86,7 @@ private: \
 		if (gobj()) { \
 			return Glib::wrap(prefix##_##name(gobj())); \
 		} else { \
-			return NULL; \
+			return nullptr; \
 		} \
 	}
 
@@ -117,7 +117,7 @@ private: \
 		if (gobj) { \
 			return static_cast<Ganv::Name*>(ganv_item_get_wrapper(GANV_ITEM(gobj))); \
 		} else { \
-			return NULL; \
+			return nullptr; \
 		} \
 	} \
 	/** Return a Ganv::CPPType wrapper for a CType. */ \
@@ -127,7 +127,7 @@ private: \
 		if (gobj) { \
 			return static_cast<const Ganv::Name*>(ganv_item_get_wrapper(GANV_ITEM(gobj))); \
 		} else { \
-			return NULL; \
+			return nullptr; \
 		} \
 	} \
 	}

@@ -58,7 +58,7 @@ public:
 		                             "border-width", 2.0,
 		                             "label", name.c_str(),
 		                             "draggable", TRUE,
-		                             NULL)))
+		                             nullptr)))
 	{}
 
 	template<typename P, typename C>
@@ -105,7 +105,7 @@ public:
 	const_iterator back()  const { return iterator(const_cast<GanvModule*>(gobj()), num_ports() - 1); }
 
 	void embed(Gtk::Widget* widget) {
-		ganv_module_embed(gobj(), widget ? widget->gobj() : NULL);
+		ganv_module_embed(gobj(), widget ? widget->gobj() : nullptr);
 	}
 
 	Port* get_port(guint index) {

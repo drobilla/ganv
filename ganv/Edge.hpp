@@ -50,7 +50,7 @@ public:
 		                               "color", color,
 		                               "curved", static_cast<gboolean>(curved),
 		                               "arrowhead", static_cast<gboolean>(show_arrowhead),
-		                               NULL)))
+		                               nullptr)))
 	{}
 
 	Edge(GanvEdge* gobj)

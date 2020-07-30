@@ -63,7 +63,7 @@ public:
 				       "border-color", BORDER_COLOUR,
 				       "label", name.c_str(),
 				       "draggable", TRUE,
-				       NULL)))
+				       nullptr)))
 	{}
 
 	RW_PROPERTY(double, radius)
