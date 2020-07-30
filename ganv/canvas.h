@@ -134,6 +134,14 @@ gboolean
 ganv_canvas_empty(const GanvCanvas* canvas);
 
 /**
+ * ganv_canvas_get_size:
+ *
+ * Gets the width and height of the canvas.
+ */
+void
+ganv_canvas_get_size(GanvCanvas* canvas, double* width, double* height);
+
+/**
  * ganv_canvas_resize:
  *
  * Resize the canvas to the given dimensions.

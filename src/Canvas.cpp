@@ -1993,6 +1993,13 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 }
 
 void
+ganv_canvas_get_size(GanvCanvas* canvas, double* width, double* height)
+{
+	*width  = canvas->impl->width;
+	*height = canvas->impl->height;
+}
+
+void
 ganv_canvas_resize(GanvCanvas* canvas, double width, double height)
 {
 	if (width != canvas->impl->width || height != canvas->impl->height) {

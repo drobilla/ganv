@@ -58,6 +58,7 @@ public:
 
 	METHOD0(ganv_canvas, clear)
 	METHODRET0(ganv_canvas, gboolean, empty)
+	METHOD2(ganv_canvas, get_size, double*, width, double*, height)
 	METHOD2(ganv_canvas, resize, double, width, double, height)
 	METHOD4(ganv_canvas, set_scroll_region, double, x1, double, y1, double, x2, double, y2)
 	METHOD4(ganv_canvas, get_scroll_region, double*, x1, double*, y1, double*, x2, double*, y2)

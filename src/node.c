@@ -116,6 +116,36 @@ ganv_node_destroy(GtkObject* object)
 	item->impl->canvas = NULL;
 }
 
+/// Expands the canvas to contain a moved/resized node if necessary
+static void
+ganv_node_expand_canvas(GanvNode* node)
+{
+	GanvItem*   item   = GANV_ITEM(node);
+	GanvCanvas* canvas = ganv_item_get_canvas(item);
+
+	if (item->impl->parent == ganv_canvas_root(canvas)) {
+		const double pad = 10.0;
+
+		double x1 = 0.0;
+		double y1 = 0.0;
+		double x2 = 0.0;
+		double y2 = 0.0;
+		ganv_item_get_bounds(item, &x1, &y1, &x2, &y2);
+
+		ganv_item_i2w(item, &x1, &y1);
+		ganv_item_i2w(item, &x2, &y2);
+
+		double canvas_w = 0.0;
+		double canvas_h = 0.0;
+		ganv_canvas_get_size(canvas, &canvas_w, &canvas_h);
+		if (x2 + pad > canvas_w || y2 + pad > canvas_h) {
+			ganv_canvas_resize(canvas,
+			                   MAX(x1 + pad, canvas_w),
+			                   MAX(y2 + pad, canvas_h));
+		}
+	}
+}
+
 static void
 ganv_node_update(GanvItem* item, int flags)
 {
@@ -130,6 +160,8 @@ ganv_node_update(GanvItem* item, int flags)
 	}
 
 	GANV_ITEM_CLASS(parent_class)->update(item, flags);
+
+	ganv_node_expand_canvas(node);
 }
 
 static void
