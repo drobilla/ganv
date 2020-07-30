@@ -118,6 +118,7 @@ def configure(conf):
     if Options.options.gir:
         conf.check_pkg('gobject-introspection-1.0',
                        uselib_store='GIR',
+                       system=True,
                        mandatory=False)
         conf.find_program('g-ir-doc-tool', var='G_IR_DOC_TOOL', mandatory=False)
         conf.find_program('yelp-build', var='YELP_BUILD', mandatory=False)
