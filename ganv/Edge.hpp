@@ -48,8 +48,8 @@ public:
 		                               tail->gobj(),
 		                               head->gobj(),
 		                               "color", color,
-		                               "curved", (gboolean)curved,
-		                               "arrowhead", (gboolean)show_arrowhead,
+		                               "curved", static_cast<gboolean>(curved),
+		                               "arrowhead", static_cast<gboolean>(show_arrowhead),
 		                               NULL)))
 	{}
 
@@ -77,8 +77,8 @@ public:
 	METHODRETWRAP0(ganv_edge, Node*, get_tail)
 	METHODRETWRAP0(ganv_edge, Node*, get_head)
 
-	GanvEdge*       gobj()       { return (GanvEdge*)_gobj; }
-	const GanvEdge* gobj() const { return (GanvEdge*)_gobj; }
+	GanvEdge*       gobj()       { return reinterpret_cast<GanvEdge*>(_gobj); }
+	const GanvEdge* gobj() const { return reinterpret_cast<GanvEdge*>(_gobj); }
 
 private:
 	Edge(const Edge& copy);

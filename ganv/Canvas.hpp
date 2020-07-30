@@ -150,7 +150,7 @@ namespace Glib {
 static inline Ganv::Canvas*
 wrap(GanvCanvas* canvas)
 {
-	return (Ganv::Canvas*)ganv_canvas_get_wrapper(canvas);
+	return static_cast<Ganv::Canvas*>(ganv_canvas_get_wrapper(canvas));
 }
 
 } // namespace Glib

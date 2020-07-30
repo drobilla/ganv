@@ -39,8 +39,8 @@ make_module(Canvas* canvas)
 
 	snprintf(name, 8, "mod%d", rand() % 10000);
 	Module* m(new Module(*canvas, name,
-	                     rand() % (int)canvas->get_width(),
-	                     rand() % (int)canvas->get_height(),
+	                     rand() % static_cast<int>(canvas->get_width()),
+	                     rand() % static_cast<int>(canvas->get_height()),
 	                     true));
 
 	int n_ins = rand() % MAX_NUM_PORTS;
@@ -70,8 +70,8 @@ make_circle(Canvas* canvas)
 
 	snprintf(name, 8, "%d", rand() % 10000);
 	Circle* e(new Circle(*canvas, name,
-	                     rand() % (int)canvas->get_width(),
-	                     rand() % (int)canvas->get_height()));
+	                     rand() % static_cast<int>(canvas->get_width()),
+	                     rand() % static_cast<int>(canvas->get_height())));
 
 	ins.push_back(e);
 	outs.push_back(e);

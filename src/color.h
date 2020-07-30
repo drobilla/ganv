@@ -54,10 +54,7 @@ highlight_color(guint c, guint delta)
 	const guint b        = MIN(((c >> 8) & 0xFF) + delta, max_char);
 	const guint a        = c & 0xFF;
 
-	return ((((guint)(r)) << 24) |
-	        (((guint)(g)) << 16) |
-	        (((guint)(b)) << 8) |
-	        (((guint)(a))));
+	return ((r << 24) | (g << 16) | (b << 8) | a);
 }
 
 #endif  // GANV_UTIL_H

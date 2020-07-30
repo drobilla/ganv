@@ -97,7 +97,7 @@ private:
 	                           gpointer    signal) {
 		gboolean value;
 		g_object_get(gobj, g_param_spec_get_name(pspec), &value, NULL);
-		((sigc::signal<bool, gboolean>*)signal)->emit(value);
+		static_cast<sigc::signal<bool, gboolean>*>(signal)->emit(value);
 	}
 };
 

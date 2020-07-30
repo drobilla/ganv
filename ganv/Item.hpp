@@ -81,7 +81,7 @@ private:
 	              GdkEvent* ev,
 	              void*     item)
 	{
-		return ((Item*)item)->signal_event().emit(ev);
+		return static_cast<Item*>(item)->signal_event().emit(ev);
 	}
 };
 

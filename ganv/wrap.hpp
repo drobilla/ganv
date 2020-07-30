@@ -115,7 +115,7 @@ private: \
 	wrap(Ganv##Name* gobj) \
 	{ \
 		if (gobj) { \
-			return (Ganv::Name*)ganv_item_get_wrapper(GANV_ITEM(gobj)); \
+			return static_cast<Ganv::Name*>(ganv_item_get_wrapper(GANV_ITEM(gobj))); \
 		} else { \
 			return NULL; \
 		} \
@@ -125,7 +125,7 @@ private: \
 	wrap(const Ganv##Name* gobj) \
 	{ \
 		if (gobj) { \
-			return (const Ganv::Name*)ganv_item_get_wrapper(GANV_ITEM(gobj)); \
+			return static_cast<const Ganv::Name*>(ganv_item_get_wrapper(GANV_ITEM(gobj))); \
 		} else { \
 			return NULL; \
 		} \
