@@ -21,7 +21,6 @@
 #include <cairo.h>
 #include <gtk/gtk.h>
 
-#include "ganv/canvas.h"
 #include "ganv/types.h"
 #include "ganv/edge.h"
 #include "ganv/item.h"
