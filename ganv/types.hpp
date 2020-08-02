@@ -25,6 +25,6 @@ class Module;
 class Node;
 class Port;
 
-}; // namespace Ganv
+} // namespace Ganv
 
 #endif // GANV_TYPES_HPP
