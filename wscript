@@ -81,7 +81,6 @@ def configure(conf):
                 '-Wno-float-equal',
                 '-Wno-implicit-fallthrough',
                 '-Wno-implicit-float-conversion',
-                '-Wno-implicit-int-float-conversion',
                 '-Wno-padded',
                 '-Wno-reserved-id-macro',
                 '-Wno-shadow',
