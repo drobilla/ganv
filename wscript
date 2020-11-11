@@ -45,6 +45,7 @@ def configure(conf):
         autowaf.add_compiler_flags(conf.env, 'c', {
             'clang': [
                 '-Wno-bad-function-cast',
+                '-Wno-documentation',
             ],
             'gcc': [
                 '-Wno-bad-function-cast',
