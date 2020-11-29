@@ -28,7 +28,6 @@ public:
 		: Node(canvas, GANV_NODE(gobj))
 	{}
 
-	RW_PROPERTY(const char*, label)
 	RW_PROPERTY(gboolean, beveled)
 
 	METHODRET0(ganv_box, double, get_x1)
@@ -39,7 +38,10 @@ public:
 	METHOD1(ganv_box, set_width, double, width)
 	METHODRET0(ganv_box, double, get_height)
 	METHOD1(ganv_box, set_height, double, height)
-	METHODRET0(ganv_box, double, get_border_width)
+
+	double get_border_width() const override {
+		return ganv_box_get_border_width(gobj());
+	}
 
 	GanvBox*       gobj()       { return GANV_BOX(_gobj); }
 	const GanvBox* gobj() const { return GANV_BOX(_gobj); }

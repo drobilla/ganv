@@ -40,7 +40,7 @@ public:
 		CONNECT_PROP_SIGNAL(gobj, selected, on_notify_bool, &Node::on_selected)
 	}
 
-	~Node() {
+	~Node() override {
 		g_object_unref(_gobj);
 	}
 
@@ -68,7 +68,10 @@ public:
 	GanvNode*       gobj()       { return GANV_NODE(_gobj); }
 	const GanvNode* gobj() const { return GANV_NODE(_gobj); }
 
-	METHOD2(ganv_node, move, double, dx, double, dy)
+	void move(const double dx, const double dy) override {
+		ganv_node_move(gobj(), dx, dy);
+	}
+
 	METHOD2(ganv_node, move_to, double, x, double, y)
 
 	METHOD0(ganv_node, disconnect)

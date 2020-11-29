@@ -57,7 +57,7 @@ public:
 		: Item(GANV_ITEM(gobj))
 	{}
 
-	virtual ~Edge() {
+	~Edge() override {
 		if (_gobj && ganv_item_get_parent(_gobj)) {
 			g_object_unref(_gobj);
 		}

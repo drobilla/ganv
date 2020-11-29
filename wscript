@@ -66,7 +66,6 @@ def configure(conf):
                 '-Wno-effc++',
                 '-Wno-missing-noreturn',
                 '-Wno-old-style-cast',
-                '-Wno-suggest-override',
                 '-Wno-useless-cast',
                 '-Wno-zero-as-null-pointer-constant',
             ]
