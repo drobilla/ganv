@@ -59,7 +59,9 @@ public:
 		                             "label", name.c_str(),
 		                             "draggable", TRUE,
 		                             nullptr)))
-	{}
+	{
+		(void)show_title;
+	}
 
 	template<typename P, typename C>
 	class iterator_base {

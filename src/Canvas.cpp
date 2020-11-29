@@ -510,7 +510,7 @@ GanvCanvasImpl::first_edge_to(const GanvNode* head)
 }
 
 static void
-select_if_tail_is_selected(GanvEdge* edge, void* data)
+select_if_tail_is_selected(GanvEdge* edge, void*)
 {
 	GanvNode* tail = edge->impl->tail;
 	gboolean  selected;
@@ -526,7 +526,7 @@ select_if_tail_is_selected(GanvEdge* edge, void* data)
 }
 
 static void
-select_if_head_is_selected(GanvEdge* edge, void* data)
+select_if_head_is_selected(GanvEdge* edge, void*)
 {
 	GanvNode* head = edge->impl->head;
 	gboolean  selected;
@@ -1701,22 +1701,20 @@ GanvCanvasImpl::unselect_ports()
 namespace Ganv {
 
 static gboolean
-on_event_after(GanvItem* canvasitem,
-               GdkEvent* ev,
-               void*     canvas)
+on_event_after(GanvItem*, GdkEvent* ev, void* canvas)
 {
 	return ((Canvas*)canvas)->signal_event.emit(ev);
 }
 
 static void
-on_connect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
+on_connect(GanvCanvas*, GanvNode* tail, GanvNode* head, void* data)
 {
 	Canvas* canvasmm = (Canvas*)data;
 	canvasmm->signal_connect.emit(Glib::wrap(tail), Glib::wrap(head));
 }
 
 static void
-on_disconnect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
+on_disconnect(GanvCanvas*, GanvNode* tail, GanvNode* head, void* data)
 {
 	Canvas* canvasmm = (Canvas*)data;
 	canvasmm->signal_disconnect.emit(Glib::wrap(tail), Glib::wrap(head));
@@ -1799,9 +1797,7 @@ enum {
 };
 
 static gboolean
-on_canvas_event(GanvItem* canvasitem,
-                GdkEvent* ev,
-                void*     impl)
+on_canvas_event(GanvItem*, GdkEvent* ev, void* impl)
 {
 	return ((GanvCanvasImpl*)impl)->on_event(ev);
 }
@@ -2212,7 +2208,7 @@ ganv_canvas_selection_move_finished(GanvCanvas* canvas)
 }
 
 static void
-select_if_ends_are_selected(GanvEdge* edge, void* data)
+select_if_ends_are_selected(GanvEdge* edge, void*)
 {
 	if (ganv_node_is_selected(ganv_edge_get_tail(edge)) &&
 	    ganv_node_is_selected(ganv_edge_get_head(edge))) {
@@ -2694,7 +2690,7 @@ ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename)
 }
 
 gboolean
-ganv_canvas_supports_sprung_layout(const GanvCanvas* canvas)
+ganv_canvas_supports_sprung_layout(const GanvCanvas*)
 {
 #ifdef GANV_FDGL
 	return TRUE;

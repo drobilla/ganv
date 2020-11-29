@@ -279,6 +279,11 @@ static void
 ganv_text_draw(GanvItem* item,
                cairo_t* cr, double cx, double cy, double cw, double ch)
 {
+	(void)cx;
+	(void)cy;
+	(void)cw;
+	(void)ch;
+
 	GanvText*        text = GANV_TEXT(item);
 	GanvTextPrivate* impl = text->impl;
 

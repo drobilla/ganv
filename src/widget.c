@@ -147,6 +147,8 @@ recalc_bounds(GanvWidget* witem)
 static void
 do_destroy(GtkObject* object, gpointer data)
 {
+	(void)object;
+
 	GanvWidget* witem = GANV_WIDGET(data);
 
 	witem->impl->in_destroy = TRUE;
@@ -323,6 +325,12 @@ static void
 ganv_widget_draw(GanvItem* item,
                  cairo_t* cr, double cx, double cy, double cw, double ch)
 {
+	(void)cr;
+	(void)cx;
+	(void)cy;
+	(void)cw;
+	(void)ch;
+
 	GanvWidget* witem = GANV_WIDGET(item);
 
 	if (witem->impl->widget) {

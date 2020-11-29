@@ -314,6 +314,8 @@ ganv_item_unmap(GanvItem* item)
 static void
 ganv_item_update(GanvItem* item, int flags)
 {
+	(void)flags;
+
 	GTK_OBJECT_UNSET_FLAGS(item, GANV_ITEM_NEED_UPDATE);
 	GTK_OBJECT_UNSET_FLAGS(item, GANV_ITEM_NEED_VIS);
 }
@@ -322,6 +324,10 @@ ganv_item_update(GanvItem* item, int flags)
 static double
 ganv_item_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
+	(void)item;
+	(void)x;
+	(void)y;
+
 	*actual_item = NULL;
 	return G_MAXDOUBLE;
 }
@@ -568,6 +574,8 @@ ganv_item_emit_event(GanvItem* item, GdkEvent* event, gint* finished)
 static void
 ganv_item_default_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2)
 {
+	(void)item;
+
 	*x1 = *y1 = *x2 = *y2 = 0.0;
 }
 
@@ -634,6 +642,9 @@ boolean_handled_accumulator(GSignalInvocationHint* ihint,
                             const GValue*          handler_return,
                             gpointer               dummy)
 {
+	(void)ihint;
+	(void)dummy;
+
 	gboolean continue_emission;
 	gboolean signal_handled;
 

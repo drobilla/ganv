@@ -33,7 +33,7 @@ class Node;
  */
 class Node : public Item {
 public:
-	Node(Canvas* canvas, GanvNode* gobj)
+	Node(Canvas*, GanvNode* gobj)
 		: Item(GANV_ITEM(g_object_ref(gobj)))
 	{
 		g_signal_connect(gobj, "moved", G_CALLBACK(on_moved), this);

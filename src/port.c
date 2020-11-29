@@ -197,6 +197,8 @@ ganv_port_tail_vector(const GanvNode* self,
                       double*         dx,
                       double*         dy)
 {
+	(void)head;
+
 	GanvPort*   port   = GANV_PORT(self);
 	GanvItem*   item   = &port->box.node.item;
 	GanvCanvas* canvas = ganv_item_get_canvas(item);
@@ -231,6 +233,8 @@ ganv_port_head_vector(const GanvNode* self,
                       double*         dx,
                       double*         dy)
 {
+	(void)tail;
+
 	GanvPort*   port   = GANV_PORT(self);
 	GanvItem*   item   = &port->box.node.item;
 	GanvCanvas* canvas = ganv_item_get_canvas(item);

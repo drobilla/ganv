@@ -76,10 +76,7 @@ protected:
 	GanvItem* const _gobj;
 
 private:
-	static gboolean
-	on_item_event(GanvItem* canvasitem,
-	              GdkEvent* ev,
-	              void*     item)
+	static gboolean on_item_event(GanvItem*, GdkEvent* ev, void* item)
 	{
 		return static_cast<Item*>(item)->signal_event().emit(ev);
 	}

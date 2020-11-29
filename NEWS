@@ -1,8 +1,9 @@
 ganv (1.7.0) unstable;
 
   * Expand canvas automatically to fit nodes
+  * Fix various compiler warnings
 
- -- David Robillard <d@drobilla.net>  Thu, 30 Jul 2020 19:13:38 +0000
+ -- David Robillard <d@drobilla.net>  Sun, 29 Nov 2020 10:51:22 +0000
 
 ganv (1.6.0) stable;
 

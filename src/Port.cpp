@@ -28,6 +28,8 @@ namespace Ganv {
 static void
 on_value_changed(GanvPort* port, double value, void* portmm)
 {
+	(void)port;
+
 	static_cast<Port*>(portmm)->signal_value_changed.emit(value);
 }
 

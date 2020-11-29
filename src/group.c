@@ -50,6 +50,8 @@ static void
 ganv_group_set_property(GObject* gobject, guint param_id,
                         const GValue* value, GParamSpec* pspec)
 {
+	(void)value;
+
 	g_return_if_fail(GANV_IS_GROUP(gobject));
 
 	switch (param_id) {
@@ -63,6 +65,8 @@ static void
 ganv_group_get_property(GObject* gobject, guint param_id,
                         GValue* value, GParamSpec* pspec)
 {
+	(void)value;
+
 	g_return_if_fail(GANV_IS_GROUP(gobject));
 
 	switch (param_id) {

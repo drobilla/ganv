@@ -340,6 +340,11 @@ static void
 ganv_edge_draw(GanvItem* item,
                cairo_t* cr, double cx, double cy, double cw, double ch)
 {
+	(void)cx;
+	(void)cy;
+	(void)cw;
+	(void)ch;
+
 	GanvEdge*        edge = GANV_EDGE(item);
 	GanvEdgePrivate* impl = edge->impl;
 

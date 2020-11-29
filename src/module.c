@@ -100,6 +100,8 @@ ganv_module_set_property(GObject*      object,
                          const GValue* value,
                          GParamSpec*   pspec)
 {
+	(void)value;
+
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_MODULE(object));
 
@@ -116,6 +118,8 @@ ganv_module_get_property(GObject*    object,
                          GValue*     value,
                          GParamSpec* pspec)
 {
+	(void)value;
+
 	g_return_if_fail(object != NULL);
 	g_return_if_fail(GANV_IS_MODULE(object));
 

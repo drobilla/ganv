@@ -25,7 +25,7 @@
 
 #define SIGNAL1(name, argtype) \
 public: \
-	virtual bool on_##name(argtype arg) { return true; } \
+	virtual bool on_##name(argtype) { return true; } \
 	sigc::signal<bool, argtype>& signal_##name() { return _signal_##name; } \
 private: \
 	sigc::signal<bool, argtype> _signal_##name;

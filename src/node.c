@@ -168,6 +168,13 @@ static void
 ganv_node_draw(GanvItem* item,
                cairo_t* cr, double cx, double cy, double cw, double ch)
 {
+	(void)item;
+	(void)cr;
+	(void)cx;
+	(void)cy;
+	(void)cw;
+	(void)ch;
+
 	/* TODO: Label is not drawn here because ports need to draw control
 	   rects then the label on top.  I can't see a way of solving this since
 	   there's no single time parent class draw needs to be called, so perhaps
@@ -280,6 +287,8 @@ ganv_node_default_tail_vector(const GanvNode* self,
                               double*         dx,
                               double*         dy)
 {
+	(void)head;
+
 	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(self));
 
 	*x = GANV_ITEM(self)->impl->x;
@@ -307,6 +316,8 @@ ganv_node_default_head_vector(const GanvNode* self,
                               double*         dx,
                               double*         dy)
 {
+	(void)tail;
+
 	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(self));
 
 	*x = GANV_ITEM(self)->impl->x;

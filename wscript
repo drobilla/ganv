@@ -89,7 +89,6 @@ def configure(conf):
                 '-Wno-sign-conversion',
                 '-Wno-switch-enum',
                 '-Wno-unused-macros',
-                '-Wno-unused-parameter',
                 '-Wno-used-but-marked-unused',
             ],
             'gcc': [
@@ -108,7 +107,6 @@ def configure(conf):
                 '-Wno-sign-conversion',
                 '-Wno-switch-enum',
                 '-Wno-unused-macros',
-                '-Wno-unused-parameter',
             ],
         })
 
