@@ -47,6 +47,12 @@ public:
 		}
 	}
 
+	Item(const Item&) = delete;
+	Item& operator=(const Item&) = delete;
+
+	Item(Item&&)  = delete;
+	Item& operator=(Item&&) = delete;
+
 	virtual ~Item() {
 		gtk_object_destroy(GTK_OBJECT(_gobj));
 	}

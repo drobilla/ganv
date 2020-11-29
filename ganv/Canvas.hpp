@@ -52,7 +52,14 @@ class Canvas
 {
 public:
 	Canvas(double width, double height);
-	virtual	~Canvas();
+
+	Canvas(const Canvas&) = delete;
+	Canvas& operator=(const Canvas&) = delete;
+
+	Canvas(Canvas&&)  = delete;
+	Canvas& operator=(Canvas&&) = delete;
+
+	virtual ~Canvas();
 
 	GanvItem* root() { return ganv_canvas_root(gobj()); }
 
@@ -138,9 +145,6 @@ public:
 	sigc::signal<void, Node*, Node*> signal_disconnect;
 
 private:
-	Canvas(const Canvas&);  ///< Noncopyable
-	const Canvas& operator=(const Canvas&);  ///< Noncopyable
-
 	GanvCanvas* const _gobj;
 };
 
