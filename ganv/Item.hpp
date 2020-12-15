@@ -36,7 +36,7 @@ namespace Ganv {
  */
 class Item : public sigc::trackable {
 public:
-	Item(GanvItem* gobj)
+	explicit Item(GanvItem* gobj)
 		: _gobj(gobj)
 	{
 		ganv_item_set_wrapper(gobj, this);

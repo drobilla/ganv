@@ -70,7 +70,7 @@ public:
 	public:
 		iterator_base(GanvModule* m, guint i) : _module(m), _index(i) {}
 		template<typename T, typename U>
-		iterator_base(const iterator_base<T, U>& i)
+		explicit iterator_base(const iterator_base<T, U>& i)
 			: _module(i._module)
 			, _index(i._index)
 		{}

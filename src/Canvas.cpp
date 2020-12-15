@@ -219,7 +219,7 @@ panic_root_destroyed(GtkObject* object, gpointer data)
 }
 
 struct GanvCanvasImpl {
-	GanvCanvasImpl(GanvCanvas* canvas)
+	explicit GanvCanvasImpl(GanvCanvas* canvas)
 		: _gcanvas(canvas)
 		, _wrapper(NULL)
 		, _connect_port(NULL)

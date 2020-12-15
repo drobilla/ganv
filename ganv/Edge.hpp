@@ -55,7 +55,7 @@ public:
 		                               nullptr)))
 	{}
 
-	Edge(GanvEdge* gobj)
+	explicit Edge(GanvEdge* gobj)
 		: Item(GANV_ITEM(gobj))
 	{}
 
