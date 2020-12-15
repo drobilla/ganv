@@ -32,6 +32,7 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 
+#include <math.h>
 #include <stddef.h>
 
 guint signal_moved;
@@ -490,9 +491,11 @@ ganv_node_default_event(GanvItem* item,
 	GanvCanvas* canvas = ganv_item_get_canvas(GANV_ITEM(node));
 
 	// FIXME: put these somewhere better
-	static double last_x, last_y;
-	static double drag_start_x, drag_start_y;
-	static gboolean dragging = FALSE;
+	static double   last_x       = NAN;
+	static double   last_y       = NAN;
+	static double   drag_start_x = NAN;
+	static double   drag_start_y = NAN;
+	static gboolean dragging     = FALSE;
 
 	switch (event->type) {
 	case GDK_ENTER_NOTIFY:
@@ -526,7 +529,7 @@ ganv_node_default_event(GanvItem* item,
 
 	case GDK_BUTTON_RELEASE:
 		if (dragging) {
-			gboolean selected;
+			gboolean selected = FALSE;
 			g_object_get(G_OBJECT(node), "selected", &selected, NULL);
 			ganv_canvas_ungrab_item(GANV_ITEM(node), event->button.time);
 			node->impl->grabbed = FALSE;
@@ -557,16 +560,16 @@ ganv_node_default_event(GanvItem* item,
 
 	case GDK_MOTION_NOTIFY:
 		if ((dragging && (event->motion.state & GDK_BUTTON1_MASK))) {
-			gboolean selected;
+			gboolean selected = FALSE;
 			g_object_get(G_OBJECT(node), "selected", &selected, NULL);
 
 			double new_x = event->motion.x;
 			double new_y = event->motion.y;
 
 			if (event->motion.is_hint) {
-				int t_x;
-				int t_y;
-				GdkModifierType state;
+				int             t_x   = 0;
+				int             t_y   = 0;
+				GdkModifierType state = (GdkModifierType)0;
 				gdk_window_get_pointer(event->motion.window, &t_x, &t_y, &state);
 				new_x = t_x;
 				new_y = t_y;

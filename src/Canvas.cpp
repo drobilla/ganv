@@ -48,7 +48,6 @@
 #include <cairo.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkkeysyms-compat.h>
-#include <gdkmm/event.h>
 #include <gdkmm/gc.h>
 #include <gdkmm/screen.h>
 #include <gdkmm/window.h>
@@ -78,6 +77,7 @@
 #include <iostream>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -541,8 +541,8 @@ GanvCanvasImpl::first_edge_to(const GanvNode* head)
 static void
 select_if_tail_is_selected(GanvEdge* edge, void*)
 {
-	GanvNode* tail = edge->impl->tail;
-	gboolean  selected;
+	GanvNode* tail     = edge->impl->tail;
+	gboolean  selected = FALSE;
 	g_object_get(tail, "selected", &selected, NULL);
 	if (!selected && GANV_IS_PORT(tail)) {
 		g_object_get(ganv_port_get_module(GANV_PORT(tail)),
@@ -557,8 +557,8 @@ select_if_tail_is_selected(GanvEdge* edge, void*)
 static void
 select_if_head_is_selected(GanvEdge* edge, void*)
 {
-	GanvNode* head = edge->impl->head;
-	gboolean  selected;
+	GanvNode* head     = edge->impl->head;
+	gboolean  selected = FALSE;
 	g_object_get(head, "selected", &selected, NULL);
 	if (!selected && GANV_IS_PORT(head)) {
 		g_object_get(ganv_port_get_module(GANV_PORT(head)),
@@ -700,7 +700,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 			}
 
 			// Label row
-			std::stringstream colspan;
+			std::ostringstream colspan;
 			colspan << (flow_right ? 1 : (n_cols + 1));
 			html += std::string("<TR><TD BORDER=\"0\" CELLPADDING=\"2\" COLSPAN=\"")
 				+ colspan.str()
@@ -826,7 +826,10 @@ get_region(GanvNode* node)
 {
 	GanvItem* item = &node->item;
 
-	double x1, y1, x2, y2;
+	double x1 = 0.0;
+	double y1 = 0.0;
+	double x2 = 0.0;
+	double y2 = 0.0;
 	ganv_item_get_bounds(item, &x1, &y1, &x2, &y2);
 
 	Region reg;
@@ -1040,7 +1043,7 @@ GanvCanvasImpl::select_port(GanvPort* p, bool unique)
 void
 GanvCanvasImpl::select_port_toggle(GanvPort* port, int mod_state)
 {
-	gboolean selected;
+	gboolean selected = FALSE;
 	g_object_get(G_OBJECT(port), "selected", &selected, NULL);
 	if ((mod_state & GDK_CONTROL_MASK)) {
 		if (selected)
@@ -1151,7 +1154,9 @@ bool
 GanvCanvasImpl::on_event(GdkEvent* event)
 {
 	static const int scroll_increment = 10;
-	int scroll_x, scroll_y;
+
+	int scroll_x = 0;
+	int scroll_y = 0;
 
 	bool handled = false;
 	switch (event->type) {
@@ -1269,9 +1274,9 @@ static void
 get_motion_coords(GdkEventMotion* motion, double* x, double* y)
 {
 	if (motion->is_hint) {
-		gint px;
-		gint py;
-		GdkModifierType state;
+		gint            px    = 0;
+		gint            py    = 0;
+		GdkModifierType state = (GdkModifierType)0;
 		gdk_window_get_pointer(motion->window, &px, &py, &state);
 		*x = px;
 		*y = py;
@@ -1309,7 +1314,8 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 		return true;
 	} else if (event->type == GDK_MOTION_NOTIFY && _drag_state == SELECT) {
 		assert(_select_rect);
-		double x, y;
+		double x = 0.0;
+		double y = 0.0;
 		get_motion_coords(&event->motion, &x, &y);
 		_select_rect->impl->coords.x1 = MIN(_select_start_x, x);
 		_select_rect->impl->coords.y1 = MIN(_select_start_y, y);
@@ -1331,7 +1337,7 @@ GanvCanvasImpl::select_drag_handler(GdkEvent* event)
 				    ganv_box_get_y1(_select_rect),
 				    ganv_box_get_x2(_select_rect),
 				    ganv_box_get_y2(_select_rect))) {
-				gboolean selected;
+				gboolean selected = FALSE;
 				g_object_get(G_OBJECT(node), "selected", &selected, NULL);
 				if (selected) {
 					ganv_canvas_unselect_node(_gcanvas, node);
@@ -1373,7 +1379,8 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 	}
 
 	if (event->type == GDK_MOTION_NOTIFY) {
-		double x, y;
+		double x = 0.0;
+		double y = 0.0;
 		get_motion_coords(&event->motion, &x, &y);
 
 		if (!_drag_edge) {
@@ -1472,6 +1479,8 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 	static double control_start_x     = 0;
 	static double control_start_y     = 0;
 	static float  control_start_value = 0;
+
+	gboolean selected = FALSE;
 
 	switch (event->type) {
 	case GDK_BUTTON_PRESS:
@@ -1589,7 +1598,6 @@ GanvCanvasImpl::port_event(GdkEvent* event, GanvPort* port)
 		return true;
 
 	case GDK_ENTER_NOTIFY:
-		gboolean selected;
 		g_object_get(G_OBJECT(port), "selected", &selected, NULL);
 		if (!control_dragging && !selected) {
 			highlight_port(port, true);
@@ -1632,8 +1640,8 @@ GanvCanvasImpl::ports_joined(GanvPort* port1, GanvPort* port2)
 	highlight_port(port1, false);
 	highlight_port(port2, false);
 
-	GanvNode* src_node;
-	GanvNode* dst_node;
+	GanvNode* src_node = NULL;
+	GanvNode* dst_node = NULL;
 
 	if (port2->impl->is_input && !port1->impl->is_input) {
 		src_node = GANV_NODE(port1);
@@ -2122,7 +2130,8 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 	if (canvas->impl->_items.empty())
 		return;
 
-	int win_width, win_height;
+	int win_width  = 0;
+	int win_height = 0;
 	GdkWindow* win = gtk_widget_get_window(
 		GTK_WIDGET(canvas->impl->_gcanvas));
 	gdk_window_get_size(win, &win_width, &win_height);
@@ -2159,7 +2168,8 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 
 	ganv_canvas_set_zoom(canvas, new_zoom);
 
-	int scroll_x, scroll_y;
+	int scroll_x = 0;
+	int scroll_y = 0;
 	ganv_canvas_w2c(canvas->impl->_gcanvas,
 	                lrintf(left - pad), lrintf(bottom - pad),
 	                &scroll_x, &scroll_y);
@@ -2543,7 +2553,8 @@ ganv_canvas_get_zoom(const GanvCanvas* canvas)
 void
 ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y)
 {
-	double min_x=HUGE_VAL, min_y=HUGE_VAL;
+	double min_x = HUGE_VAL;
+	double min_y = HUGE_VAL;
 	FOREACH_ITEM(canvas->impl->_items, i) {
 		const double x = GANV_ITEM(*i)->impl->x;
 		const double y = GANV_ITEM(*i)->impl->y;
@@ -2559,7 +2570,10 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 #ifdef HAVE_AGRAPH
 	GVNodes nodes = canvas->impl->layout_dot((char*)"");
 
-	double least_x=HUGE_VAL, least_y=HUGE_VAL, most_x=0, most_y=0;
+	double least_x = HUGE_VAL;
+	double least_y = HUGE_VAL;
+	double most_x  = 0.0;
+	double most_y  = 0.0;
 
 	// Set numeric locale to POSIX for reading graphviz output with strtod
 	char* locale = strdup(setlocale(LC_NUMERIC, NULL));
@@ -2579,7 +2593,8 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 		const double      cx    = lrint(strtod(x_str.c_str(), NULL) * dpp);
 		const double      cy    = lrint(strtod(y_str.c_str(), NULL) * dpp);
 
-		double w, h;
+		double w = 0.0;
+		double h = 0.0;
 		if (GANV_IS_BOX(i->first)) {
 			w = ganv_box_get_width(GANV_BOX(i->first));
 			h = ganv_box_get_height(GANV_BOX(i->first));
@@ -2618,7 +2633,8 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 	//cerr << "CWH: " << _width << ", " << _height << endl;
 	//cerr << "GWH: " << graph_width << ", " << graph_height << endl;
 
-	double old_width, old_height;
+	double old_width  = 0.0;
+	double old_height = 0.0;
 	g_object_get(G_OBJECT(canvas),
 	             "width", &old_width,
 	             "height", &old_height,
@@ -2669,7 +2685,10 @@ ganv_canvas_export_image(GanvCanvas* canvas,
 	cairo_destroy(cr);
 
 	// Get draw extent
-	double x, y, w, h;
+	double x = 0.0;
+	double y = 0.0;
+	double w = 0.0;
+	double h = 0.0;
 	cairo_recording_surface_ink_extents(rec_surface, &x, &y, &w, &h);
 
 	// Create image surface with the appropriate size
@@ -2691,7 +2710,10 @@ ganv_canvas_export_image(GanvCanvas* canvas,
 	// Draw recording to image surface
 	cr = cairo_create(img);
 	if (draw_background) {
-		double r, g, b, a;
+		double r = 0.0;
+		double g = 0.0;
+		double b = 0.0;
+		double a = 0.0;
 		color_to_rgba(DEFAULT_BACKGROUND_COLOR, &r, &g, &b, &a);
 		cairo_set_source_rgba(cr, r, g, b, a);
 		cairo_rectangle(cr, 0, 0, w + 2 * pad, h + 2 * pad);
@@ -2954,11 +2976,16 @@ ganv_canvas_unrealize(GtkWidget* widget)
 static void
 scroll_to(GanvCanvas* canvas, int cx, int cy)
 {
-	int scroll_width, scroll_height;
-	int right_limit, bottom_limit;
-	int old_zoom_xofs, old_zoom_yofs;
-	int changed_x = FALSE, changed_y = FALSE;
-	int canvas_width, canvas_height;
+	int scroll_width  = 0;
+	int scroll_height = 0;
+	int right_limit   = 0;
+	int bottom_limit  = 0;
+	int old_zoom_xofs = 0;
+	int old_zoom_yofs = 0;
+	int changed_x     = 0;
+	int changed_y     = 0;
+	int canvas_width  = 0;
+	int canvas_height = 0;
 
 	canvas_width  = GTK_WIDGET(canvas)->allocation.width;
 	canvas_height = GTK_WIDGET(canvas)->allocation.height;
@@ -3092,11 +3119,11 @@ is_descendant(GanvItem* item, GanvItem* parent)
 int
 ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 {
-	GdkEvent* ev;
-	gint      finished;
-	GanvItem* item;
-	GanvItem* parent;
-	guint     mask;
+	GdkEvent* ev       = NULL;
+	gint      finished = 0;
+	GanvItem* item     = NULL;
+	GanvItem* parent   = NULL;
+	guint     mask     = 0;
 
 	/* Perform checks for grabbed items */
 
@@ -3422,7 +3449,8 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 	if (canvas->impl->pick_event.type != GDK_LEAVE_NOTIFY) {
 		/* these fields don't have the same offsets in both types of events */
 
-		double x, y;
+		double x = 0.0;
+		double y = 0.0;
 		if (canvas->impl->pick_event.type == GDK_ENTER_NOTIFY) {
 			x = canvas->impl->pick_event.crossing.x - canvas->impl->zoom_xofs;
 			y = canvas->impl->pick_event.crossing.y - canvas->impl->zoom_yofs;
@@ -3500,13 +3528,11 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 static gint
 ganv_canvas_button(GtkWidget* widget, GdkEventButton* event)
 {
-	int mask;
-	int retval;
+	int mask   = 0;
+	int retval = FALSE;
 
 	g_return_val_if_fail(GANV_IS_CANVAS(widget), FALSE);
 	g_return_val_if_fail(event != NULL, FALSE);
-
-	retval = FALSE;
 
 	GanvCanvas* canvas = GANV_CANVAS(widget);
 
@@ -3615,9 +3641,7 @@ ganv_canvas_key(GtkWidget* widget, GdkEventKey* event)
 	GanvCanvas* canvas = GANV_CANVAS(widget);
 
 	if (!ganv_canvas_emit_event(canvas, (GdkEvent*)event)) {
-		GtkWidgetClass* widget_class;
-
-		widget_class = GTK_WIDGET_CLASS(canvas_parent_class);
+		GtkWidgetClass* widget_class = GTK_WIDGET_CLASS(canvas_parent_class);
 
 		if (event->type == GDK_KEY_PRESS) {
 			if (widget_class->key_press_event) {
@@ -3689,19 +3713,18 @@ ganv_canvas_focus_out(GtkWidget* widget, GdkEventFocus* event)
 static void
 ganv_canvas_paint_rect(GanvCanvas* canvas, gint x0, gint y0, gint x1, gint y1)
 {
-	gint draw_x1, draw_y1;
-	gint draw_x2, draw_y2;
-	gint draw_width, draw_height;
-
 	g_return_if_fail(!canvas->impl->need_update);
 
-	draw_x1 = MAX(x0, canvas->layout.hadjustment->value - canvas->impl->zoom_xofs);
-	draw_y1 = MAX(y0, canvas->layout.vadjustment->value - canvas->impl->zoom_yofs);
-	draw_x2 = MIN(draw_x1 + GTK_WIDGET(canvas)->allocation.width, x1);
-	draw_y2 = MIN(draw_y1 + GTK_WIDGET(canvas)->allocation.height, y1);
+	gint draw_x1 =
+	    MAX(x0, canvas->layout.hadjustment->value - canvas->impl->zoom_xofs);
+	gint draw_y1 =
+	    MAX(y0, canvas->layout.vadjustment->value - canvas->impl->zoom_yofs);
 
-	draw_width  = draw_x2 - draw_x1;
-	draw_height = draw_y2 - draw_y1;
+	gint draw_x2 = MIN(draw_x1 + GTK_WIDGET(canvas)->allocation.width, x1);
+	gint draw_y2 = MIN(draw_y1 + GTK_WIDGET(canvas)->allocation.height, y1);
+
+	gint draw_width  = draw_x2 - draw_x1;
+	gint draw_height = draw_y2 - draw_y1;
 
 	if ((draw_width < 1) || (draw_height < 1)) {
 		return;
@@ -3716,18 +3739,25 @@ ganv_canvas_paint_rect(GanvCanvas* canvas, gint x0, gint y0, gint x1, gint y1)
 
 	cairo_t* cr = gdk_cairo_create(canvas->layout.bin_window);
 
-	double win_x, win_y;
+	double win_x = 0.0;
+	double win_y = 0.0;
 	ganv_canvas_window_to_world(canvas, 0, 0, &win_x, &win_y);
 	cairo_translate(cr, -win_x, -win_y);
 	cairo_scale(cr, canvas->impl->pixels_per_unit, canvas->impl->pixels_per_unit);
 
 	if (canvas->impl->root->object.flags & GANV_ITEM_VISIBLE) {
-		double wx1, wy1, ww, wh;
+		double wx1 = 0.0;
+		double wy1 = 0.0;
+		double ww  = 0.0;
+		double wh  = 0.0;
 		ganv_canvas_c2w(canvas, draw_x1, draw_y1, &wx1, &wy1);
 		ganv_canvas_c2w(canvas, draw_width, draw_height, &ww, &wh);
 
 		// Draw background
-		double r, g, b, a;
+		double r = 0.0;
+		double g = 0.0;
+		double b = 0.0;
+		double a = 0.0;
 		color_to_rgba(DEFAULT_BACKGROUND_COLOR, &r, &g, &b, &a);
 		cairo_set_source_rgba(cr, r, g, b, a);
 		cairo_rectangle(cr, wx1, wy1, ww, wh);
@@ -3889,8 +3919,10 @@ void
 ganv_canvas_set_scroll_region(GanvCanvas* canvas,
                               double x1, double y1, double x2, double y2)
 {
-	double wxofs, wyofs;
-	int    xofs, yofs;
+	double wxofs = 0.0;
+	double wyofs = 0.0;
+	int    xofs  = 0;
+	int    yofs  = 0;
 
 	g_return_if_fail(GANV_IS_CANVAS(canvas));
 
@@ -4076,7 +4108,10 @@ void
 ganv_canvas_request_redraw_w(GanvCanvas* canvas,
                              double x1, double y1, double x2, double y2)
 {
-	int cx1, cx2, cy1, cy2;
+	int cx1 = 0;
+	int cx2 = 0;
+	int cy1 = 0;
+	int cy2 = 0;
 	ganv_canvas_w2c(canvas, x1, y1, &cx1, &cy1);
 	ganv_canvas_w2c(canvas, x2, y2, &cx2, &cy2);
 	ganv_canvas_request_redraw_c(canvas, cx1, cy1, cx2, cy2);

@@ -316,7 +316,10 @@ ganv_edge_update(GanvItem* item, int flags)
 	impl->old_coords = impl->coords;
 
 	// Get bounding box
-	double x1, x2, y1, y2;
+	double x1 = 0.0;
+	double x2 = 0.0;
+	double y1 = 0.0;
+	double y2 = 0.0;
 	ganv_edge_bounds(item, &x1, &y1, &x2, &y2);
 
 	// Ensure bounding box has non-zero area
@@ -359,7 +362,10 @@ ganv_edge_draw(GanvItem* item,
 	double dx    = src_x - dst_x;
 	double dy    = src_y - dst_y;
 
-	double r, g, b, a;
+	double r = 0.0;
+	double g = 0.0;
+	double b = 0.0;
+	double a = 0.0;
 	if (impl->highlighted) {
 		color_to_rgba(highlight_color(impl->color, 0x40), &r, &g, &b, &a);
 	} else {

@@ -167,7 +167,8 @@ measure(GanvModule* module, Metrics* m)
 {
 	memset(m, '\0', sizeof(Metrics));
 
-	double title_w, title_h;
+	double title_w = 0.0;
+	double title_h = 0.0;
 	title_size(module, &title_w, &title_h);
 
 	GanvCanvas*        canvas       = ganv_item_get_canvas(GANV_ITEM(module));
@@ -268,7 +269,8 @@ place_title(GanvModule* module, GanvDirection dir)
 	GanvBox*  box          = GANV_BOX(module);
 	GanvText* canvas_title = GANV_NODE(module)->impl->label;
 
-	double title_w, title_h;
+	double title_w = 0.0;
+	double title_h = 0.0;
 	title_size(module, &title_w, &title_h);
 
 	if (!canvas_title) {
@@ -294,7 +296,8 @@ resize_right(GanvModule* module)
 	Metrics m;
 	measure(module, &m);
 
-	double title_w, title_h;
+	double title_w = 0.0;
+	double title_h = 0.0;
 	title_size(module, &title_w, &title_h);
 
 	// Basic height contains title
@@ -370,7 +373,8 @@ resize_down(GanvModule* module)
 	Metrics m;
 	measure(module, &m);
 
-	double title_w, title_h;
+	double title_w = 0.0;
+	double title_h = 0.0;
 	title_size(module, &title_w, &title_h);
 
 	const double port_depth   = ganv_module_get_empty_port_depth(module);
@@ -821,7 +825,8 @@ ganv_module_embed(GanvModule* module,
 		return;
 	}
 
-	double title_w, title_h;
+	double title_w = 0.0;
+	double title_h = 0.0;
 	title_size(module, &title_w, &title_h);
 
 	impl->embed_item = ganv_item_new(

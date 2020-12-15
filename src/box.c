@@ -155,7 +155,10 @@ ganv_box_request_redraw(GanvItem*            item,
                         const GanvBoxCoords* coords,
                         gboolean             world)
 {
-	double x1, y1, x2, y2;
+	double x1 = 0.0;
+	double y1 = 0.0;
+	double x2 = 0.0;
+	double y2 = 0.0;
 	ganv_box_bounds_item(coords, &x1, &y1, &x2, &y2);
 
 	if (!world) {
@@ -268,11 +271,16 @@ ganv_box_draw(GanvItem* item,
 	double y2 = impl->coords.y2;
 	ganv_item_i2w_pair(item, &x1, &y1, &x2, &y2);
 
-	double dash_length, border_color, fill_color;
+	double dash_length  = 0.0;
+	double border_color = 0.0;
+	double fill_color   = 0.0;
 	ganv_node_get_draw_properties(
 		&box->node, &dash_length, &border_color, &fill_color);
 
-	double r, g, b, a;
+	double r = 0.0;
+	double g = 0.0;
+	double b = 0.0;
+	double a = 0.0;
 
 	for (int i = (impl->coords.stacked ? 1 : 0); i >= 0; --i) {
 		const double x = 0.0 - (STACKED_OFFSET * i);
@@ -314,7 +322,10 @@ ganv_box_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 
 	*actual_item = NULL;
 
-	double x1, y1, x2, y2;
+	double x1 = 0.0;
+	double y1 = 0.0;
+	double x2 = 0.0;
+	double y2 = 0.0;
 	ganv_box_bounds_item(&impl->coords, &x1, &y1, &x2, &y2);
 
 	// Point is inside the box (distance 0)
@@ -351,7 +362,10 @@ ganv_box_is_within(const GanvNode* self,
                    double          x2,
                    double          y2)
 {
-	double bx1, by1, bx2, by2;
+	double bx1 = 0.0;
+	double by1 = 0.0;
+	double bx2 = 0.0;
+	double by2 = 0.0;
 	g_object_get(G_OBJECT(self),
 	             "x1", &bx1,
 	             "y1", &by1,

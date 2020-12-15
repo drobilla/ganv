@@ -59,6 +59,9 @@ public:
 		: Item(GANV_ITEM(gobj))
 	{}
 
+	Edge(const Edge& copy) = delete;
+	Edge& operator=(const Edge& other) = delete;
+
 	~Edge() override {
 		if (_gobj && ganv_item_get_parent(_gobj)) {
 			g_object_unref(_gobj);
@@ -81,10 +84,6 @@ public:
 
 	GanvEdge*       gobj()       { return reinterpret_cast<GanvEdge*>(_gobj); }
 	const GanvEdge* gobj() const { return reinterpret_cast<GanvEdge*>(_gobj); }
-
-private:
-	Edge(const Edge& copy);
-	Edge& operator=(const Edge& other);
 };
 
 } // namespace Ganv

@@ -103,7 +103,7 @@ private:
 	static void on_notify_bool(GObject*    gobj,
 	                           GParamSpec* pspec,
 	                           gpointer    signal) {
-		gboolean value;
+		gboolean value = FALSE;
 		g_object_get(gobj, g_param_spec_get_name(pspec), &value, nullptr);
 		static_cast<sigc::signal<bool, gboolean>*>(signal)->emit(value);
 	}

@@ -142,7 +142,8 @@ recalc_bounds(GanvWidget* witem)
 	item->impl->x2 = witem->impl->cx + witem->impl->cwidth;
 	item->impl->y2 = witem->impl->cy + witem->impl->cheight;
 
-	int zoom_xofs, zoom_yofs;
+	int zoom_xofs = 0;
+	int zoom_yofs = 0;
 	ganv_canvas_get_zoom_offsets(item->impl->canvas, &zoom_xofs, &zoom_yofs);
 	if (witem->impl->widget) {
 		gtk_layout_move(GTK_LAYOUT(item->impl->canvas), witem->impl->widget,
@@ -172,7 +173,7 @@ ganv_widget_set_property(GObject*      object,
 	GanvWidget* witem       = GANV_WIDGET(object);
 	int         update      = FALSE;
 	int         calc_bounds = FALSE;
-	GObject*    obj;
+	GObject*    obj         = NULL;
 
 	switch (param_id) {
 	case PROP_WIDGET:
@@ -187,7 +188,8 @@ ganv_widget_set_property(GObject*      object,
 			witem->impl->destroy_id = g_signal_connect(obj, "destroy",
 			                                     G_CALLBACK(do_destroy),
 			                                     witem);
-			int zoom_xofs, zoom_yofs;
+			int zoom_xofs = 0;
+			int zoom_yofs = 0;
 			ganv_canvas_get_zoom_offsets(item->impl->canvas, &zoom_xofs, &zoom_yofs);
 
 			gtk_layout_put(GTK_LAYOUT(item->impl->canvas), witem->impl->widget,
@@ -352,7 +354,8 @@ ganv_widget_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 
 	*actual_item = item;
 
-	double x1, y1;
+	double x1 = 0.0;
+	double y1 = 0.0;
 	ganv_canvas_c2w(item->impl->canvas, witem->impl->cx, witem->impl->cy, &x1, &y1);
 
 	const double pixels_per_unit = ganv_canvas_get_zoom(item->impl->canvas);
@@ -368,7 +371,7 @@ ganv_widget_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 
 	/* Point is outside widget bounds */
 
-	double dx;
+	double dx = 0.0;
 	if (x < x1) {
 		dx = x1 - x;
 	} else if (x > x2) {
@@ -377,7 +380,7 @@ ganv_widget_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 		dx = 0.0;
 	}
 
-	double dy;
+	double dy = 0.0;
 	if (y < y1) {
 		dy = y1 - y;
 	} else if (y > y2) {

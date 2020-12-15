@@ -21,7 +21,6 @@
 #include "ganv/wrap.hpp"
 
 #include <gdk/gdk.h>
-#include <gdkmm/event.h>
 #include <glib-object.h>
 #include <glib.h>
 #include <gobject/gclosure.h>

@@ -699,7 +699,7 @@ ganv_port_get_natural_width(const GanvPort* port)
 	if (ganv_canvas_get_direction(canvas) == GANV_DIRECTION_DOWN) {
 		w = ganv_module_get_empty_port_breadth(ganv_port_get_module(port));
 	} else if (label && (GANV_ITEM(label)->object.flags & GANV_ITEM_VISIBLE)) {
-		double label_w;
+		double label_w = 0.0;
 		g_object_get(port->box.node.impl->label, "width", &label_w, NULL);
 		w = label_w + (PORT_LABEL_HPAD * 2.0);
 	} else {
@@ -708,7 +708,7 @@ ganv_port_get_natural_width(const GanvPort* port)
 	if (port->impl->value_label &&
 	    (GANV_ITEM(port->impl->value_label)->object.flags
 	     & GANV_ITEM_VISIBLE)) {
-		double label_w;
+		double label_w = 0.0;
 		g_object_get(port->impl->value_label, "width", &label_w, NULL);
 		w += label_w + PORT_LABEL_HPAD;
 	}

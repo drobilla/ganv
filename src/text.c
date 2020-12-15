@@ -128,7 +128,8 @@ ganv_text_layout(GanvText* text)
 	cairo_font_options_destroy(opt);
 	pango_font_description_free(font);
 
-	int width, height;
+	int width  = 0;
+	int height = 0;
 	pango_layout_get_pixel_size(impl->layout, &width, &height);
 
 	impl->coords.width  = width;
@@ -255,14 +256,18 @@ ganv_text_point(GanvItem* item, double x, double y, GanvItem** actual_item)
 {
 	*actual_item = NULL;
 
-	double x1, y1, x2, y2;
+	double x1 = 0.0;
+	double y1 = 0.0;
+	double x2 = 0.0;
+	double y2 = 0.0;
 	ganv_text_bounds_item(item, &x1, &y1, &x2, &y2);
 	if ((x >= x1) && (y >= y1) && (x <= x2) && (y <= y2)) {
 		return 0.0;
 	}
 
 	// Point is outside the box
-	double dx, dy;
+	double dx = 0.0;
+	double dy = 0.0;
 
 	// Find horizontal distance to nearest edge
 	if (x < x1) {
@@ -305,7 +310,10 @@ ganv_text_draw(GanvItem* item,
 		ganv_text_layout(text);
 	}
 
-	double r, g, b, a;
+	double r = 0.0;
+	double g = 0.0;
+	double b = 0.0;
+	double a = 0.0;
 	color_to_rgba(impl->color, &r, &g, &b, &a);
 
 	cairo_set_source_rgba(cr, r, g, b, a);

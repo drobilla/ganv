@@ -252,7 +252,7 @@ redraw_if_visible(GanvItem* item)
 static void
 ganv_item_dispose(GObject* object)
 {
-	GanvItem* item;
+	GanvItem* item = NULL;
 
 	g_return_if_fail(GANV_IS_ITEM(object));
 
@@ -517,8 +517,8 @@ ganv_item_i2w(GanvItem* item, double* x, double* y)
 	  g_return_if_fail(x != NULL);
 	  g_return_if_fail(y != NULL);*/
 
-	double off_x;
-	double off_y;
+	double off_x = 0.0;
+	double off_y = 0.0;
 	ganv_item_i2w_offset(item, &off_x, &off_y);
 
 	*x += off_x;
@@ -528,8 +528,8 @@ ganv_item_i2w(GanvItem* item, double* x, double* y)
 void
 ganv_item_i2w_pair(GanvItem* item, double* x1, double* y1, double* x2, double* y2)
 {
-	double off_x;
-	double off_y;
+	double off_x = 0.0;
+	double off_y = 0.0;
 	ganv_item_i2w_offset(item, &off_x, &off_y);
 
 	*x1 += off_x;
@@ -550,8 +550,8 @@ ganv_item_i2w_pair(GanvItem* item, double* x1, double* y1, double* x2, double* y
 void
 ganv_item_w2i(GanvItem* item, double* x, double* y)
 {
-	double off_x;
-	double off_y;
+	double off_x = 0.0;
+	double off_y = 0.0;
 	ganv_item_i2w_offset(item, &off_x, &off_y);
 
 	*x -= off_x;
@@ -652,8 +652,8 @@ boolean_handled_accumulator(GSignalInvocationHint* ihint,
 	(void)ihint;
 	(void)dummy;
 
-	gboolean continue_emission;
-	gboolean signal_handled;
+	gboolean continue_emission = FALSE;
+	gboolean signal_handled    = FALSE;
 
 	signal_handled = g_value_get_boolean(handler_return);
 	g_value_set_boolean(return_accu, signal_handled);
@@ -666,9 +666,7 @@ boolean_handled_accumulator(GSignalInvocationHint* ihint,
 static void
 ganv_item_class_init(GanvItemClass* klass)
 {
-	GObjectClass* gobject_class;
-
-	gobject_class = (GObjectClass*)klass;
+	GObjectClass* gobject_class = (GObjectClass*)klass;
 
 	item_parent_class = (GtkObjectClass*)g_type_class_peek_parent(klass);
 

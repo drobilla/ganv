@@ -298,13 +298,18 @@ ganv_circle_draw(GanvItem* item,
 	GanvCircle*        circle = GANV_CIRCLE(item);
 	GanvCirclePrivate* impl   = circle->impl;
 
-	double r, g, b, a;
+	double r = 0.0;
+	double g = 0.0;
+	double b = 0.0;
+	double a = 0.0;
 
 	double x = impl->coords.x;
 	double y = impl->coords.y;
 	ganv_item_i2w(item, &x, &y);
 
-	double dash_length, border_color, fill_color;
+	double dash_length  = 0.0;
+	double border_color = 0.0;
+	double fill_color   = 0.0;
 	ganv_node_get_draw_properties(
 		&circle->node, &dash_length, &border_color, &fill_color);
 

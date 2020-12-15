@@ -85,7 +85,7 @@ ganv_group_get_property(GObject* gobject, guint param_id,
 static void
 ganv_group_destroy(GtkObject* object)
 {
-	GanvGroup* group;
+	GanvGroup* group = NULL;
 
 	g_return_if_fail(GANV_IS_GROUP(object));
 
@@ -131,9 +131,9 @@ ganv_group_update(GanvItem* item, int flags)
 static void
 ganv_group_realize(GanvItem* item)
 {
-	GanvGroup* group;
-	GList*     list;
-	GanvItem*  i;
+	GanvGroup* group = NULL;
+	GList*     list  = NULL;
+	GanvItem*  i     = NULL;
 
 	group = GANV_GROUP(item);
 
@@ -151,9 +151,9 @@ ganv_group_realize(GanvItem* item)
 static void
 ganv_group_unrealize(GanvItem* item)
 {
-	GanvGroup* group;
-	GList*     list;
-	GanvItem*  i;
+	GanvGroup* group = NULL;
+	GList*     list  = NULL;
+	GanvItem*  i     = NULL;
 
 	group = GANV_GROUP(item);
 
@@ -171,9 +171,9 @@ ganv_group_unrealize(GanvItem* item)
 static void
 ganv_group_map(GanvItem* item)
 {
-	GanvGroup* group;
-	GList*     list;
-	GanvItem*  i;
+	GanvGroup* group = NULL;
+	GList*     list  = NULL;
+	GanvItem*  i     = NULL;
 
 	group = GANV_GROUP(item);
 
@@ -191,9 +191,9 @@ ganv_group_map(GanvItem* item)
 static void
 ganv_group_unmap(GanvItem* item)
 {
-	GanvGroup* group;
-	GList*     list;
-	GanvItem*  i;
+	GanvGroup* group = NULL;
+	GList*     list  = NULL;
+	GanvItem*  i     = NULL;
 
 	group = GANV_GROUP(item);
 
@@ -297,23 +297,20 @@ get_child_bounds(GanvItem* child, double* x1, double* y1, double* x2, double* y2
 static void
 ganv_group_bounds(GanvItem* item, double* x1, double* y1, double* x2, double* y2)
 {
-	GanvGroup* group;
-	GanvItem*  child;
-	GList*     list;
-	double     tx1, ty1, tx2, ty2;
-	double     minx = DBL_MAX;
-	double     miny = DBL_MAX;
-	double     maxx = DBL_MIN;
-	double     maxy = DBL_MIN;
-	int        set;
-
-	group = GANV_GROUP(item);
+	GanvGroup* group = GANV_GROUP(item);
+	GanvItem*  child = NULL;
+	GList*     list  = NULL;
+	double     tx1   = 0.0;
+	double     ty1   = 0.0;
+	double     tx2   = 0.0;
+	double     ty2   = 0.0;
+	double     minx  = DBL_MAX;
+	double     miny  = DBL_MAX;
+	double     maxx  = DBL_MIN;
+	double     maxy  = DBL_MIN;
+	int        set   = FALSE;
 
 	/* Get the bounds of the first visible item */
-
-	child = NULL; /* Unnecessary but eliminates a warning. */
-
-	set = FALSE;
 
 	for (list = group->impl->item_list; list; list = list->next) {
 		child = (GanvItem*)list->data;
@@ -395,8 +392,8 @@ ganv_group_add(GanvItem* parent, GanvItem* item)
 static void
 ganv_group_remove(GanvItem* parent, GanvItem* item)
 {
-	GanvGroup* group = GANV_GROUP(parent);
-	GList* children;
+	GanvGroup* group    = GANV_GROUP(parent);
+	GList*     children = NULL;
 
 	g_return_if_fail(GANV_IS_GROUP(group));
 	g_return_if_fail(GANV_IS_ITEM(item));
@@ -432,13 +429,9 @@ ganv_group_remove(GanvItem* parent, GanvItem* item)
 static void
 ganv_group_class_init(GanvGroupClass* klass)
 {
-	GObjectClass*   gobject_class;
-	GtkObjectClass* object_class;
-	GanvItemClass*  item_class;
-
-	gobject_class = (GObjectClass*)klass;
-	object_class  = (GtkObjectClass*)klass;
-	item_class    = (GanvItemClass*)klass;
+	GObjectClass*   gobject_class = (GObjectClass*)klass;
+	GtkObjectClass* object_class  = (GtkObjectClass*)klass;
+	GanvItemClass*  item_class    = (GanvItemClass*)klass;
 
 	group_parent_class = (GanvItemClass*)g_type_class_peek_parent(klass);
 
