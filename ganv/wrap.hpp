@@ -85,9 +85,8 @@ private: \
 	virtual ret name() const { \
 		if (gobj()) { \
 			return Glib::wrap(prefix##_##name(gobj())); \
-		} else { \
-			return nullptr; \
 		} \
+		return nullptr; \
 	}
 
 #define METHOD2(prefix, name, t1, a1, t2, a2) \
@@ -116,9 +115,8 @@ private: \
 	{ \
 		if (gobj) { \
 			return static_cast<Ganv::Name*>(ganv_item_get_wrapper(GANV_ITEM(gobj))); \
-		} else { \
-			return nullptr; \
 		} \
+		return nullptr; \
 	} \
 	/** Return a Ganv::CPPType wrapper for a CType. */ \
 	static inline const Ganv::Name* \
@@ -126,9 +124,8 @@ private: \
 	{ \
 		if (gobj) { \
 			return static_cast<const Ganv::Name*>(ganv_item_get_wrapper(GANV_ITEM(gobj))); \
-		} else { \
-			return nullptr; \
 		} \
+		return nullptr; \
 	} \
 	}
 
