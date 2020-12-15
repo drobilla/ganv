@@ -22,7 +22,7 @@
 #include "ganv/wrap.hpp"
 
 #include <cairo.h>
-#include <gdkmm/event.h>
+#include <gdk/gdk.h>
 #include <glib.h>
 #include <gtkmm/layout.h>
 #include <sigc++/signal.h>

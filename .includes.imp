@@ -1,0 +1,4 @@
+[
+  { "symbol": [ "GdkEvent", "private", "<gdk/gdk.h>", "public" ] },
+  { "symbol": [ "std::ostringstream", "private", "<sstream>", "public" ] }
+]
