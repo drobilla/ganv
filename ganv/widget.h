@@ -13,6 +13,8 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// IWYU pragma: no_include "ganv-private.h"
+
 /* Based on GnomeCanvasWidget, by Federico Mena <federico@nuclecu.unam.mx>
  * Copyright 1997-2000 Free Software Foundation
  */

@@ -13,8 +13,18 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// IWYU pragma: no_include "gettext.h"
+
 #ifndef GANV_WRAP_HPP
 #define GANV_WRAP_HPP
+
+#include "ganv/item.h"
+
+#include <glib-object.h>             // IWYU pragma: keep
+#include <glib.h>                    // IWYU pragma: keep
+#include <gobject/gclosure.h>        // IWYU pragma: keep
+#include <sigc++/functors/mem_fun.h> // IWYU pragma: keep
+#include <sigc++/signal.h>           // IWYU pragma: keep
 
 #define CONNECT_PROP_SIGNAL(gobj, name, notify, handler) \
 	g_signal_connect(gobj, "notify::" #name, \

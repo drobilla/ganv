@@ -13,6 +13,8 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// IWYU pragma: no_include "ganv-private.h"
+
 #ifndef GANV_BOX_H
 #define GANV_BOX_H
 

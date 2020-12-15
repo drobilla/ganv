@@ -28,7 +28,7 @@
 #include <gobject/gclosure.h>
 #include <sigc++/signal.h>
 
-GANV_GLIB_WRAP(Node)
+GANV_GLIB_WRAP(Node) // IWYU pragma: keep
 
 namespace Ganv {
 
