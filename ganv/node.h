@@ -18,7 +18,10 @@
 
 #include "ganv/item.h"
 #include "ganv/types.h"
-#include "ganv/text.h"
+
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -28,6 +31,8 @@ G_BEGIN_DECLS
 #define GANV_IS_NODE(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_NODE))
 #define GANV_IS_NODE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_NODE))
 #define GANV_NODE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_NODE, GanvNodeClass))
+
+struct _GanvNodeClass;
 
 typedef struct _GanvNodeClass   GanvNodeClass;
 typedef struct _GanvNodePrivate GanvNodePrivate;

@@ -16,11 +16,11 @@
 #ifndef GANV_GANV_HPP
 #define GANV_GANV_HPP
 
-#include "ganv/Canvas.hpp"
-#include "ganv/Circle.hpp"
-#include "ganv/Edge.hpp"
-#include "ganv/Module.hpp"
-#include "ganv/Node.hpp"
-#include "ganv/Port.hpp"
+#include "ganv/Canvas.hpp" // IWYU pragma: export
+#include "ganv/Circle.hpp" // IWYU pragma: export
+#include "ganv/Edge.hpp"   // IWYU pragma: export
+#include "ganv/Module.hpp" // IWYU pragma: export
+#include "ganv/Node.hpp"   // IWYU pragma: export
+#include "ganv/Port.hpp"   // IWYU pragma: export
 
 #endif // GANV_GANV_HPP

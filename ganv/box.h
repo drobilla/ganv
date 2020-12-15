@@ -17,6 +17,11 @@
 #define GANV_BOX_H
 
 #include "ganv/node.h"
+#include "ganv/types.h"
+
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -26,6 +31,8 @@ G_BEGIN_DECLS
 #define GANV_IS_BOX(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_BOX))
 #define GANV_IS_BOX_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_BOX))
 #define GANV_BOX_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_BOX, GanvBoxClass))
+
+struct _GanvBoxClass;
 
 typedef struct _GanvBoxClass   GanvBoxClass;
 typedef struct _GanvBoxPrivate GanvBoxPrivate;

@@ -21,42 +21,66 @@
 #define _POSIX_C_SOURCE 200809L // strdup
 #define _XOPEN_SOURCE   600 // isascii on BSD
 
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
+#include "color.h"
+#include "ganv-marshal.h"
+#include "ganv-private.h"
+#include "gettext.h"
+
+#include "ganv/Canvas.hpp"
+#include "ganv/Edge.hpp"
+#include "ganv/Item.hpp"
+#include "ganv/Node.hpp"
+#include "ganv/box.h"
+#include "ganv/canvas.h"
+#include "ganv/circle.h"
+#include "ganv/edge.h"
+#include "ganv/group.h"
+#include "ganv/item.h"
+#include "ganv/module.h"
+#include "ganv/node.h"
+#include "ganv/port.h"
+#include "ganv/types.h"
+#include "ganv_config.h"
+
+#include <cairo-pdf.h>
+#include <cairo-ps.h>
+#include <cairo-svg.h>
+#include <cairo.h>
+#include <gdk/gdk.h>
+#include <gdk/gdkkeysyms-compat.h>
+#include <gdkmm/event.h>
+#include <gdkmm/gc.h>
+#include <gdkmm/screen.h>
+#include <gdkmm/window.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <glibmm/object.h>
+#include <gobject/gclosure.h>
+#include <gtk/gtk.h>
+#include <gtkmm/layout.h>
+#include <gtkmm/object.h>
+#include <gtkmm/style.h>
+#include <gtkmm/widget.h>
+#include <pango/pango-font.h>
+#include <pango/pango-types.h>
+#include <pangomm/fontdescription.h>
+#include <sigc++/signal.h>
 
 #include <algorithm>
 #include <cassert>
+#include <cfloat>
+#include <clocale>
 #include <cmath>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <set>
-#include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
-
-#include <cairo.h>
-#include <gdk/gdkkeysyms.h>
-#include <gtk/gtk.h>
-#include <gtk/gtkstyle.h>
-#include <gtkmm/widget.h>
-
-#include "ganv/Canvas.hpp"
-#include "ganv/Circle.hpp"
-#include "ganv/Edge.hpp"
-#include "ganv/Module.hpp"
-#include "ganv/Port.hpp"
-#include "ganv/box.h"
-#include "ganv/canvas.h"
-#include "ganv/edge.h"
-#include "ganv/group.h"
-#include "ganv/node.h"
-#include "ganv_config.h"
-
-#include "./color.h"
-#include "./ganv-marshal.h"
-#include "./ganv-private.h"
-#include "./gettext.h"
 
 #ifdef HAVE_AGRAPH
 // Deal with graphviz API amateur hour...
@@ -64,7 +88,10 @@
 #    define _dll_import 0
 #    define _BLD_cdt 0
 #    define _PACKAGE_ast 0
+#    include <arith.h>
 #    include <gvc.h>
+#    include <gvcext.h>
+#    include <types.h>
 #endif
 #ifdef GANV_FDGL
 #    include "./fdgl.hpp"
@@ -73,6 +100,8 @@
 #define CANVAS_IDLE_PRIORITY (GDK_PRIORITY_REDRAW - 5)
 
 static const double GANV_CANVAS_PAD = 8.0;
+
+struct GanvCanvasImpl;
 
 typedef struct {
 	int x;
@@ -1777,11 +1806,7 @@ Canvas::get_edge(Node* tail, Node* head) const
 
 extern "C" {
 
-#include "ganv/canvas.h"
-
-#include "./boilerplate.h"
-#include "./color.h"
-#include "./gettext.h"
+#include "boilerplate.h"
 
 G_DEFINE_TYPE_WITH_CODE(GanvCanvas, ganv_canvas, GTK_TYPE_LAYOUT,
                         G_ADD_PRIVATE(GanvCanvas))

@@ -13,9 +13,9 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <gtk/gtk.h>
-
 #include "ganv/ganv.h"
+
+#include <gtk/gtk.h>
 
 static void
 on_window_destroy(GtkWidget* widget, void* data)

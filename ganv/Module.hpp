@@ -16,21 +16,23 @@
 #ifndef GANV_MODULE_HPP
 #define GANV_MODULE_HPP
 
-#include <string>
-#include <vector>
-
-#include <gtkmm/container.h>
-
+#include "ganv/Box.hpp"
 #include "ganv/Canvas.hpp"
-#include "ganv/Node.hpp"
 #include "ganv/Port.hpp"
+#include "ganv/box.h"
+#include "ganv/item.h"
 #include "ganv/module.h"
+#include "ganv/types.h"
+#include "ganv/wrap.hpp"
+
+#include <glib.h>
+#include <gtkmm/widget.h>
+
+#include <string>
 
 GANV_GLIB_WRAP(Module)
 
 namespace Ganv {
-
-class Canvas;
 
 /** A rectangular Item which can hold a Port.
  *

@@ -13,17 +13,30 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <math.h>
-#include <stdlib.h>
+#include "boilerplate.h"
+#include "color.h"
+#include "ganv-private.h"
+#include "gettext.h"
 
+#include "ganv/box.h"
 #include "ganv/canvas.h"
-#include "ganv/port.h"
+#include "ganv/edge.h"
+#include "ganv/item.h"
 #include "ganv/module.h"
+#include "ganv/node.h"
+#include "ganv/port.h"
+#include "ganv/text.h"
+#include "ganv/types.h"
 
-#include "./boilerplate.h"
-#include "./color.h"
-#include "./ganv-private.h"
-#include "./gettext.h"
+#include <cairo.h>
+#include <gdk/gdk.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+
+#include <math.h>
+#include <stdarg.h>
+#include <stdlib.h>
 
 static const double PORT_LABEL_HPAD = 4.0;
 static const double PORT_LABEL_VPAD = 1.0;

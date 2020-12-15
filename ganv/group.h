@@ -18,6 +18,9 @@
 
 #include "ganv/item.h"
 
+#include <glib-object.h>
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 /* Based on GnomeCanvasGroup, by Federico Mena <federico@nuclecu.unam.mx>
@@ -31,6 +34,9 @@ G_BEGIN_DECLS
 #define GANV_IS_GROUP(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GANV_TYPE_GROUP))
 #define GANV_IS_GROUP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GANV_TYPE_GROUP))
 #define GANV_GROUP_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GANV_TYPE_GROUP, GanvGroupClass))
+
+struct _GanvGroup;
+struct _GanvGroupClass;
 
 typedef struct _GanvGroup        GanvGroup;
 typedef struct _GanvGroupPrivate GanvGroupPrivate;

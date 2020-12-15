@@ -18,8 +18,15 @@
 
 #include "ganv/Node.hpp"
 #include "ganv/box.h"
+#include "ganv/node.h"
+#include "ganv/types.h"
+#include "ganv/wrap.hpp"
+
+#include <glib.h>
 
 namespace Ganv {
+
+class Canvas;
 
 class Box : public Node
 {

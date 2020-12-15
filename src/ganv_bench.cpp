@@ -13,16 +13,30 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "ganv/Canvas.hpp"
+#include "ganv/Circle.hpp"
+#include "ganv/Edge.hpp"
+#include "ganv/Module.hpp"
+#include "ganv/Port.hpp"
 
-#include <glibmm.h>
+#include <glibmm/main.h>
+#include <gtkmm/layout.h>
 #include <gtkmm/main.h>
+#include <gtkmm/object.h>
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/window.h>
+#include <sigc++/functors/ptr_fun.h>
 
-#include "ganv/ganv.hpp"
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <ctime>
+#include <iosfwd>
+#include <vector>
+
+namespace Ganv {
+class Node;
+}
 
 using namespace std;
 using namespace Ganv;

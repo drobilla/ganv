@@ -18,12 +18,12 @@
 
 namespace Ganv {
 
-class Canvas;
-class Edge;
-class Item;
-class Module;
-class Node;
-class Port;
+class Canvas; // IWYU pragma: keep
+class Edge;   // IWYU pragma: keep
+class Item;   // IWYU pragma: keep
+class Module; // IWYU pragma: keep
+class Node;   // IWYU pragma: keep
+class Port;   // IWYU pragma: keep
 
 } // namespace Ganv
 

@@ -16,22 +16,22 @@
 #ifndef GANV_ITEM_HPP
 #define GANV_ITEM_HPP
 
-#include <assert.h>
-
-#include <glib.h>
-
-#include <sigc++/signal.h>
-#include <sigc++/trackable.h>
-
 #include "ganv/Canvas.hpp"
 #include "ganv/item.h"
 #include "ganv/wrap.hpp"
 
+#include <gdk/gdk.h>
+#include <gdkmm/event.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gobject/gclosure.h>
+#include <gtk/gtk.h>
+#include <sigc++/signal.h>
+#include <sigc++/trackable.h>
+
 GANV_GLIB_WRAP(Item)
 
 namespace Ganv {
-
-class Canvas;
 
 /** An item on the canvas.
  */

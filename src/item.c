@@ -18,13 +18,20 @@
  * Copyright 1997-2000 Free Software Foundation
  */
 
-#include "ganv/canvas.h"
-#include "ganv/node.h"
+#include "ganv-marshal.h"
+#include "ganv-private.h"
+#include "gettext.h"
 
-#include "./boilerplate.h"
-#include "./ganv-marshal.h"
-#include "./ganv-private.h"
-#include "./gettext.h"
+#include "ganv/item.h"
+#include "ganv/types.h"
+
+#include <gdk/gdk.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+
+#include <stdarg.h>
+#include <stdio.h>
 
 /* All canvas items are derived from GanvItem.  The only information a GanvItem
  * contains is its parent canvas, its parent canvas item, its bounding box in

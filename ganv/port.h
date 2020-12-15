@@ -17,8 +17,11 @@
 #define GANV_PORT_H
 
 #include "ganv/box.h"
+#include "ganv/types.h"
 
-struct _GanvModule;
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -28,6 +31,8 @@ G_BEGIN_DECLS
 #define GANV_IS_PORT(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_PORT))
 #define GANV_IS_PORT_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_PORT))
 #define GANV_PORT_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_PORT, GanvPortClass))
+
+struct _GanvPortClass;
 
 typedef struct _GanvPortClass   GanvPortClass;
 typedef struct _GanvPortPrivate GanvPortPrivate;

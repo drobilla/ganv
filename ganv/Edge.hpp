@@ -16,20 +16,22 @@
 #ifndef GANV_EDGE_HPP
 #define GANV_EDGE_HPP
 
-#include <stdint.h>
-
-#include <gdk/gdkevents.h>
-
 #include "ganv/Canvas.hpp"
 #include "ganv/Item.hpp"
 #include "ganv/Node.hpp"
 #include "ganv/edge.h"
+#include "ganv/item.h"
+#include "ganv/types.h"
+#include "ganv/wrap.hpp"
+
+#include <glib-object.h>
+#include <glib.h>
+
+#include <cstdint>
 
 GANV_GLIB_WRAP(Edge)
 
 namespace Ganv {
-
-class Canvas;
 
 /** A edge (line) between two Node objects.
  *

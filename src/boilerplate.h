@@ -13,6 +13,13 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef GANV_BOILERPLATE_H
+#define GANV_BOILERPLATE_H
+
+#include "ganv/item.h"
+
+#include <glib.h>
+
 typedef gpointer gobject;
 
 /**
@@ -41,3 +48,5 @@ typedef gpointer gobject;
 	case PROP_##prop: \
 	g_value_set_##type(value, field); \
 	break;
+
+#endif  // GANV_BOILERPLATE_H

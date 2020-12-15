@@ -13,17 +13,23 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <math.h>
-#include <string.h>
-
-#include <cairo.h>
+#include "boilerplate.h"
+#include "color.h"
+#include "ganv-private.h"
+#include "gettext.h"
 
 #include "ganv/box.h"
+#include "ganv/item.h"
+#include "ganv/node.h"
+#include "ganv/types.h"
 
-#include "./boilerplate.h"
-#include "./color.h"
-#include "./gettext.h"
-#include "./ganv-private.h"
+#include <cairo.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+
+#include <math.h>
+#include <string.h>
 
 static const double STACKED_OFFSET = 4.0;
 

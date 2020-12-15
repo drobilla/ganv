@@ -21,14 +21,18 @@
 #ifndef GANV_ITEM_H
 #define GANV_ITEM_H
 
-#include <stdarg.h>
-
 #include <cairo.h>
+#include <gdk/gdk.h>
+#include <glib-object.h>
+#include <glib.h>
 #include <gtk/gtk.h>
+
+#include <stdarg.h>
 
 G_BEGIN_DECLS
 
-struct _GanvCanvas;
+struct _GanvItem;
+struct _GanvItemClass;
 
 typedef struct _GanvItem        GanvItem;
 typedef struct _GanvItemPrivate GanvItemPrivate;

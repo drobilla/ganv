@@ -13,16 +13,27 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <math.h>
-#include <string.h>
+#include "boilerplate.h"
+#include "color.h"
+#include "ganv-private.h"
+#include "gettext.h"
 
 #include "ganv/canvas.h"
 #include "ganv/circle.h"
+#include "ganv/item.h"
+#include "ganv/node.h"
+#include "ganv/text.h"
+#include "ganv/types.h"
 
-#include "./color.h"
-#include "./boilerplate.h"
-#include "./gettext.h"
-#include "./ganv-private.h"
+#include <cairo.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+
+#include <float.h>
+#include <math.h>
+#include <stdarg.h>
+#include <string.h>
 
 G_DEFINE_TYPE_WITH_CODE(GanvCircle, ganv_circle, GANV_TYPE_NODE,
                         G_ADD_PRIVATE(GanvCircle))

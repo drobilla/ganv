@@ -18,13 +18,19 @@
  * Copyright 1997-2000 Free Software Foundation
  */
 
-#include <math.h>
+#include "ganv-private.h"
 
-#include "ganv/canvas.h"
 #include "ganv/group.h"
+#include "ganv/item.h"
 
-#include "./gettext.h"
-#include "./ganv-private.h"
+#include <cairo.h>
+#include <float.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+
+#include <math.h>
+#include <stddef.h>
 
 enum {
 	GROUP_PROP_0

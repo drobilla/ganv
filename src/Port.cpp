@@ -13,15 +13,22 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string>
+#include "color.h"
 
-#include <glib.h>
-
-#include "ganv/Canvas.hpp"
+#include "ganv/Box.hpp"
 #include "ganv/Module.hpp"
 #include "ganv/Port.hpp"
+#include "ganv/box.h"
+#include "ganv/port.h"
+#include "ganv/types.h"
 
-#include "./color.h"
+#include <glib-object.h>
+#include <gobject/gclosure.h>
+#include <sigc++/signal.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <string>
 
 namespace Ganv {
 

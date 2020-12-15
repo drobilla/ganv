@@ -13,21 +13,25 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <math.h>
-#include <string.h>
-
-#include <cairo.h>
+#include "boilerplate.h"
+#include "color.h"
+#include "ganv-private.h"
+#include "gettext.h"
 
 #include "ganv/canvas.h"
 #include "ganv/edge.h"
+#include "ganv/item.h"
 #include "ganv/node.h"
+#include "ganv/types.h"
 
-#include "./boilerplate.h"
-#include "./color.h"
-#include "./gettext.h"
+#include <cairo.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+#include <stdarg.h>
 
-#include "color.h"
-#include "ganv-private.h"
+#include <math.h>
+#include <string.h>
 
 #define ARROW_DEPTH   32
 #define ARROW_BREADTH 32

@@ -16,10 +16,14 @@
 #ifndef GANV_MODULE_H
 #define GANV_MODULE_H
 
+#include "ganv/types.h"
+
+#include <glib-object.h>
 #include <glib.h>
 #include <gtk/gtk.h>
 
 #include "ganv/box.h"
+#include "ganv/canvas.h"
 
 G_BEGIN_DECLS
 
@@ -29,6 +33,8 @@ G_BEGIN_DECLS
 #define GANV_IS_MODULE(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_MODULE))
 #define GANV_IS_MODULE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_MODULE))
 #define GANV_MODULE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_MODULE, GanvModuleClass))
+
+struct _GanvModuleClass;
 
 typedef struct _GanvModuleClass   GanvModuleClass;
 typedef struct _GanvModulePrivate GanvModulePrivate;

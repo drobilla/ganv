@@ -17,15 +17,22 @@
  * Copyright 1997-2000 Free Software Foundation
  */
 
-#include <math.h>
-
-#include <gtk/gtksignal.h>
+#include "ganv-private.h"
+#include "gettext.h"
 
 #include "ganv/canvas.h"
+#include "ganv/item.h"
 #include "ganv/widget.h"
 
-#include "./gettext.h"
-#include "./ganv-private.h"
+#include <cairo.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gobject/gclosure.h>
+#include <gtk/gtk.h>
+#include <gtk/gtktypebuiltins.h>
+
+#include <math.h>
+#include <stddef.h>
 
 G_DEFINE_TYPE_WITH_CODE(GanvWidget, ganv_widget, GANV_TYPE_ITEM,
                         G_ADD_PRIVATE(GanvWidget))

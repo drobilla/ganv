@@ -16,18 +16,23 @@
 #ifndef GANV_NODE_HPP
 #define GANV_NODE_HPP
 
-#include <glib.h>
-#include <assert.h>
-
-#include "ganv/node.h"
 #include "ganv/Item.hpp"
+#include "ganv/item.h"
+#include "ganv/node.h"
+#include "ganv/types.h"
+#include "ganv/wrap.hpp"
+
+#include <glib-object.h>
+#include <glib.h>
+#include <glibmm/object.h>
+#include <gobject/gclosure.h>
+#include <sigc++/signal.h>
 
 GANV_GLIB_WRAP(Node)
 
 namespace Ganv {
 
 class Canvas;
-class Node;
 
 /** An object a Edge can connect to.
  */

@@ -17,6 +17,11 @@
 #define GANV_CIRCLE_H
 
 #include "ganv/node.h"
+#include "ganv/types.h"
+
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -26,6 +31,9 @@ G_BEGIN_DECLS
 #define GANV_IS_CIRCLE(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_CIRCLE))
 #define GANV_IS_CIRCLE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_CIRCLE))
 #define GANV_CIRCLE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_CIRCLE, GanvCircleClass))
+
+struct _GanvCircle;
+struct _GanvCircleClass;
 
 typedef struct _GanvCircle        GanvCircle;
 typedef struct _GanvCircleClass   GanvCircleClass;

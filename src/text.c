@@ -13,20 +13,30 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <math.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <gtk/gtkstyle.h>
+#include "boilerplate.h"
+#include "color.h"
+#include "ganv-private.h"
+#include "gettext.h"
 
 #include "ganv/canvas.h"
+#include "ganv/item.h"
+#include "ganv/node.h"
 #include "ganv/text.h"
+#include "ganv/types.h"
 
-#include "./color.h"
-#include "./boilerplate.h"
-#include "./gettext.h"
-#include "./ganv-private.h"
+#include <cairo.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+#include <pango/pango-font.h>
+#include <pango/pango-fontmap.h>
+#include <pango/pango-layout.h>
+#include <pango/pango-types.h>
+#include <pango/pangocairo.h>
+
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 G_DEFINE_TYPE_WITH_CODE(GanvText, ganv_text, GANV_TYPE_ITEM,
                         G_ADD_PRIVATE(GanvText))

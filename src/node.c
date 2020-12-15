@@ -13,14 +13,26 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ganv/canvas.h"
-#include "ganv/node.h"
+#include "boilerplate.h"
+#include "color.h"
+#include "ganv-marshal.h"
+#include "ganv-private.h"
+#include "gettext.h"
 
-#include "./boilerplate.h"
-#include "./color.h"
-#include "./ganv-marshal.h"
-#include "./ganv-private.h"
-#include "./gettext.h"
+#include "ganv/canvas.h"
+#include "ganv/edge.h"
+#include "ganv/item.h"
+#include "ganv/node.h"
+#include "ganv/text.h"
+#include "ganv/types.h"
+
+#include <cairo.h>
+#include <gdk/gdk.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
+
+#include <stddef.h>
 
 guint signal_moved;
 

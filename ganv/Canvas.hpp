@@ -16,14 +16,16 @@
 #ifndef GANV_CANVAS_HPP
 #define GANV_CANVAS_HPP
 
-#include <string>
-
-#include <glib.h>
-#include <glibmm.h>
-#include <gtkmm/layout.h>
-
 #include "ganv/canvas.h"
+#include "ganv/item.h"
+#include "ganv/types.h"
 #include "ganv/wrap.hpp"
+
+#include <cairo.h>
+#include <gdkmm/event.h>
+#include <glib.h>
+#include <gtkmm/layout.h>
+#include <sigc++/signal.h>
 
 /** Ganv namespace, everything is defined under this.
  *
@@ -34,7 +36,6 @@ namespace Ganv {
 class Edge;
 class Item;
 class Node;
-class Port;
 
 /** @defgroup Ganv Ganv
  *

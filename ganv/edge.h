@@ -17,8 +17,11 @@
 #define GANV_EDGE_H
 
 #include "ganv/item.h"
-#include "ganv/node.h"
 #include "ganv/types.h"
+
+#include <glib-object.h>
+#include <glib.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -28,6 +31,8 @@ G_BEGIN_DECLS
 #define GANV_IS_EDGE(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_EDGE))
 #define GANV_IS_EDGE_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_EDGE))
 #define GANV_EDGE_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_EDGE, GanvEdgeClass))
+
+struct _GanvEdgeClass;
 
 typedef struct _GanvEdgeClass   GanvEdgeClass;
 typedef struct _GanvEdgePrivate GanvEdgePrivate;

@@ -16,8 +16,6 @@
 #ifndef GANV_WRAP_HPP
 #define GANV_WRAP_HPP
 
-#include <glib.h>
-
 #define CONNECT_PROP_SIGNAL(gobj, name, notify, handler) \
 	g_signal_connect(gobj, "notify::" #name, \
 	                 G_CALLBACK(notify), &_signal_##name); \

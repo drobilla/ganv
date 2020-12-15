@@ -16,14 +16,14 @@
 #ifndef GANV_CANVAS_H
 #define GANV_CANVAS_H
 
-#include <stdarg.h>
+#include "ganv/item.h"
+#include "ganv/types.h"
 
 #include <cairo.h>
+#include <gdk/gdk.h>
+#include <glib-object.h>
+#include <glib.h>
 #include <gtk/gtk.h>
-
-#include "ganv/types.h"
-#include "ganv/edge.h"
-#include "ganv/item.h"
 
 G_BEGIN_DECLS
 
@@ -33,6 +33,8 @@ G_BEGIN_DECLS
 #define GANV_IS_CANVAS(obj)         (GTK_CHECK_TYPE((obj), GANV_TYPE_CANVAS))
 #define GANV_IS_CANVAS_CLASS(klass) (GTK_CHECK_CLASS_TYPE((klass), GANV_TYPE_CANVAS))
 #define GANV_CANVAS_GET_CLASS(obj)  (GTK_CHECK_GET_CLASS((obj), GANV_TYPE_CANVAS, GanvCanvasClass))
+
+struct _GanvCanvasClass;
 
 typedef struct GanvCanvasImpl   GanvCanvasPrivate;
 typedef struct _GanvCanvasClass GanvCanvasClass;

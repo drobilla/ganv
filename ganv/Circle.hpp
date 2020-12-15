@@ -16,22 +16,21 @@
 #ifndef GANV_CIRCLE_HPP
 #define GANV_CIRCLE_HPP
 
-#include <algorithm>
-#include <map>
-#include <string>
-#include <stdint.h>
-
-#include <gdkmm/types.h>
-
-#include "ganv/types.hpp"
+#include "ganv/Canvas.hpp"
 #include "ganv/Node.hpp"
 #include "ganv/circle.h"
+#include "ganv/item.h"
+#include "ganv/node.h"
+#include "ganv/wrap.hpp"
+
+#include <glib.h>
+
+#include <cstdint>
+#include <string>
 
 GANV_GLIB_WRAP(Circle)
 
 namespace Ganv {
-
-class Canvas;
 
 /** An elliptical Item which is Node.
  *

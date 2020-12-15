@@ -22,6 +22,9 @@
 
 #include "ganv/item.h"
 
+#include <glib-object.h>
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 #define GANV_TYPE_WIDGET            (ganv_widget_get_type ())
@@ -30,6 +33,9 @@ G_BEGIN_DECLS
 #define GANV_IS_WIDGET(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GANV_TYPE_WIDGET))
 #define GANV_IS_WIDGET_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GANV_TYPE_WIDGET))
 #define GANV_WIDGET_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GANV_TYPE_WIDGET, GanvWidgetClass))
+
+struct _GanvWidget;
+struct _GanvWidgetClass;
 
 typedef struct _GanvWidget        GanvWidget;
 typedef struct _GanvWidgetPrivate GanvWidgetPrivate;

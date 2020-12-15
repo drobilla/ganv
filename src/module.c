@@ -13,18 +13,28 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
+#include "ganv-private.h"
 
+#include "ganv/box.h"
 #include "ganv/canvas.h"
+#include "ganv/item.h"
 #include "ganv/module.h"
+#include "ganv/node.h"
 #include "ganv/port.h"
+#include "ganv/text.h"
+#include "ganv/types.h"
 #include "ganv/widget.h"
 
-#include "./color.h"
-#include "./boilerplate.h"
-#include "./gettext.h"
-#include "./ganv-private.h"
+#include <cairo.h>
+#include <glib-object.h>
+#include <glib.h>
+#include <gobject/gclosure.h>
+#include <gtk/gtk.h>
+
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define FOREACH_PORT(ports, i) \
 	for (GanvPort** i = (GanvPort**)ports->pdata; \

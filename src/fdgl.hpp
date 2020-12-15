@@ -13,8 +13,9 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <float.h>
-#include <math.h>
+#include "ganv-private.h"
+
+#include <cmath>
 
 static const double CHARGE_KE = 4000000.0;
 static const double EDGE_K    = 16.0;
