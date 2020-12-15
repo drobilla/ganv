@@ -98,8 +98,8 @@ public:
 		guint       _index;
 	};
 
-	typedef iterator_base<Port, GanvPort>             iterator;
-	typedef iterator_base<const Port, const GanvPort> const_iterator;
+	using iterator       = iterator_base<Port, GanvPort>;
+	using const_iterator = iterator_base<const Port, const GanvPort>;
 
 	iterator       begin()       { return iterator(gobj(), 0); }
 	iterator       end()         { return iterator(gobj(), num_ports()); }

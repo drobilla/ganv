@@ -103,12 +103,12 @@ static const double GANV_CANVAS_PAD = 8.0;
 
 struct GanvCanvasImpl;
 
-typedef struct {
+struct IRect {
 	int x;
 	int y;
 	int width;
 	int height;
-} IRect;
+};
 
 extern "C" {
 static void add_idle(GanvCanvas* canvas);
@@ -144,7 +144,7 @@ static guint signal_disconnect;
 
 static GEnumValue dir_values[3];
 
-typedef std::set<GanvNode*> Items;
+using Items = std::set<GanvNode*>;
 
 #define FOREACH_ITEM(items, i) \
 	for (Items::const_iterator i = items.begin(); i != items.end(); ++i)
@@ -334,10 +334,10 @@ struct GanvCanvasImpl {
 	GVNodes layout_dot(const std::string& filename);
 #endif
 
-	typedef std::set<GanvEdge*, TailHeadOrder> Edges;
-	typedef std::set<GanvEdge*, HeadTailOrder> DstEdges;
-	typedef std::set<GanvEdge*>                SelectedEdges;
-	typedef std::set<GanvPort*>                SelectedPorts;
+	using Edges         = std::set<GanvEdge*, TailHeadOrder>;
+	using DstEdges      = std::set<GanvEdge*, HeadTailOrder>;
+	using SelectedEdges = std::set<GanvEdge*>;
+	using SelectedPorts = std::set<GanvPort*>;
 
 	Edges::const_iterator    first_edge_from(const GanvNode* src);
 	DstEdges::const_iterator first_edge_to(const GanvNode* dst);
@@ -505,11 +505,11 @@ struct GanvCanvasImpl {
 #endif
 };
 
-typedef struct {
+struct GanvEdgeKey {
 	GanvItem         item;
 	GanvEdgePrivate* impl;
 	GanvEdgePrivate  impl_data;
-} GanvEdgeKey;
+};
 
 static void
 make_edge_search_key(GanvEdgeKey*    key,

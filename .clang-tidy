@@ -62,7 +62,6 @@ Checks: >
   -modernize-raw-string-literal,
   -modernize-use-default-member-init,
   -modernize-use-trailing-return-type,
-  -modernize-use-using,
   -performance-faster-string-find,
   -readability-const-return-type,
   -readability-container-size-empty,
