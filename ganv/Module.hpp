@@ -101,12 +101,12 @@ public:
 	using iterator       = iterator_base<Port, GanvPort>;
 	using const_iterator = iterator_base<const Port, const GanvPort>;
 
-	iterator       begin()       { return iterator(gobj(), 0); }
-	iterator       end()         { return iterator(gobj(), num_ports()); }
-	iterator       back()        { return iterator(gobj(), num_ports() - 1); }
-	const_iterator begin() const { return iterator(const_cast<GanvModule*>(gobj()), 0); }
-	const_iterator end()   const { return iterator(const_cast<GanvModule*>(gobj()), num_ports()); }
-	const_iterator back()  const { return iterator(const_cast<GanvModule*>(gobj()), num_ports() - 1); }
+	iterator       begin()       { return {gobj(), 0}; }
+	iterator       end()         { return {gobj(), num_ports()}; }
+	iterator       back()        { return {gobj(), num_ports() - 1}; }
+	const_iterator begin() const { return {const_cast<GanvModule*>(gobj()), 0}; }
+	const_iterator end()   const { return {const_cast<GanvModule*>(gobj()), num_ports()}; }
+	const_iterator back()  const { return {const_cast<GanvModule*>(gobj()), num_ports() - 1}; }
 
 	void embed(Gtk::Widget* widget) {
 		ganv_module_embed(gobj(), widget ? widget->gobj() : nullptr);
