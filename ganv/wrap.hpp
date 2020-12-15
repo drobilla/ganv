@@ -114,7 +114,7 @@ private: \
 
 #define GANV_GLIB_WRAP(Name) \
 	namespace Ganv { \
-	class Name; \
+	class Name; /* NOLINT(bugprone-macro-parentheses) */ \
 	} \
 	namespace Glib { \
 	/** Return a Ganv::CPPType wrapper for a CType. */ \
