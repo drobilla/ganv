@@ -45,6 +45,12 @@ public:
 		CONNECT_PROP_SIGNAL(gobj, selected, on_notify_bool, &Node::on_selected)
 	}
 
+	Node(const Node&) = delete;
+	Node& operator=(const Node&) = delete;
+
+	Node(Node&&) = delete;
+	Node& operator=(Node&&) = delete;
+
 	~Node() override {
 		g_object_unref(_gobj);
 	}

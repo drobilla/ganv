@@ -301,6 +301,12 @@ struct GanvCanvasImpl {
 		_move_cursor = gdk_cursor_new(GDK_FLEUR);
 	}
 
+	GanvCanvasImpl(const GanvCanvasImpl&) = delete;
+	GanvCanvasImpl& operator=(const GanvCanvasImpl&) = delete;
+
+	GanvCanvasImpl(GanvCanvasImpl&&) = delete;
+	GanvCanvasImpl& operator=(GanvCanvasImpl&&) = delete;
+
 	~GanvCanvasImpl()
 	{
 		if (_animate_idle_id) {

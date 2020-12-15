@@ -59,8 +59,11 @@ public:
 		: Item(GANV_ITEM(gobj))
 	{}
 
-	Edge(const Edge& copy) = delete;
+	Edge(const Edge&) = delete;
 	Edge& operator=(const Edge& other) = delete;
+
+	Edge(Edge&&) = delete;
+	Edge& operator=(Edge&&) = delete;
 
 	~Edge() override {
 		if (_gobj && ganv_item_get_parent(_gobj)) {
