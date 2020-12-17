@@ -20,24 +20,33 @@
 static void
 on_window_destroy(GtkWidget* widget, void* data)
 {
+	(void)widget;
+	(void)data;
+
 	gtk_main_quit();
 }
 
 static void
 on_connect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
 {
+	(void)data;
+
 	ganv_edge_new(canvas, tail, head, "color", 0xFFFFFFFF, NULL);
 }
 
 static void
 on_disconnect(GanvCanvas* canvas, GanvNode* tail, GanvNode* head, void* data)
 {
+	(void)data;
+
 	ganv_canvas_remove_edge_between(canvas, tail, head);
 }
 
 static void
 on_value_changed(GanvPort* port, double value, void* data)
 {
+	(void)data;
+
 	fprintf(stderr, "Value changed: port %p = %lf\n", (void*)port, value);
 }
 
