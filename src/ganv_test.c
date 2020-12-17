@@ -14,8 +14,15 @@
  */
 
 #include "ganv/ganv.h"
+#include "ganv/item.h"
 
 #include <gtk/gtk.h>
+
+#include <glib-object.h>
+#include <glib.h>
+#include <gobject/gclosure.h>
+
+#include <stdio.h>
 
 static void
 on_window_destroy(GtkWidget* widget, void* data)
