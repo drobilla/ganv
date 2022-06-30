@@ -92,7 +92,15 @@ typedef void (*GanvEdgeFunc)(GanvEdge* edge, void* data);
  */
 typedef void (*GanvNodeFunc)(GanvNode* node, void* data);
 
-typedef int (*GanvPortOrderFunc)(const GanvPort*, const GanvPort*, void* data);
+/**
+ * GanvPortOrderFunc:
+ * @lhs: Left-hand port to compare.
+ * @rhs: Right-hand port to compare.
+ * @data: User callback data.
+ *
+ * A function to compare two ports.
+ */
+typedef int (*GanvPortOrderFunc)(const GanvPort* lhs, const GanvPort* rhs, void* data);
 
 /**
  * ganv_canvas_new:
@@ -621,9 +629,9 @@ ganv_canvas_move_contents_to(GanvCanvas* canvas, double x, double y);
 
 /**
  * ganv_canvas_set_port_order:
- * @canvas The canvas to set the default port order on.
- * @port_cmp Port comparison function.
- * @data Data to be passed to order.
+ * @canvas: The canvas to set the default port order on.
+ * @port_cmp: (scope call): Port comparison function.
+ * @data: Data to be passed to order.
  *
  * Set a comparator function to use as the default order for ports on modules.
  * If left unset, ports are shown in the order they are added.
