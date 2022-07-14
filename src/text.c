@@ -29,7 +29,6 @@
 #include <glib.h>
 #include <gtk/gtk.h>
 #include <pango/pango-font.h>
-#include <pango/pango-fontmap.h>
 #include <pango/pango-layout.h>
 #include <pango/pango-types.h>
 #include <pango/pangocairo.h>
