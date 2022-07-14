@@ -95,36 +95,36 @@ add_project_arguments(config_defines, language: ['c', 'cpp'])
 # Library #
 ###########
 
-include_dirs = include_directories('.')
+include_dirs = include_directories('include')
 
 c_headers = files(
-  'ganv/box.h',
-  'ganv/canvas.h',
-  'ganv/circle.h',
-  'ganv/edge.h',
-  'ganv/ganv.h',
-  'ganv/group.h',
-  'ganv/item.h',
-  'ganv/module.h',
-  'ganv/node.h',
-  'ganv/port.h',
-  'ganv/text.h',
-  'ganv/types.h',
-  'ganv/widget.h',
+  'include/ganv/box.h',
+  'include/ganv/canvas.h',
+  'include/ganv/circle.h',
+  'include/ganv/edge.h',
+  'include/ganv/ganv.h',
+  'include/ganv/group.h',
+  'include/ganv/item.h',
+  'include/ganv/module.h',
+  'include/ganv/node.h',
+  'include/ganv/port.h',
+  'include/ganv/text.h',
+  'include/ganv/types.h',
+  'include/ganv/widget.h',
 )
 
 cpp_headers = files(
-  'ganv/Box.hpp',
-  'ganv/Canvas.hpp',
-  'ganv/Circle.hpp',
-  'ganv/Edge.hpp',
-  'ganv/Item.hpp',
-  'ganv/Module.hpp',
-  'ganv/Node.hpp',
-  'ganv/Port.hpp',
-  'ganv/ganv.hpp',
-  'ganv/types.hpp',
-  'ganv/wrap.hpp',
+  'include/ganv/Box.hpp',
+  'include/ganv/Canvas.hpp',
+  'include/ganv/Circle.hpp',
+  'include/ganv/Edge.hpp',
+  'include/ganv/Item.hpp',
+  'include/ganv/Module.hpp',
+  'include/ganv/Node.hpp',
+  'include/ganv/Port.hpp',
+  'include/ganv/ganv.hpp',
+  'include/ganv/types.hpp',
+  'include/ganv/wrap.hpp',
 )
 
 sources = files(
