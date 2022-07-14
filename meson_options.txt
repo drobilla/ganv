@@ -1,0 +1,23 @@
+option('fdgl', type: 'feature', value: 'auto', yield: true,
+       description: 'Build with force-directed graph layout support')
+
+option('gir', type: 'feature', value: 'auto', yield: true,
+       description: 'Build GObject introspection data')
+
+option('graphviz', type: 'feature', value: 'auto', yield: true,
+       description: 'Build with graphviz-based layout support')
+
+option('light', type: 'boolean', value: 'false', yield: true,
+       description: 'Use light-coloured theme')
+
+option('nls', type: 'feature', value: 'auto', yield: true,
+       description: 'Build with native language support')
+
+option('strict', type: 'boolean', value: false, yield: true,
+       description: 'Enable ultra-strict warnings')
+
+option('title', type: 'string', value: 'Ganv',
+       description: 'Project title')
+
+option('tools', type: 'boolean', value: true, yield: true,
+       description: 'Build command line utilities')

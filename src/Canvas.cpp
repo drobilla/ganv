@@ -40,7 +40,6 @@
 #include "ganv/node.h"
 #include "ganv/port.h"
 #include "ganv/types.h"
-#include "ganv_config.h"
 
 #include <cairo-pdf.h>
 #include <cairo-ps.h>
