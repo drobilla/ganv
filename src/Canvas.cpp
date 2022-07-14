@@ -89,9 +89,9 @@
 #    define _BLD_cdt 0
 #    define _PACKAGE_ast 0
 #    include <arith.h>
+#    include <cgraph.h>
 #    include <gvc.h>
 #    include <gvcext.h>
-#    include <types.h>
 #endif
 #ifdef GANV_FDGL
 #    include "./fdgl.hpp"
