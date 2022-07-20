@@ -2661,6 +2661,8 @@ ganv_canvas_arrange(GanvCanvas* canvas)
 		const double y = GANV_ITEM(*i)->impl->y;
 		g_signal_emit(*i, signal_moved, 0, x, y, NULL);
 	}
+#else
+    (void)canvas;
 #endif
 }
 
@@ -2738,6 +2740,9 @@ ganv_canvas_export_dot(GanvCanvas* canvas, const char* filename)
 #ifdef HAVE_AGRAPH
 	GVNodes nodes = canvas->impl->layout_dot(filename);
 	nodes.cleanup();
+#else
+    (void)canvas;
+    (void)filename;
 #endif
 }
 
