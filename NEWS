@@ -1,8 +1,8 @@
-ganv (1.8.1) unstable; urgency=medium
+ganv (1.8.2) stable; urgency=medium
 
   * Switch to meson build system
 
- -- David Robillard <d@drobilla.net>  Wed, 20 Jul 2022 20:39:48 +0000
+ -- David Robillard <d@drobilla.net>  Sat, 13 Aug 2022 22:12:49 +0000
 
 ganv (1.8.0) stable; urgency=medium
 
