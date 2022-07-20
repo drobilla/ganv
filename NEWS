@@ -1,17 +1,17 @@
-ganv (1.8.1) unstable;
+ganv (1.8.1) unstable; urgency=medium
 
   * Switch to meson build system
 
  -- David Robillard <d@drobilla.net>  Wed, 20 Jul 2022 20:39:48 +0000
 
-ganv (1.8.0) stable;
+ganv (1.8.0) stable; urgency=medium
 
   * Expand canvas automatically to fit nodes
   * Fix various compiler warnings
 
  -- David Robillard <d@drobilla.net>  Thu, 07 Jan 2021 22:38:31 +0000
 
-ganv (1.6.0) stable;
+ganv (1.6.0) stable; urgency=medium
 
   * Add API to specify module port order.
   * Add support for PDF and PS export.
@@ -35,7 +35,7 @@ ganv (1.6.0) stable;
 
  -- David Robillard <d@drobilla.net>  Thu, 09 Apr 2020 11:45:01 +0000
 
-ganv (1.4.2) stable;
+ganv (1.4.2) stable; urgency=medium
 
   * Fix bug where edges would not update when nodes are moved after the canvas
     is cleared (fix stuck connections in Patchage after refresh).
@@ -43,7 +43,7 @@ ganv (1.4.2) stable;
 
  -- David Robillard <d@drobilla.net>  Fri, 08 Aug 2014 22:24:33 +0000
 
-ganv (1.4.0) stable;
+ganv (1.4.0) stable; urgency=medium
 
   * Add Connection::set_curved()
   * Add ability to select connections by their handles, either individually or
