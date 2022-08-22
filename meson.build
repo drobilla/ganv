@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: CC0-1.0 OR GPL-3.0-or-later
 
 project('ganv', ['c', 'cpp'],
-        version: '1.8.2',
+        version: '1.8.3',
         license: 'GPLv3+',
         meson_version: '>= 0.56.0',
         default_options: [

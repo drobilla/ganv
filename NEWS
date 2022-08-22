@@ -1,3 +1,9 @@
+ganv (1.8.3) unstable; urgency=medium
+
+  * Update installation instructions
+
+ -- David Robillard <d@drobilla.net>  Mon, 22 Aug 2022 14:59:07 +0000
+
 ganv (1.8.2) stable; urgency=medium
 
   * Switch to meson build system
