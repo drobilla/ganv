@@ -59,6 +59,20 @@ gvc_dep = dependency('libgvc',
                      include_type: 'system',
                      required: get_option('graphviz'))
 
+##########################
+# Platform Configuration #
+##########################
+
+# Use versioned name everywhere to support parallel major version installations
+if host_machine.system() == 'windows'
+  if get_option('default_library') == 'both'
+    error('default_library=both is not supported on Windows')
+  endif
+  soversion = ''
+else
+  soversion = meson.project_version().split('.')[0]
+endif
+
 #################
 # Configuration #
 #################
@@ -143,7 +157,6 @@ sources = files(
 )
 
 # Set appropriate arguments for building against the library type
-subdir('meson/library')
 extra_args = []
 if get_option('default_library') == 'static'
   extra_args = ['-DGANV_STATIC']
@@ -159,13 +172,14 @@ ganv_marshal_sources = gnome.genmarshal(
 
 # Build shared and/or static library
 libganv = library(
-  meson.project_name() + library_suffix,
+  versioned_name,
   sources + ganv_marshal_sources,
   c_args: c_suppressions + extra_args + ['-DGANV_INTERNAL'],
   cpp_args: cpp_suppressions + extra_args + ['-DGANV_INTERNAL'],
   dependencies: [gtk2_dep, gtkmm2_dep, gvc_dep, intl_dep, m_dep],
   include_directories: include_dirs,
   install: true,
+  soversion: soversion,
   version: meson.project_version(),
 )
 
