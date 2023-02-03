@@ -761,9 +761,9 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 	}
 
 	FOREACH_EDGE(_edges, i) {
-		const GanvEdge* const edge   = *i;
-		GVNodes::iterator     tail_i = nodes.find(edge->impl->tail);
-		GVNodes::iterator     head_i = nodes.find(edge->impl->head);
+		const GanvEdge* const   edge   = *i;
+		const GVNodes::iterator tail_i = nodes.find(edge->impl->tail);
+		const GVNodes::iterator head_i = nodes.find(edge->impl->head);
 
 		if (tail_i != nodes.end() && head_i != nodes.end()) {
 			Agedge_t* e = agedge(G, tail_i->second, head_i->second, NULL, true);
@@ -789,7 +789,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 	for (GVNodes::iterator i = nodes.begin(); i != nodes.end(); ++i) {
 		GanvNode* partner = ganv_node_get_partner(i->first);
 		if (partner) {
-			GVNodes::iterator p = nodes.find(partner);
+			const GVNodes::iterator p = nodes.find(partner);
 			if (p != nodes.end()) {
 				Agedge_t* e = agedge(G, i->second, p->second, NULL, true);
 				agsafeset(e, (char*)"style", (char*)"invis", (char*)"");
@@ -1133,7 +1133,7 @@ GanvCanvasImpl::join_selection()
 		for (size_t i = 0; i < inputs.size(); ++i)
 			ports_joined(inputs[i], outputs[0]);
 	} else { // n -> m
-		size_t num_to_connect = std::min(inputs.size(), outputs.size());
+		const size_t num_to_connect = std::min(inputs.size(), outputs.size());
 		for (size_t i = 0; i < num_to_connect; ++i) {
 			ports_joined(inputs[i], outputs[i]);
 		}
@@ -1432,8 +1432,8 @@ GanvCanvasImpl::connect_drag_handler(GdkEvent* event)
 	} else if (event->type == GDK_BUTTON_RELEASE) {
 		ganv_canvas_ungrab_item(root, event->button.time);
 
-		double x = event->button.x;
-		double y = event->button.y;
+		const double x = event->button.x;
+		const double y = event->button.y;
 
 		GanvNode* joinee = get_node_at(x, y);
 
@@ -1968,14 +1968,14 @@ ganv_canvas_class_init(GanvCanvasClass* klass)
 			600.0,
 			(GParamFlags)G_PARAM_READWRITE));
 
-	GEnumValue down_dir  = { GANV_DIRECTION_DOWN, "down", "down" };
-	GEnumValue right_dir = { GANV_DIRECTION_RIGHT, "right", "right" };
-	GEnumValue null_dir  = { 0, 0, 0 };
+	const GEnumValue down_dir  = { GANV_DIRECTION_DOWN, "down", "down" };
+	const GEnumValue right_dir = { GANV_DIRECTION_RIGHT, "right", "right" };
+	const GEnumValue null_dir  = { 0, 0, 0 };
 	dir_values[0] = down_dir;
 	dir_values[1] = right_dir;
 	dir_values[2] = null_dir;
-	GType dir_type = g_enum_register_static("GanvDirection",
-	                                        dir_values);
+	const GType dir_type = g_enum_register_static("GanvDirection",
+	                                              dir_values);
 
 	g_object_class_install_property(
 		gobject_class, PROP_DIRECTION, g_param_spec_enum(
@@ -2212,13 +2212,13 @@ ganv_canvas_clear_selection(GanvCanvas* canvas)
 {
 	canvas->impl->unselect_ports();
 
-	Items items(canvas->impl->_selected_items);
+	const Items items{canvas->impl->_selected_items};
 	canvas->impl->_selected_items.clear();
 	FOREACH_ITEM(items, i) {
 		ganv_item_set(GANV_ITEM(*i), "selected", FALSE, NULL);
 	}
 
-	GanvCanvasImpl::SelectedEdges edges(canvas->impl->_selected_edges);
+	const GanvCanvasImpl::SelectedEdges edges{canvas->impl->_selected_edges};
 	canvas->impl->_selected_edges.clear();
 	FOREACH_SELECTED_EDGE(edges, c) {
 		ganv_item_set(GANV_ITEM(*c), "selected", FALSE, NULL);
@@ -2351,7 +2351,8 @@ ganv_canvas_get_edge(GanvCanvas* canvas,
 {
 	GanvEdgeKey key;
 	make_edge_search_key(&key, tail, head);
-	GanvCanvasImpl::Edges::const_iterator i = canvas->impl->_edges.find((GanvEdge*)&key);
+
+	const GanvCanvasImpl::Edges::const_iterator i = canvas->impl->_edges.find((GanvEdge*)&key);
 	return (i != canvas->impl->_edges.end()) ? *i : NULL;
 }
 
@@ -2523,13 +2524,13 @@ ganv_canvas_clear(GanvCanvas* canvas)
 	canvas->impl->_selected_items.clear();
 	canvas->impl->_selected_edges.clear();
 
-	Items items = canvas->impl->_items; // copy
+	const Items items = canvas->impl->_items; // copy
 	FOREACH_ITEM(items, i) {
 		gtk_object_destroy(GTK_OBJECT(*i));
 	}
 	canvas->impl->_items.clear();
 
-	GanvCanvasImpl::Edges edges = canvas->impl->_edges; // copy
+	const GanvCanvasImpl::Edges edges = canvas->impl->_edges; // copy
 	FOREACH_EDGE(edges, i) {
 		gtk_object_destroy(GTK_OBJECT(*i));
 	}
@@ -3346,12 +3347,12 @@ ganv_canvas_grab_item(GanvItem* item, guint event_mask, GdkCursor* cursor, guint
 		return GDK_GRAB_NOT_VIEWABLE;
 	}
 
-	int retval = gdk_pointer_grab(item->impl->canvas->layout.bin_window,
-	                              FALSE,
-	                              (GdkEventMask)event_mask,
-	                              NULL,
-	                              cursor,
-	                              etime);
+	const int retval = gdk_pointer_grab(item->impl->canvas->layout.bin_window,
+	                                    FALSE,
+	                                    (GdkEventMask)event_mask,
+	                                    NULL,
+	                                    cursor,
+	                                    etime);
 
 	if (retval != GDK_GRAB_SUCCESS) {
 		return retval;
@@ -3405,11 +3406,11 @@ pick_current_item(GanvCanvas* canvas, GdkEvent* event)
 	 * current item, but not enter on any other item.  This is more or less
 	 * like X pointer grabbing for canvas items.
 	 */
-	int button_down = canvas->impl->state & (GDK_BUTTON1_MASK
-	                                         | GDK_BUTTON2_MASK
-	                                         | GDK_BUTTON3_MASK
-	                                         | GDK_BUTTON4_MASK
-	                                         | GDK_BUTTON5_MASK);
+	const int button_down = canvas->impl->state & (GDK_BUTTON1_MASK
+	                                               | GDK_BUTTON2_MASK
+	                                               | GDK_BUTTON3_MASK
+	                                               | GDK_BUTTON4_MASK
+	                                               | GDK_BUTTON5_MASK);
 	if (!button_down) {
 		canvas->impl->left_grabbed_item = FALSE;
 	}
@@ -3725,16 +3726,16 @@ ganv_canvas_paint_rect(GanvCanvas* canvas, gint x0, gint y0, gint x1, gint y1)
 {
 	g_return_if_fail(!canvas->impl->need_update);
 
-	gint draw_x1 =
+	const gint draw_x1 =
 	    MAX(x0, canvas->layout.hadjustment->value - canvas->impl->zoom_xofs);
-	gint draw_y1 =
+	const gint draw_y1 =
 	    MAX(y0, canvas->layout.vadjustment->value - canvas->impl->zoom_yofs);
 
-	gint draw_x2 = MIN(draw_x1 + GTK_WIDGET(canvas)->allocation.width, x1);
-	gint draw_y2 = MIN(draw_y1 + GTK_WIDGET(canvas)->allocation.height, y1);
+	const gint draw_x2 = MIN(draw_x1 + GTK_WIDGET(canvas)->allocation.width, x1);
+	const gint draw_y2 = MIN(draw_y1 + GTK_WIDGET(canvas)->allocation.height, y1);
 
-	gint draw_width  = draw_x2 - draw_x1;
-	gint draw_height = draw_y2 - draw_y1;
+	const gint draw_width  = draw_x2 - draw_x1;
+	const gint draw_height = draw_y2 - draw_y1;
 
 	if ((draw_width < 1) || (draw_height < 1)) {
 		return;
@@ -4035,8 +4036,8 @@ ganv_canvas_get_item_at(GanvCanvas* canvas, double x, double y)
 {
 	g_return_val_if_fail(GANV_IS_CANVAS(canvas), NULL);
 
-	GanvItem* item = NULL;
-	double dist    = GANV_ITEM_GET_CLASS(canvas->impl->root)->point(
+	GanvItem*    item = NULL;
+	const double dist = GANV_ITEM_GET_CLASS(canvas->impl->root)->point(
 		canvas->impl->root,
 		x - canvas->impl->root->impl->x,
 		y - canvas->impl->root->impl->y,
