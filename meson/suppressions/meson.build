@@ -1,14 +1,11 @@
-# Copyright 2020-2022 David Robillard <d@drobilla.net>
+# Copyright 2020-2023 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR ISC
 
-# Project-specific warning suppressions.
-#
-# This should be used in conjunction with the generic "warnings" sibling that
-# enables all reasonable warnings for the compiler.  It lives here just to keep
-# the top-level meson.build more readable.
+# Project-specific warning suppressions
+
+warning_level = get_option('warning_level')
 
 clang_common_suppressions = [
-  '-Wno-cast-function-type',
   '-Wno-cast-qual',
   '-Wno-covered-switch-default',
   '-Wno-disabled-macro-expansion',
@@ -30,7 +27,6 @@ clang_common_suppressions = [
 ]
 
 gcc_common_suppressions = [
-  '-Wno-cast-function-type',
   '-Wno-cast-qual',
   '-Wno-conversion',
   '-Wno-deprecated-declarations',
@@ -40,14 +36,12 @@ gcc_common_suppressions = [
   '-Wno-format',
   '-Wno-implicit-fallthrough',
   '-Wno-padded',
-  '-Wno-pedantic',
   '-Wno-shadow',
   '-Wno-sign-conversion',
   '-Wno-suggest-attribute=const',
   '-Wno-suggest-attribute=pure',
   '-Wno-switch-default',
   '-Wno-switch-enum',
-  '-Wno-unsuffixed-float-constants',
   '-Wno-unused-macros',
 ]
 
@@ -58,9 +52,9 @@ gcc_common_suppressions = [
 if is_variable('cc')
   c_suppressions = []
 
-  if get_option('strict')
-    if cc.get_id() == 'clang'
-      c_suppressions += clang_common_suppressions + [
+  if cc.get_id() == 'clang'
+    if warning_level == 'everything'
+      c_suppressions += [
         '-Wno-bad-function-cast',
         '-Wno-declaration-after-statement',
         '-Wno-documentation',
@@ -71,14 +65,38 @@ if is_variable('cc')
           '-Wno-c11-extensions',
         ]
       endif
+    endif
 
-    elif cc.get_id() == 'gcc'
-      c_suppressions += gcc_common_suppressions + [
+    if warning_level in ['everything', '3']
+      c_suppressions += clang_common_suppressions + [
+        '-Wno-cast-function-type',
+        '-Wno-pedantic',
+      ]
+    endif
+
+  elif cc.get_id() == 'gcc'
+    if warning_level == 'everything'
+      c_suppressions += [
         '-Wno-bad-function-cast',
         '-Wno-c++-compat',
+        '-Wno-unsuffixed-float-constants',
       ]
+    endif
 
-    elif cc.get_id() == 'msvc'
+    if warning_level in ['everything', '3']
+      c_suppressions += gcc_common_suppressions + [
+        '-Wno-pedantic',
+      ]
+    endif
+
+    if warning_level in ['everything', '3', '2']
+      c_suppressions += gcc_common_suppressions + [
+        '-Wno-cast-function-type',
+      ]
+    endif
+
+  elif cc.get_id() == 'msvc'
+    if warning_level == 'everything'
       c_suppressions += [
         '/wd4061', # enumerator in switch is not explicitly handled
         '/wd4100', # unreferenced formal parameter
@@ -109,9 +127,12 @@ endif
 if is_variable('cpp')
   cpp_suppressions = []
 
-  if get_option('strict')
-    if cpp.get_id() == 'clang'
-      cpp_suppressions += clang_common_suppressions + [
+  if cpp.get_id() == 'clang'
+    cpp_suppressions += clang_common_suppressions
+
+    if warning_level == 'everything'
+      cpp_suppressions += [
+        '-Wno-c++98-compat',
         '-Wno-exit-time-destructors',
         '-Wno-global-constructors',
         '-Wno-missing-noreturn',
@@ -119,9 +140,19 @@ if is_variable('cpp')
         '-Wno-weak-vtables',
         '-Wno-zero-as-null-pointer-constant',
       ]
+    endif
 
-    elif cpp.get_id() == 'gcc'
-      cpp_suppressions += gcc_common_suppressions + [
+    if warning_level in ['everything', '3']
+      cpp_suppressions += [
+        '-Wno-cast-function-type',
+      ]
+    endif
+
+  elif cpp.get_id() == 'gcc'
+    cpp_suppressions += gcc_common_suppressions
+
+    if warning_level == 'everything'
+      cpp_suppressions += [
         '-Wno-effc++',
         '-Wno-missing-noreturn',
         '-Wno-null-dereference',
@@ -129,6 +160,18 @@ if is_variable('cpp')
         '-Wno-redundant-tags',
         '-Wno-useless-cast',
         '-Wno-zero-as-null-pointer-constant',
+      ]
+    endif
+
+    if warning_level in ['everything', '3']
+      cpp_suppressions += [
+        '-Wno-pedantic',
+      ]
+    endif
+
+    if warning_level in ['everything', '3', '2']
+      cpp_suppressions += [
+        '-Wno-cast-function-type',
       ]
     endif
   endif

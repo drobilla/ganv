@@ -1,4 +1,4 @@
-# Copyright 2021-2022 David Robillard <d@drobilla.net>
+# Copyright 2021-2023 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR GPL-3.0-or-later
 
 project('ganv', ['c', 'cpp'],
@@ -26,11 +26,6 @@ pkg = import('pkgconfig')
 gnome = import('gnome')
 cc = meson.get_compiler('c')
 cpp = meson.get_compiler('cpp')
-
-# Set global warning flags
-if get_option('strict') and not meson.is_subproject()
-  subdir('meson/warnings')
-endif
 
 # Set global warning suppressions
 subdir('meson/suppressions')
@@ -191,7 +186,7 @@ ganv_dep = declare_dependency(
 )
 
 # Generage pkg-config file for external dependants
-ganv_pc = pkg.generate(
+pkg.generate(
   libganv,
   description: 'Interactive Gtk canvas widget for graph-based interfaces',
   extra_cflags: extra_args,
@@ -200,6 +195,9 @@ ganv_pc = pkg.generate(
   subdirs: [versioned_name],
   version: meson.project_version(),
 )
+
+# Override pkg-config dependency for internal meson dependants
+meson.override_dependency(versioned_name, ganv_dep)
 
 # Install headers to a versioned include directory
 install_headers(c_headers + cpp_headers, subdir: versioned_name / 'ganv')
