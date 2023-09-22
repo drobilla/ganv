@@ -60,6 +60,7 @@ Checks: >
   -llvmlibc-*,
   -misc-no-recursion,
   -misc-non-private-member-variables-in-classes,
+  -misc-use-anonymous-namespace,
   -modernize-loop-convert,
   -modernize-macro-to-enum,
   -modernize-raw-string-literal,
