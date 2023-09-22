@@ -58,6 +58,7 @@ if is_variable('cc')
         '-Wno-bad-function-cast',
         '-Wno-declaration-after-statement',
         '-Wno-documentation',
+        '-Wno-unsafe-buffer-usage',
       ]
 
       if host_machine.system() == 'freebsd'
@@ -137,6 +138,7 @@ if is_variable('cpp')
         '-Wno-global-constructors',
         '-Wno-missing-noreturn',
         '-Wno-old-style-cast',
+        '-Wno-unsafe-buffer-usage',
         '-Wno-weak-vtables',
         '-Wno-zero-as-null-pointer-constant',
       ]
