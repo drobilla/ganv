@@ -146,7 +146,7 @@ public:
 	sigc::signal<void, Node*, Node*> signal_disconnect;
 
 private:
-	GanvCanvas* const _gobj;
+	GanvCanvas* _gobj;
 };
 
 } // namespace Ganv

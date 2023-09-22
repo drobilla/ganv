@@ -78,7 +78,7 @@ public:
 	SIGNAL1(click, GdkEventButton*)
 
 protected:
-	GanvItem* const _gobj;
+	GanvItem* _gobj;
 
 private:
 	static gboolean on_item_event(GanvItem*, GdkEvent* ev, void* item)
