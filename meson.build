@@ -1,16 +1,19 @@
 # Copyright 2021-2023 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR GPL-3.0-or-later
 
-project('ganv', ['c', 'cpp'],
-        version: '1.8.3',
-        license: 'GPLv3+',
-        meson_version: '>= 0.56.0',
-        default_options: [
-          'b_ndebug=if-release',
-          'buildtype=release',
-          'c_std=c99',
-          'cpp_std=c++11',
-        ])
+project(
+  'ganv',
+  ['c', 'cpp'],
+  default_options: [
+    'b_ndebug=if-release',
+    'buildtype=release',
+    'c_std=c99',
+    'cpp_std=c++11',
+  ],
+  license: 'GPLv3+',
+  meson_version: '>= 0.56.0',
+  version: '1.8.3',
+)
 
 ganv_src_root = meson.current_source_dir()
 major_version = meson.project_version().split('.')[0]
@@ -42,17 +45,19 @@ m_dep = cc.find_library('m', required: false)
 
 intl_dep = cc.find_library('intl', required: get_option('nls'))
 
-gtk2_dep = dependency('gtk+-2.0',
-                      version: '>= 2.10.0',
-                      include_type: 'system')
+gtk2_dep = dependency('gtk+-2.0', version: '>= 2.10.0', include_type: 'system')
 
-gtkmm2_dep = dependency('gtkmm-2.4',
-                        version: '>= 2.10.0',
-                        include_type: 'system')
+gtkmm2_dep = dependency(
+  'gtkmm-2.4',
+  include_type: 'system',
+  version: '>= 2.10.0',
+)
 
-gvc_dep = dependency('libgvc',
-                     include_type: 'system',
-                     required: get_option('graphviz'))
+gvc_dep = dependency(
+  'libgvc',
+  include_type: 'system',
+  required: get_option('graphviz'),
+)
 
 ##########################
 # Platform Configuration #
@@ -94,8 +99,11 @@ if not get_option('nls').disabled()
   dgettext_code = '''#include <libintl.h>
 int main(void) { !!dgettext("ganv", "string"); }'''
 
-  config_defines += ['-DHAVE_DGETTEXT=@0@'.format(
-    cc.compiles(dgettext_code, name: 'dgettext').to_int())]
+  config_defines += [
+    '-DHAVE_DGETTEXT=@0@'.format(
+      cc.compiles(dgettext_code, name: 'dgettext').to_int(),
+    ),
+  ]
 endif
 
 add_project_arguments(config_defines, language: ['c', 'cpp'])

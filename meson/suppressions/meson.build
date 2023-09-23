@@ -69,10 +69,12 @@ if is_variable('cc')
     endif
 
     if warning_level in ['everything', '3']
-      c_suppressions += clang_common_suppressions + [
-        '-Wno-cast-function-type',
-        '-Wno-pedantic',
-      ]
+      c_suppressions += (
+        clang_common_suppressions + [
+          '-Wno-cast-function-type',
+          '-Wno-pedantic',
+        ]
+      )
     endif
 
   elif cc.get_id() == 'gcc'
@@ -85,15 +87,19 @@ if is_variable('cc')
     endif
 
     if warning_level in ['everything', '3']
-      c_suppressions += gcc_common_suppressions + [
-        '-Wno-pedantic',
-      ]
+      c_suppressions += (
+        gcc_common_suppressions + [
+          '-Wno-pedantic',
+        ]
+      )
     endif
 
     if warning_level in ['everything', '3', '2']
-      c_suppressions += gcc_common_suppressions + [
-        '-Wno-cast-function-type',
-      ]
+      c_suppressions += (
+        gcc_common_suppressions + [
+          '-Wno-cast-function-type',
+        ]
+      )
     endif
 
   elif cc.get_id() == 'msvc'
