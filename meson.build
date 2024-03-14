@@ -179,6 +179,7 @@ libganv = library(
   sources + ganv_marshal_sources,
   c_args: c_suppressions + extra_args + ['-DGANV_INTERNAL'],
   cpp_args: cpp_suppressions + extra_args + ['-DGANV_INTERNAL'],
+  darwin_versions: [major_version + '.0.0', meson.project_version()],
   dependencies: [gtk2_dep, gtkmm2_dep, gvc_dep, intl_dep, m_dep],
   include_directories: include_dirs,
   install: true,
