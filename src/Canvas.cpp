@@ -3959,11 +3959,11 @@ ganv_canvas_set_scroll_region(GanvCanvas* canvas,
 	scroll_to(canvas, xofs, yofs);
 
 	canvas->impl->need_repick = TRUE;
-#if 0
 	/* todo: should be requesting update */
+	/*
 	(*GANV_ITEM_CLASS(canvas->impl->root->object.klass)->update)(
 		canvas->impl->root, NULL, NULL, 0);
-#endif
+	*/
 }
 
 void
