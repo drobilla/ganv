@@ -756,7 +756,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 				agsafeset(node, (char*)"label", (char*)"", (char*)"");
 			}
 		} else {
-			std::cerr << "Unable to arrange item of unknown type" << std::endl;
+			std::cerr << "Unable to arrange item of unknown type\n";
 		}
 	}
 
@@ -781,7 +781,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 				agsafeset(e, (char*)"constraint", (char*)"false", (char*)"");
 			}
 		} else {
-			std::cerr << "Unable to find graphviz node" << std::endl;
+			std::cerr << "Unable to find graphviz node\n";
 		}
 	}
 
