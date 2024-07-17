@@ -21,6 +21,7 @@ clang_common_suppressions = [
   '-Wno-shadow',
   '-Wno-shorten-64-to-32',
   '-Wno-sign-conversion',
+  '-Wno-switch-default',
   '-Wno-switch-enum',
   '-Wno-unused-macros',
   '-Wno-used-but-marked-unused',
