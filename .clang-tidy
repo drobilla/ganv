@@ -10,7 +10,6 @@ Checks: >
   -*-named-parameter,
   -*-narrowing-conversions,
   -*-no-malloc,
-  -*-uppercase-literal-suffix,
   -*-use-auto,
   -*-use-nullptr,
   -*-vararg,
@@ -82,6 +81,11 @@ Checks: >
   -readability-redundant-casting,
   -readability-redundant-inline-specifier,
   -readability-simplify-boolean-expr,
+CheckOptions:
+  - key:   hicpp-uppercase-literal-suffix.NewSuffixes
+    value: 'L;U;UL;ULL'
+  - key:   readability-uppercase-literal-suffix.NewSuffixes
+    value: 'L;U;UL;ULL'
 WarningsAsErrors: '*'
 HeaderFilterRegex: '.*'
 FormatStyle: file
