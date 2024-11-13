@@ -2,8 +2,9 @@ ganv (1.8.3) unstable; urgency=medium
 
   * Fix library current_version on MacOS
   * Update installation instructions
+  * Remove unused "tools" configuration option
 
- -- David Robillard <d@drobilla.net>  Fri, 19 Jul 2024 00:49:05 +0000
+ -- David Robillard <d@drobilla.net>  Wed, 13 Nov 2024 19:11:25 +0000
 
 ganv (1.8.2) stable; urgency=medium
 

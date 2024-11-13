@@ -18,6 +18,3 @@ option('nls', type: 'feature', yield: true,
 
 option('title', type: 'string', value: 'Ganv',
        description: 'Project title')
-
-option('tools', type: 'boolean', yield: true,
-       description: 'Build command line utilities')

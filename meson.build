@@ -237,12 +237,7 @@ if not get_option('gir').disabled()
 endif
 
 if not meson.is_subproject()
-  summary('Tools', get_option('tools'), bool_yn: true)
   summary('Install prefix', get_option('prefix'))
   summary('Headers', get_option('prefix') / get_option('includedir'))
   summary('Libraries', get_option('prefix') / get_option('libdir'))
-
-  if get_option('tools')
-    summary('Executables', get_option('prefix') / get_option('bindir'))
-  endif
 endif
