@@ -18,8 +18,8 @@
 #ifndef GANV_NODE_H
 #define GANV_NODE_H
 
-#include "ganv/item.h"
-#include "ganv/types.h"
+#include <ganv/item.h>
+#include <ganv/types.h>
 
 #include <glib-object.h>
 #include <glib.h>

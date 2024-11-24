@@ -16,9 +16,9 @@
 #ifndef GANV_ITEM_HPP
 #define GANV_ITEM_HPP
 
-#include "ganv/Canvas.hpp"
-#include "ganv/item.h"
-#include "ganv/wrap.hpp"
+#include <ganv/Canvas.hpp>
+#include <ganv/item.h>
+#include <ganv/wrap.hpp>
 
 #include <gdk/gdk.h>
 #include <glib-object.h>

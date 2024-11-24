@@ -18,8 +18,8 @@
 #ifndef GANV_PORT_H
 #define GANV_PORT_H
 
-#include "ganv/box.h"
-#include "ganv/types.h"
+#include <ganv/box.h>
+#include <ganv/types.h>
 
 #include <glib-object.h>
 #include <glib.h>

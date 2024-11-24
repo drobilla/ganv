@@ -15,12 +15,12 @@
 
 #include "color.h"
 
-#include "ganv/Box.hpp"
-#include "ganv/Module.hpp"
-#include "ganv/Port.hpp"
-#include "ganv/box.h"
-#include "ganv/port.h"
-#include "ganv/types.h"
+#include <ganv/Box.hpp>
+#include <ganv/Module.hpp>
+#include <ganv/Port.hpp>
+#include <ganv/box.h>
+#include <ganv/port.h>
+#include <ganv/types.h>
 
 #include <glib-object.h>
 #include <gobject/gclosure.h>

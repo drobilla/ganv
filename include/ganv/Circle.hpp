@@ -16,12 +16,12 @@
 #ifndef GANV_CIRCLE_HPP
 #define GANV_CIRCLE_HPP
 
-#include "ganv/Canvas.hpp"
-#include "ganv/Node.hpp"
-#include "ganv/circle.h"
-#include "ganv/item.h"
-#include "ganv/node.h"
-#include "ganv/wrap.hpp"
+#include <ganv/Canvas.hpp>
+#include <ganv/Node.hpp>
+#include <ganv/circle.h>
+#include <ganv/item.h>
+#include <ganv/node.h>
+#include <ganv/wrap.hpp>
 
 #include <glib.h>
 

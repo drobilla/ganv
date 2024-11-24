@@ -16,15 +16,15 @@
 #ifndef GANV_GANV_H
 #define GANV_GANV_H
 
-#include "ganv/box.h"    // IWYU pragma: export
-#include "ganv/canvas.h" // IWYU pragma: export
-#include "ganv/circle.h" // IWYU pragma: export
-#include "ganv/edge.h"   // IWYU pragma: export
-#include "ganv/group.h"  // IWYU pragma: export
-#include "ganv/module.h" // IWYU pragma: export
-#include "ganv/node.h"   // IWYU pragma: export
-#include "ganv/port.h"   // IWYU pragma: export
-#include "ganv/text.h"   // IWYU pragma: export
-#include "ganv/types.h"  // IWYU pragma: export
+#include <ganv/box.h>    // IWYU pragma: export
+#include <ganv/canvas.h> // IWYU pragma: export
+#include <ganv/circle.h> // IWYU pragma: export
+#include <ganv/edge.h>   // IWYU pragma: export
+#include <ganv/group.h>  // IWYU pragma: export
+#include <ganv/module.h> // IWYU pragma: export
+#include <ganv/node.h>   // IWYU pragma: export
+#include <ganv/port.h>   // IWYU pragma: export
+#include <ganv/text.h>   // IWYU pragma: export
+#include <ganv/types.h>  // IWYU pragma: export
 
 #endif  /* GANV_GANV_H */

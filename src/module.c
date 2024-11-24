@@ -15,15 +15,15 @@
 
 #include "ganv-private.h"
 
-#include "ganv/box.h"
-#include "ganv/canvas.h"
-#include "ganv/item.h"
-#include "ganv/module.h"
-#include "ganv/node.h"
-#include "ganv/port.h"
-#include "ganv/text.h"
-#include "ganv/types.h"
-#include "ganv/widget.h"
+#include <ganv/box.h>
+#include <ganv/canvas.h>
+#include <ganv/item.h>
+#include <ganv/module.h>
+#include <ganv/node.h>
+#include <ganv/port.h>
+#include <ganv/text.h>
+#include <ganv/types.h>
+#include <ganv/widget.h>
 
 #include <cairo.h>
 #include <glib-object.h>

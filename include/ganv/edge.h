@@ -18,8 +18,8 @@
 #ifndef GANV_EDGE_H
 #define GANV_EDGE_H
 
-#include "ganv/item.h"
-#include "ganv/types.h"
+#include <ganv/item.h>
+#include <ganv/types.h>
 
 #include <glib-object.h>
 #include <glib.h>

@@ -13,11 +13,11 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ganv/Canvas.hpp"
-#include "ganv/Circle.hpp"
-#include "ganv/Edge.hpp"
-#include "ganv/Module.hpp"
-#include "ganv/Port.hpp"
+#include <ganv/Canvas.hpp>
+#include <ganv/Circle.hpp>
+#include <ganv/Edge.hpp>
+#include <ganv/Module.hpp>
+#include <ganv/Port.hpp>
 
 #include <glibmm/main.h>
 #include <gtkmm/layout.h>

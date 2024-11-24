@@ -18,7 +18,7 @@
 #ifndef GANV_WRAP_HPP
 #define GANV_WRAP_HPP
 
-#include "ganv/item.h"
+#include <ganv/item.h>
 
 #include <glib-object.h>             // IWYU pragma: keep
 #include <glib.h>                    // IWYU pragma: keep

@@ -16,8 +16,8 @@
 #ifndef GANV_CANVAS_H
 #define GANV_CANVAS_H
 
-#include "ganv/item.h"
-#include "ganv/types.h"
+#include <ganv/item.h>
+#include <ganv/types.h>
 
 #include <cairo.h>
 #include <gdk/gdk.h>

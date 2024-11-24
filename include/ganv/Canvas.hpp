@@ -16,10 +16,10 @@
 #ifndef GANV_CANVAS_HPP
 #define GANV_CANVAS_HPP
 
-#include "ganv/canvas.h"
-#include "ganv/item.h"
-#include "ganv/types.h"
-#include "ganv/wrap.hpp"
+#include <ganv/canvas.h>
+#include <ganv/item.h>
+#include <ganv/types.h>
+#include <ganv/wrap.hpp>
 
 #include <cairo.h>
 #include <gdk/gdk.h>

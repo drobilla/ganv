@@ -26,20 +26,20 @@
 #include "ganv-private.h"
 #include "gettext.h"
 
-#include "ganv/Canvas.hpp"
-#include "ganv/Edge.hpp"
-#include "ganv/Item.hpp"
-#include "ganv/Node.hpp"
-#include "ganv/box.h"
-#include "ganv/canvas.h"
-#include "ganv/circle.h"
-#include "ganv/edge.h"
-#include "ganv/group.h"
-#include "ganv/item.h"
-#include "ganv/module.h"
-#include "ganv/node.h"
-#include "ganv/port.h"
-#include "ganv/types.h"
+#include <ganv/Canvas.hpp>
+#include <ganv/Edge.hpp>
+#include <ganv/Item.hpp>
+#include <ganv/Node.hpp>
+#include <ganv/box.h>
+#include <ganv/canvas.h>
+#include <ganv/circle.h>
+#include <ganv/edge.h>
+#include <ganv/group.h>
+#include <ganv/item.h>
+#include <ganv/module.h>
+#include <ganv/node.h>
+#include <ganv/port.h>
+#include <ganv/types.h>
 
 #include <cairo-pdf.h>
 #include <cairo-ps.h>
@@ -93,7 +93,7 @@
 #    include <gvcext.h>
 #endif
 #ifdef GANV_FDGL
-#    include "./fdgl.hpp"
+#    include "fdgl.hpp"
 #endif
 
 #define CANVAS_IDLE_PRIORITY (GDK_PRIORITY_REDRAW - 5)

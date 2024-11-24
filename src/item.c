@@ -22,8 +22,8 @@
 #include "ganv-private.h"
 #include "gettext.h"
 
-#include "ganv/item.h"
-#include "ganv/types.h"
+#include <ganv/item.h>
+#include <ganv/types.h>
 
 #include <gdk/gdk.h>
 #include <glib-object.h>

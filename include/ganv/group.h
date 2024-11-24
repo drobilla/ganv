@@ -18,7 +18,7 @@
 #ifndef GANV_GROUP_H
 #define GANV_GROUP_H
 
-#include "ganv/item.h"
+#include <ganv/item.h>
 
 #include <glib-object.h>
 #include <glib.h>

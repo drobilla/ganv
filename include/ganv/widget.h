@@ -22,7 +22,7 @@
 #ifndef GANV_WIDGET_H
 #define GANV_WIDGET_H
 
-#include "ganv/item.h"
+#include <ganv/item.h>
 
 #include <glib-object.h>
 #include <glib.h>

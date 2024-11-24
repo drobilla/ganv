@@ -20,8 +20,8 @@
 
 #include "ganv-private.h"
 
-#include "ganv/group.h"
-#include "ganv/item.h"
+#include <ganv/group.h>
+#include <ganv/item.h>
 
 #include <cairo.h>
 #include <float.h>

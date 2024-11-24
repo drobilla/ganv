@@ -18,12 +18,12 @@
 #include "ganv-private.h"
 #include "gettext.h"
 
-#include "ganv/canvas.h"
-#include "ganv/circle.h"
-#include "ganv/item.h"
-#include "ganv/node.h"
-#include "ganv/text.h"
-#include "ganv/types.h"
+#include <ganv/canvas.h>
+#include <ganv/circle.h>
+#include <ganv/item.h>
+#include <ganv/node.h>
+#include <ganv/text.h>
+#include <ganv/types.h>
 
 #include <cairo.h>
 #include <glib-object.h>

@@ -16,7 +16,7 @@
 #ifndef GANV_BOILERPLATE_H
 #define GANV_BOILERPLATE_H
 
-#include "ganv/item.h"
+#include <ganv/item.h>
 
 #include <glib.h>
 

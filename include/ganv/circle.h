@@ -18,8 +18,8 @@
 #ifndef GANV_CIRCLE_H
 #define GANV_CIRCLE_H
 
-#include "ganv/node.h"
-#include "ganv/types.h"
+#include <ganv/node.h>
+#include <ganv/types.h>
 
 #include <glib-object.h>
 #include <glib.h>

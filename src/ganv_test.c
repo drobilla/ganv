@@ -13,8 +13,8 @@
  * with Ganv.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ganv/ganv.h"
-#include "ganv/item.h"
+#include <ganv/ganv.h>
+#include <ganv/item.h>
 
 #include <gtk/gtk.h>
 

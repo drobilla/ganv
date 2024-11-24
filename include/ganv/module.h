@@ -18,14 +18,13 @@
 #ifndef GANV_MODULE_H
 #define GANV_MODULE_H
 
-#include "ganv/types.h"
+#include <ganv/box.h>
+#include <ganv/canvas.h>
+#include <ganv/types.h>
 
 #include <glib-object.h>
 #include <glib.h>
 #include <gtk/gtk.h>
-
-#include "ganv/box.h"
-#include "ganv/canvas.h"
 
 G_BEGIN_DECLS
 

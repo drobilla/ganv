@@ -18,15 +18,15 @@
 #include "ganv-private.h"
 #include "gettext.h"
 
-#include "ganv/box.h"
-#include "ganv/canvas.h"
-#include "ganv/edge.h"
-#include "ganv/item.h"
-#include "ganv/module.h"
-#include "ganv/node.h"
-#include "ganv/port.h"
-#include "ganv/text.h"
-#include "ganv/types.h"
+#include <ganv/box.h>
+#include <ganv/canvas.h>
+#include <ganv/edge.h>
+#include <ganv/item.h>
+#include <ganv/module.h>
+#include <ganv/node.h>
+#include <ganv/port.h>
+#include <ganv/text.h>
+#include <ganv/types.h>
 
 #include <cairo.h>
 #include <gdk/gdk.h>

@@ -20,9 +20,9 @@
 #include "ganv-private.h"
 #include "gettext.h"
 
-#include "ganv/canvas.h"
-#include "ganv/item.h"
-#include "ganv/widget.h"
+#include <ganv/canvas.h>
+#include <ganv/item.h>
+#include <ganv/widget.h>
 
 #include <cairo.h>
 #include <glib-object.h>

@@ -16,10 +16,10 @@
 #ifndef GANV_PORT_HPP
 #define GANV_PORT_HPP
 
-#include "ganv/Box.hpp"
-#include "ganv/port.h"
-#include "ganv/types.h"
-#include "ganv/wrap.hpp"
+#include <ganv/Box.hpp>
+#include <ganv/port.h>
+#include <ganv/types.h>
+#include <ganv/wrap.hpp>
 
 #include <glib.h>
 #include <sigc++/signal.h>

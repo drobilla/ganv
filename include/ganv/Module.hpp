@@ -16,14 +16,14 @@
 #ifndef GANV_MODULE_HPP
 #define GANV_MODULE_HPP
 
-#include "ganv/Box.hpp"
-#include "ganv/Canvas.hpp"
-#include "ganv/Port.hpp"
-#include "ganv/box.h"
-#include "ganv/item.h"
-#include "ganv/module.h"
-#include "ganv/types.h"
-#include "ganv/wrap.hpp"
+#include <ganv/Box.hpp>
+#include <ganv/Canvas.hpp>
+#include <ganv/Port.hpp>
+#include <ganv/box.h>
+#include <ganv/item.h>
+#include <ganv/module.h>
+#include <ganv/types.h>
+#include <ganv/wrap.hpp>
 
 #include <glib.h>
 #include <gtkmm/widget.h>

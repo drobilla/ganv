@@ -16,11 +16,11 @@
 #ifndef GANV_NODE_HPP
 #define GANV_NODE_HPP
 
-#include "ganv/Item.hpp"
-#include "ganv/item.h"
-#include "ganv/node.h"
-#include "ganv/types.h"
-#include "ganv/wrap.hpp"
+#include <ganv/Item.hpp>
+#include <ganv/item.h>
+#include <ganv/node.h>
+#include <ganv/types.h>
+#include <ganv/wrap.hpp>
 
 #include <glib-object.h>
 #include <glib.h>

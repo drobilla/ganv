@@ -16,11 +16,11 @@
 #ifndef GANV_BOX_HPP
 #define GANV_BOX_HPP
 
-#include "ganv/Node.hpp"
-#include "ganv/box.h"
-#include "ganv/node.h"
-#include "ganv/types.h"
-#include "ganv/wrap.hpp"
+#include <ganv/Node.hpp>
+#include <ganv/box.h>
+#include <ganv/node.h>
+#include <ganv/types.h>
+#include <ganv/wrap.hpp>
 
 #include <glib.h>
 
