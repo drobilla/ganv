@@ -109,6 +109,7 @@ elif cc.get_id() == 'gcc'
     c_suppressions += [
       '-Wno-bad-function-cast',
       '-Wno-c++-compat',
+      '-Wno-inline',
       '-Wno-unsuffixed-float-constants',
     ]
   endif
@@ -183,6 +184,7 @@ elif cpp.get_id() == 'gcc'
   if warning_level == 'everything'
     cpp_suppressions += [
       '-Wno-effc++',
+      '-Wno-inline',
       '-Wno-missing-noreturn',
       '-Wno-null-dereference',
       '-Wno-old-style-cast',
