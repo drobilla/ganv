@@ -812,6 +812,8 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 }
 #endif
 
+namespace {
+
 inline uint64_t
 get_monotonic_time()
 {
@@ -824,7 +826,11 @@ get_monotonic_time()
 #endif
 }
 
+} // namespace
+
 #ifdef GANV_FDGL
+
+namespace {
 
 inline Region
 get_region(GanvNode* node)
@@ -854,6 +860,8 @@ apply_force(GanvNode* a, GanvNode* b, const Vector& f)
 	a->impl->force = vec_add(a->impl->force, f);
 	b->impl->force = vec_sub(b->impl->force, f);
 }
+
+} // namespace
 
 gboolean
 GanvCanvasImpl::layout_iteration()
@@ -4062,7 +4070,9 @@ ganv_canvas_request_update(GanvCanvas* canvas)
 	}
 }
 
-static inline gboolean
+namespace {
+
+inline gboolean
 rect_overlaps(const IRect* a, const IRect* b)
 {
 	if ((a->x             > b->x + b->width) ||
@@ -4074,7 +4084,7 @@ rect_overlaps(const IRect* a, const IRect* b)
 	return TRUE;
 }
 
-static inline gboolean
+inline gboolean
 rect_is_visible(GanvCanvas* canvas, const IRect* r)
 {
 	const IRect rect = {
@@ -4086,6 +4096,8 @@ rect_is_visible(GanvCanvas* canvas, const IRect* r)
 
 	return rect_overlaps(&rect, r);
 }
+
+} // namespace
 
 void
 ganv_canvas_request_redraw_c(GanvCanvas* canvas,
