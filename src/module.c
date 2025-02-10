@@ -26,6 +26,7 @@
 #include <ganv/widget.h>
 
 #include <cairo.h>
+#include <gdk/gdk.h>
 #include <glib-object.h>
 #include <glib.h>
 #include <gobject/gclosure.h>
