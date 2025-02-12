@@ -234,7 +234,7 @@ ganv_canvas_get_center_scroll_region(const GanvCanvas* canvas);
  * Makes a canvas scroll to the specified offsets, given in canvas pixel units.
  * The canvas will adjust the view so that it is not outside the scrolling
  * region.  This function is typically not used, as it is better to hook
- * scrollbars to the canvas layout's scrolling adjusments.
+ * scrollbars to the canvas layout's scrolling adjustments.
  */
 void
 ganv_canvas_scroll_to(GanvCanvas* canvas, int cx, int cy);

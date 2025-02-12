@@ -463,7 +463,7 @@ struct GanvCanvasImpl {
 	int redraw_x2;
 	int redraw_y2;
 
-	/* Offsets of the temprary drawing pixmap */
+	/* Offsets of the temporary drawing pixmap */
 	int draw_xofs;
 	int draw_yofs;
 
@@ -3201,7 +3201,7 @@ ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 		}
 	}
 
-	/* Convert to world coordinates -- we have two cases because of diferent
+	/* Convert to world coordinates -- we have two cases because of different
 	 * offsets of the fields in the event structures.
 	 */
 

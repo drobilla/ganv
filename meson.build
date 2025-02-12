@@ -366,7 +366,7 @@ ganv_dep = declare_dependency(
   link_with: libganv,
 )
 
-# Generage pkg-config file for external dependants
+# Generate pkg-config file for external dependants
 pkg.generate(
   libganv,
   description: 'Interactive Gtk canvas widget for graph-based interfaces',

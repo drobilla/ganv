@@ -26,7 +26,7 @@ ganv (1.6.0) stable; urgency=medium
   * Add support for beveled box corners.
   * Add support for edges that do not constrain the layout.
   * Dampen sprung layout energy over time to prevent oscillation.
-  * Distinguish edge color from port color slighly.
+  * Distinguish edge color from port color slightly.
   * Fix compilation with --no-fdgl (patch from Vlad Glagolev).
   * Fix crash when destroying canvas.
   * Fix port position on modules with embedded widgets.
