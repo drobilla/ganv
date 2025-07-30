@@ -1,19 +1,19 @@
-# Copyright 2022-2023 David Robillard <d@drobilla.net>
+# Copyright 2022-2025 David Robillard <d@drobilla.net>
 # SPDX-License-Identifier: 0BSD OR ISC
 
-option('fdgl', type: 'feature', yield: true,
+option('fdgl', type: 'feature',
        description: 'Build with force-directed graph layout support')
 
-option('gir', type: 'feature', yield: true,
+option('gir', type: 'feature',
        description: 'Build GObject introspection data')
 
-option('graphviz', type: 'feature', yield: true,
+option('graphviz', type: 'feature',
        description: 'Build with graphviz-based layout support')
 
-option('light', type: 'boolean', value: false, yield: true,
+option('light', type: 'boolean', value: false,
        description: 'Use light-coloured theme')
 
-option('nls', type: 'feature', yield: true,
+option('nls', type: 'feature',
        description: 'Build with native language support')
 
 option('title', type: 'string', value: 'Ganv',
