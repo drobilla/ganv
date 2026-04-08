@@ -42,7 +42,7 @@ color_to_rgba(guint color, double* r, double* g, double* b, double* a)
 	*r = ((color >> 24) & 0xFF) / 255.0;
 	*g = ((color >> 16) & 0xFF) / 255.0;
 	*b = ((color >> 8)  & 0xFF) / 255.0;
-	*a = ((color)       & 0xFF) / 255.0;
+	*a = (color         & 0xFF) / 255.0;
 }
 
 static inline guint

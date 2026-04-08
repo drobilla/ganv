@@ -89,7 +89,6 @@ Checks: >
   -readability-math-missing-parentheses,
   -readability-redundant-casting,
   -readability-redundant-inline-specifier,
-  -readability-redundant-parentheses,
   -readability-simplify-boolean-expr,
 CheckOptions:
   - key:   hicpp-uppercase-literal-suffix.NewSuffixes

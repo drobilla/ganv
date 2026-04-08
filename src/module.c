@@ -216,7 +216,7 @@ measure(GanvModule* module, Metrics* m)
 	// side that the port isn't right on the edge).
 	const double hor_pad = (canvas_title ? 10.0 : 20.0);
 
-	m->width = (canvas_title) ? title_w + 10.0 : 1.0;
+	m->width = canvas_title ? title_w + 10.0 : 1.0;
 
 	// Title is wide or there is an embedded widget,
 	// put inputs and outputs beside each other
