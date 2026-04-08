@@ -3151,7 +3151,6 @@ ganv_canvas_emit_event(GanvCanvas* canvas, GdkEvent* event)
 		/* I think this warning is annoying and I don't know what it's for
 		 * so I'll disable it for now.
 		 */
-		/*                g_warning ("emit_event() returning FALSE!\n");*/
 		return FALSE;
 	}
 
@@ -3922,8 +3921,6 @@ add_idle(GanvCanvas* canvas)
 		                                        canvas,
 		                                        NULL);
 	}
-
-	/*      canvas->idle_id = gtk_idle_add (idle_handler, canvas); */
 }
 
 GanvItem*
