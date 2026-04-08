@@ -69,7 +69,6 @@ Checks: >
   -misc-include-cleaner,
   -misc-no-recursion,
   -misc-non-private-member-variables-in-classes,
-  -misc-predictable-rand,
   -misc-use-anonymous-namespace,
   -misc-use-internal-linkage,
   -modernize-avoid-c-style-cast,

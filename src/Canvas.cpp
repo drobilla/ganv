@@ -75,6 +75,7 @@
 #include <cstring>
 #include <iostream>
 #include <map>
+#include <random>
 #include <set>
 #include <sstream>
 #include <string>
@@ -229,6 +230,7 @@ struct GanvCanvasImpl {
 		, _select_start_x(0.0)
 		, _select_start_y(0.0)
 		, _drag_state(NOT_DRAGGING)
+        , rng(reinterpret_cast<std::minstd_rand::result_type>(canvas))
 	{
 		this->root               = GANV_ITEM(g_object_new(ganv_group_get_type(), NULL));
 		this->root->impl->canvas = canvas;
@@ -504,9 +506,11 @@ struct GanvCanvasImpl {
 	gboolean exporting;
 
 #ifdef GANV_FDGL
-	guint    layout_idle_id;
-	gdouble  layout_energy;
-	gboolean sprung_layout;
+	std::minstd_rand                 rng;
+	std::uniform_real_distribution<> force_dist{0.0, 128.0};
+	guint                            layout_idle_id;
+	gdouble                          layout_energy;
+	gboolean                         sprung_layout;
 #endif
 };
 
@@ -962,8 +966,7 @@ GanvCanvasImpl::layout_calculate(double dur, bool update)
 			tide_force(mouth, reg.pos, 4000000000000.0));
 
 		// Add slight noise to force to limit oscillation
-		const Vector noise = { rand() / (float)RAND_MAX * 128.0,
-		                       rand() / (float)RAND_MAX * 128.0 };
+		const Vector noise = { force_dist(rng), force_dist(rng) };
 		node->impl->force = vec_add(noise, node->impl->force);
 
 		FOREACH_ITEM(_items, j) {

@@ -1,11 +1,12 @@
 ganv (1.8.3) unstable; urgency=medium
 
   * Avoid over-use of yielding meson options
+  * Avoid use of rand() for sprung layout
   * Fix library current_version on MacOS
   * Remove unused "tools" configuration option
   * Update installation instructions
 
- -- David Robillard <d@drobilla.net>  Wed, 30 Jul 2025 22:20:44 +0000
+ -- David Robillard <d@drobilla.net>  Wed, 08 Apr 2026 02:18:20 +0000
 
 ganv (1.8.2) stable; urgency=medium
 
