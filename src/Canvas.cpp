@@ -736,7 +736,7 @@ GanvCanvasImpl::layout_dot(const std::string& filename)
 
 			char* html_label_str = agstrdup_html(G, (char*)html.c_str());
 
-			agsafeset(node, (char*)"label", (char*)html_label_str, (char*)"");
+			agsafeset(node, (char*)"label", html_label_str, (char*)"");
 		} else if (GANV_IS_CIRCLE(*i)) {
 			agsafeset(node, (char*)"shape", (char*)"circle", (char*)"");
 			agsafeset(node, (char*)"fixedsize", (char*)"true", (char*)"");
@@ -2179,8 +2179,8 @@ ganv_canvas_zoom_full(GanvCanvas* canvas)
 	static const double pad = GANV_CANVAS_PAD;
 
 	const double new_zoom = std::min(
-		((double)win_width / (double)(right - left + pad*2.0)),
-		((double)win_height / (double)(top - bottom + pad*2.0)));
+		((double)win_width / (right - left + (pad * 2.0))),
+		((double)win_height / (top - bottom + (pad * 2.0))));
 
 	ganv_canvas_set_zoom(canvas, new_zoom);
 

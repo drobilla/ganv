@@ -87,7 +87,6 @@ Checks: >
   -readability-inconsistent-declaration-parameter-name,
   -readability-make-member-function-const,
   -readability-math-missing-parentheses,
-  -readability-redundant-casting,
   -readability-redundant-inline-specifier,
   -readability-simplify-boolean-expr,
 CheckOptions:
