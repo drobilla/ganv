@@ -99,9 +99,11 @@
 
 #define CANVAS_IDLE_PRIORITY (GDK_PRIORITY_REDRAW - 5)
 
-static const double GANV_CANVAS_PAD = 8.0;
+constexpr double GANV_CANVAS_PAD = 8.0;
 
 struct GanvCanvasImpl;
+
+namespace {
 
 struct IRect {
 	int x;
@@ -109,6 +111,8 @@ struct IRect {
 	int width;
 	int height;
 };
+
+} // namespace
 
 extern "C" {
 static void add_idle(GanvCanvas* canvas);
@@ -171,6 +175,8 @@ using Items = std::set<GanvNode*>;
 	for (SelectedPorts::iterator p = _selected_ports.begin(); \
 	     p != _selected_ports.end(); ++p)
 
+namespace {
+
 #ifdef HAVE_AGRAPH
 class GVNodes : public std::map<GanvNode*, Agnode_t*> {
 public:
@@ -188,8 +194,8 @@ public:
 };
 #endif
 
-static const uint32_t SELECT_RECT_FILL_COLOUR   = 0x2E444577;
-static const uint32_t SELECT_RECT_BORDER_COLOUR = 0x2E4445FF;
+constexpr uint32_t SELECT_RECT_FILL_COLOUR   = 0x2E444577;
+constexpr uint32_t SELECT_RECT_BORDER_COLOUR = 0x2E4445FF;
 
 /* Order edges by (tail, head) */
 struct TailHeadOrder {
@@ -212,11 +218,13 @@ struct HeadTailOrder {
 /* Callback used when the root item of a canvas is destroyed.  The user should
  * never ever do this, so we panic if this happens.
  */
-static void
+void
 panic_root_destroyed(GtkObject* object, gpointer data)
 {
 	g_error("Eeeek, root item %p of canvas %p was destroyed!", (void*)object, data);
 }
+
+} // namespace
 
 struct GanvCanvasImpl {
 	explicit GanvCanvasImpl(GanvCanvas* canvas)
@@ -514,13 +522,15 @@ struct GanvCanvasImpl {
 #endif
 };
 
+namespace {
+
 struct GanvEdgeKey {
 	GanvItem         item;
 	GanvEdgePrivate* impl;
 	GanvEdgePrivate  impl_data;
 };
 
-static void
+void
 make_edge_search_key(GanvEdgeKey*    key,
                      const GanvNode* tail,
                      const GanvNode* head)
@@ -530,6 +540,8 @@ make_edge_search_key(GanvEdgeKey*    key,
 	key->impl->tail = const_cast<GanvNode*>(tail);
 	key->impl->head = const_cast<GanvNode*>(head);
 }
+
+} // namespace
 
 GanvCanvasImpl::Edges::const_iterator
 GanvCanvasImpl::first_edge_from(const GanvNode* tail)
@@ -547,7 +559,9 @@ GanvCanvasImpl::first_edge_to(const GanvNode* head)
 	return _dst_edges.lower_bound((GanvEdge*)&key);
 }
 
-static void
+namespace {
+
+void
 select_if_tail_is_selected(GanvEdge* edge, void*)
 {
 	GanvNode* tail     = edge->impl->tail;
@@ -563,7 +577,7 @@ select_if_tail_is_selected(GanvEdge* edge, void*)
 	}
 }
 
-static void
+void
 select_if_head_is_selected(GanvEdge* edge, void*)
 {
 	GanvNode* head     = edge->impl->head;
@@ -579,7 +593,7 @@ select_if_head_is_selected(GanvEdge* edge, void*)
 	}
 }
 
-static void
+void
 select_edges(GanvPort* port, void* data)
 {
 	GanvCanvasImpl* impl = (GanvCanvasImpl*)data;
@@ -595,6 +609,8 @@ select_edges(GanvPort* port, void* data)
 		                               NULL);
 	}
 }
+
+} // namespace
 
 #ifdef HAVE_AGRAPH
 static void
@@ -3831,8 +3847,10 @@ ganv_canvas_expose(GtkWidget* widget, GdkEventExpose* event)
 	return FALSE;
 }
 
+namespace {
+
 /* Repaints the areas in the canvas that need it */
-static void
+void
 paint(GanvCanvas* canvas)
 {
 	for (GSList* l = canvas->impl->redraw_region; l; l = l->next) {
@@ -3859,7 +3877,7 @@ paint(GanvCanvas* canvas)
 	canvas->impl->redraw_y2 = 0;
 }
 
-static void
+void
 do_update(GanvCanvas* canvas)
 {
 	/* Cause the update if necessary */
@@ -3895,7 +3913,7 @@ update_again:
 }
 
 /* Idle handler for the canvas.  It deals with pending updates and redraws. */
-static gboolean
+gboolean
 idle_handler(gpointer data)
 {
 	GDK_THREADS_ENTER();
@@ -3911,6 +3929,8 @@ idle_handler(gpointer data)
 
 	return FALSE;
 }
+
+} // namespace
 
 /* Convenience function to add an idle handler to a canvas */
 static void
