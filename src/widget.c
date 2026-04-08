@@ -505,7 +505,7 @@ ganv_widget_class_init(GanvWidgetClass* klass)
 
 	g_object_class_install_property(
 		gobject_class, PROP_SIZE_PIXELS, g_param_spec_boolean(
-			"size-pixels", ("Size is in pixels"),
+			"size-pixels", _("Size is in pixels"),
 			_("Specifies whether the widget size is specified in pixels or"
 			  " canvas units. If it is in pixels, then the widget will not"
 			  " be scaled when the canvas zoom factor changes.  Otherwise,"
